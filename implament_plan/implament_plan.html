@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plan — Real Backend (Supabase + Go)</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2.5rem 1.5rem 6rem;
+    background: #0b0f14; color: #dbe4ec;
+    font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 880px; margin: 0 auto; }
+  h1 { font-size: 1.9rem; margin: 0 0 .3rem; color: #fff; }
+  .sub { color: #7d93a8; margin: 0 0 2.2rem; font-size: .95rem; }
+  h2 {
+    font-size: 1.05rem; text-transform: uppercase; letter-spacing: .04em;
+    color: #ff9f43; margin: 2.6rem 0 .9rem; border-bottom: 1px solid #1e2a36; padding-bottom: .5rem;
+  }
+  h2:first-of-type { margin-top: 0; }
+  p { margin: 0 0 .9rem; }
+  code {
+    background: #131b23; border: 1px solid #1e2a36; border-radius: 4px;
+    padding: .1rem .35rem; font-size: .88em; color: #7ee7c7;
+  }
+  pre {
+    background: #0f151b; border: 1px solid #1e2a36; border-radius: 8px;
+    padding: 1rem; overflow-x: auto; font-size: .85rem; color: #a9c2d6;
+  }
+  ul, ol { padding-left: 1.4rem; margin: 0 0 .9rem; }
+  li { margin-bottom: .45rem; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 1rem; font-size: .9rem; }
+  th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid #1e2a36; }
+  th { color: #7d93a8; font-weight: 600; }
+  .badge {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .03em;
+    padding: .15rem .5rem; border-radius: 4px; margin-right: .4rem; text-transform: uppercase;
+  }
+  .badge.confirmed { background: #16332633; color: #7ee7c7; border: 1px solid #2b6b52; }
+  .badge.out { background: #33201633; color: #ff9f43; border: 1px solid #6b4a2b; }
+  .callout {
+    background: #131b23; border-left: 3px solid #ff9f43; border-radius: 6px;
+    padding: 1rem 1.2rem; margin: 0 0 1.2rem;
+  }
+  .files { list-style: none; padding: 0; }
+  .files li { font-family: ui-monospace, monospace; font-size: .85rem; }
+  .new { color: #7ee7c7; }
+  .edit { color: #ffce6b; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Real Backend — Supabase Postgres + Go Scan API</h1>
+  <p class="sub">division-backend (Korn) · Requested by Gong · Plan reviewed 2026-07-07</p>
+
+  <h2>Why</h2>
+  <p>division-frontend is fully built and demo-correct — real 121-runner dataset, gun-time ranking, scan-validation engine — but everything lives in browser <code>localStorage</code>. A check-in scanned at one laptop is invisible to the checkpoint/finish stations on other devices. This plan replaces that with a real Supabase Postgres DB + Go API so all scan stations share one source of truth in real time.</p>
+
+  <div class="callout">
+    <strong>Gong's confirmed decisions today:</strong>
+    <ul>
+      <li><span class="badge confirmed">Confirmed</span> Full Supabase Auth now — real staff login + JWT middleware, not an API-key stopgap</li>
+      <li><span class="badge confirmed">Confirmed</span> Create the real Supabase project now — org <code>TIXS</code>, region <code>ap-southeast-1</code>, free tier ($0/mo, verified)</li>
+      <li><span class="badge confirmed">Confirmed</span> Seed clean pre-race state — 121 real runners as <code>REGISTERED</code>, no scan history</li>
+    </ul>
+  </div>
+
+  <p><span class="badge out">Out of scope</span> BIB/RFID admin endpoints, Excel re-import in Go, Fly.io deploy — later passes, once this core loop is proven.</p>
+
+  <h2>Repo foundation</h2>
+  <ul>
+    <li><code>git init</code> at repo root now — real backend code + <code>.env</code> secrets are about to exist</li>
+    <li><code>.gitignore</code>: <code>.env</code>, <code>node_modules</code>, Go build output</li>
+    <li>New top-level <code>supabase/migrations/*.sql</code></li>
+  </ul>
+
+  <h2>Schema — 6 tables</h2>
+  <table>
+    <tr><th>Table</th><th>Purpose</th></tr>
+    <tr><td><code>race_categories</code></td><td>MKT33 (start 05:30), MKT50 (start 05:00) — matches frontend</td></tr>
+    <tr><td><code>checkpoints</code></td><td>A1/A2/A3 per category — matches frontend</td></tr>
+    <tr><td><code>runners</code></td><td>Seeded from <code>runners.json</code>, status enum REGISTERED→...→FINISHED/DNF/DNS</td></tr>
+    <tr><td><code>rfid_tags</code></td><td>Schema only this pass, unused until BIB/RFID phase</td></tr>
+    <tr><td><code>scan_events</code></td><td>Append-only audit log, never UPDATE/DELETE</td></tr>
+    <tr><td><code>live_progress</code></td><td>PII-light, upserted per scan — only table open to <code>anon</code> + Realtime</td></tr>
+  </table>
+  <p>Plus <code>staff_users(user_id, role)</code> driving authz. RLS: raw tables staff/admin-only; <code>live_progress</code> open-read; all client writes denied (Go uses service-role key).</p>
+
+  <h2>Staff auth</h2>
+  <p>Real Supabase Auth users, admin-provisioned (no public signup). Go verifies JWTs via Supabase JWKS in middleware. Frontend gets a small new <code>LoginPage</code> + auth guard — existing pages untouched.</p>
+
+  <h2>Go backend layout</h2>
+  <pre>division-backend/
+├── go.mod
+├── cmd/api/main.go
+├── internal/
+│   ├── config/      # env vars
+│   ├── db/          # pgx pool
+│   ├── httpapi/     # router + middleware
+│   ├── authz/       # JWT verify, role lookup
+│   ├── runner/       GET /runners, /runners/:bib/report
+│   ├── checkpoint/   GET /checkpoints
+│   ├── scan/         POST /scan — validate/transition/log core
+│   └── results/      GET /results, /stats, /results/export.csv
+└── .env.example</pre>
+  <p>Hand-written <code>pgx</code> queries this pass (no <code>sqlc</code> — not installed, query set small enough that codegen now is speculative). <code>scan</code> package ports the same rules already proven in <code>raceEngine.js</code>: duplicate → reject+log, checkpoint/finish before check-in → reject+log, first-scan-wins. Each scan is one transaction: validate → insert <code>scan_events</code> → update <code>runners.status</code> → upsert <code>live_progress</code>.</p>
+
+  <h2>Realtime</h2>
+  <p>Supabase Realtime "Postgres Changes" on <code>live_progress</code>, subscribed directly from React via <code>supabase-js</code>. No Go WebSocket hub.</p>
+
+  <h2>Frontend wiring</h2>
+  <ul>
+    <li><code>VITE_USE_MOCK_DATA</code> flag (default true) — mock path keeps today's localStorage behavior unchanged; real path calls the Go API + subscribes to Realtime, feeding the same shape components already consume. Page components don't change.</li>
+    <li>New minimal <code>LoginPage</code> + auth guard in <code>App.jsx</code>, real-backend path only</li>
+  </ul>
+
+  <h2>Files touched</h2>
+  <ul class="files">
+    <li class="new">NEW supabase/migrations/0001_init.sql (+ seed)</li>
+    <li class="new">NEW division-backend/** (Go module, see layout above)</li>
+    <li class="new">NEW division-frontend/src/lib/api.js</li>
+    <li class="new">NEW division-frontend/src/pages/LoginPage.jsx</li>
+    <li class="edit">EDIT division-frontend/src/hooks/useRaceState.js</li>
+    <li class="edit">EDIT division-frontend/src/App.jsx</li>
+    <li class="edit">EDIT root CLAUDE.md + division-backend/CLAUDE.md (status, once live)</li>
+  </ul>
+
+  <h2>Verification</h2>
+  <ol>
+    <li><code>get_advisors</code> after migrations — no outstanding RLS/security lints</li>
+    <li><code>go build ./...</code> + unit tests for <code>scan</code> package rules (dup, not-checked-in, first-wins)</li>
+    <li>Manual: run backend locally against hosted project, log in as seeded staff, <code>curl POST /scan</code> a known BIB → row in <code>scan_events</code> + <code>live_progress</code> updates</li>
+    <li>Frontend: <code>VITE_USE_MOCK_DATA=false</code>, log in, scan in Check-in page → second browser tab's Dashboard updates via Realtime with no refresh</li>
+    <li><code>npm test</code> / <code>npm run lint</code> / <code>npm run build</code> stay green</li>
+  </ol>
+</main>
+</body>
+</html>

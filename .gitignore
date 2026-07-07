@@ -1,0 +1,30 @@
+# Env / secrets
+.env
+.env.local
+**/.env
+!**/.env.example
+
+# Node
+node_modules
+dist
+dist-ssr
+*.local
+npm-debug.log*
+
+# Go
+division-backend/tmp
+division-backend/bin
+*.exe
+*.test
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Local tool configs — contain machine-local secrets (Obsidian REST API key,
+# Codex bearer token), not project source. Never commit.
+.obsidian
+.codex
+.claude/settings.local.json

@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RFID Trail Race Dashboard</title>
+  <style>
+    :root{
+      --bg:#071014;
+      --panel:#0d1b22;
+      --panel2:#10252d;
+      --line:#1f3d47;
+      --text:#e9fbff;
+      --muted:#8fb2bd;
+      --yellow:#fff200;
+      --green:#44ff9a;
+      --red:#ff5c7c;
+      --blue:#5aa8ff;
+      --orange:#ffb547;
+      --shadow:0 18px 50px rgba(0,0,0,.35);
+      --radius:20px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(90,168,255,.16), transparent 35%),
+        radial-gradient(circle at top right, rgba(68,255,154,.10), transparent 30%),
+        var(--bg);
+      color:var(--text);
+    }
+
+    .app{
+      min-height:100vh;
+      padding:22px;
+      display:grid;
+      gap:18px;
+      grid-template-columns: 280px 1fr 360px;
+      grid-template-rows:auto 1fr;
+    }
+
+    .topbar{
+      grid-column:1 / -1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      background:linear-gradient(90deg, rgba(13,27,34,.94), rgba(16,37,45,.88));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px 22px;
+      box-shadow:var(--shadow);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .logo{
+      width:50px;height:50px;border-radius:16px;
+      background:linear-gradient(135deg, var(--green), var(--blue));
+      display:grid;place-items:center;
+      color:#001316;
+      font-size:25px;
+      font-weight:900;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:23px;
+      line-height:1.2;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .clock{
+      text-align:right;
+    }
+    .clock .time{
+      font-size:28px;
+      font-weight:800;
+      letter-spacing:1px;
+      color:var(--yellow);
+    }
+    .clock .date{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .panel{
+      background:rgba(13,27,34,.92);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-header{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .panel-header h2{
+      margin:0;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+
+    .panel-body{padding:18px}
+
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .steps{
+      display:grid;
+      gap:12px;
+    }
+
+    .step{
+      position:relative;
+      padding:14px 14px 14px 16px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:var(--panel2);
+    }
+    .step strong{display:block;font-size:14px}
+    .step span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+    .step.active{
+      border-color:rgba(255,242,0,.8);
+      box-shadow:0 0 0 2px rgba(255,242,0,.08) inset;
+    }
+
+    .main{
+      display:grid;
+      gap:18px;
+      grid-template-rows:auto auto 1fr;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap:12px;
+    }
+
+    .stat{
+      background:rgba(16,37,45,.92);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      min-height:96px;
+    }
+    .stat .label{font-size:12px;color:var(--muted)}
+    .stat .value{font-size:30px;font-weight:900;margin-top:6px}
+    .stat .hint{font-size:12px;color:var(--muted);margin-top:4px}
+    .green{color:var(--green)}
+    .yellow{color:var(--yellow)}
+    .red{color:var(--red)}
+    .blue{color:var(--blue)}
+    .orange{color:var(--orange)}
+
+    .scanner{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr auto;
+      gap:12px;
+      align-items:end;
+    }
+
+    label{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:7px;
+    }
+
+    input, select, button{
+      width:100%;
+      border:none;
+      outline:none;
+      border-radius:14px;
+      font:inherit;
+    }
+
+    input, select{
+      background:#07161c;
+      color:var(--text);
+      border:1px solid var(--line);
+      padding:13px 14px;
+    }
+
+    button{
+      cursor:pointer;
+      background:linear-gradient(135deg, var(--yellow), #ffca28);
+      color:#172000;
+      font-weight:900;
+      padding:13px 17px;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    button.secondary{
+      background:#10252d;
+      color:var(--text);
+      border:1px solid var(--line);
+    }
+
+    button.danger{
+      background:linear-gradient(135deg, #ff5c7c, #ff8964);
+      color:#1c0207;
+    }
+
+    .board{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      min-height:0;
+    }
+
+    .monitor{
+      background:#000;
+      border:2px solid #2d73ff;
+      border-radius:14px;
+      min-height:330px;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:26px;
+    }
+
+    .monitor .bib{
+      font-size:54px;
+      color:var(--yellow);
+      font-weight:900;
+      line-height:1;
+    }
+    .monitor .name{
+      color:var(--yellow);
+      font-size:28px;
+      font-weight:900;
+      margin-top:10px;
+      text-transform:uppercase;
+    }
+    .monitor .meta{
+      color:var(--yellow);
+      font-size:20px;
+      font-weight:800;
+      margin-top:8px;
+      line-height:1.45;
+    }
+    .monitor .status{
+      margin-top:18px;
+      color:var(--green);
+      font-size:18px;
+      font-weight:800;
+    }
+
+    .mini-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      max-height:430px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    th, td{
+      text-align:left;
+      padding:12px 10px;
+      border-bottom:1px solid var(--line);
+      white-space:nowrap;
+    }
+
+    th{
+      color:var(--muted);
+      font-weight:700;
+      position:sticky;
+      top:0;
+      background:#0d1b22;
+      z-index:1;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:11px;
+      font-weight:800;
+      background:#10252d;
+      border:1px solid var(--line);
+    }
+    .badge.ok{color:var(--green);border-color:rgba(68,255,154,.4)}
+    .badge.warn{color:var(--orange);border-color:rgba(255,181,71,.4)}
+    .badge.done{color:var(--blue);border-color:rgba(90,168,255,.4)}
+    .badge.bad{color:var(--red);border-color:rgba(255,92,124,.4)}
+
+    .rightbar{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-height:0;
+    }
+
+    .runner-card{
+      background:linear-gradient(180deg, rgba(16,37,45,.96), rgba(8,19,24,.96));
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+    }
+
+    .runner-card .bigbib{
+      font-size:42px;
+      color:var(--yellow);
+      font-weight:900;
+    }
+    .runner-card h3{
+      margin:4px 0 8px;
+      font-size:21px;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns:110px 1fr;
+      gap:7px;
+      font-size:13px;
+      margin-top:12px;
+    }
+    .kv div:nth-child(odd){color:var(--muted)}
+
+    .timeline{
+      display:grid;
+      gap:10px;
+    }
+    .timeitem{
+      display:grid;
+      grid-template-columns:90px 1fr;
+      gap:8px;
+      padding:11px 12px;
+      border:1px solid var(--line);
+      background:#08151a;
+      border-radius:14px;
+    }
+    .timeitem .t{color:var(--yellow);font-weight:900}
+    .timeitem .d{font-size:12px;color:var(--muted)}
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    @media (max-width:1180px){
+      .app{grid-template-columns:1fr; padding:14px}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .clock{text-align:left}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .board{grid-template-columns:1fr}
+      .scanner{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">RF</div>
+        <div>
+          <h1>RFID Trail Race Dashboard</h1>
+          <p>ระบบแสดงผล Check-in / Start / Checkpoint / Finish / Race Result</p>
+        </div>
+      </div>
+      <div class="clock">
+        <div class="time" id="clockTime">--:--:--</div>
+        <div class="date" id="clockDate">10-14 ก.ค. 2569 · เทศกาลอะโวคาโดและของดีตำบลบ้านปง</div>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Workflow</h2>
+          <span class="badge ok">LIVE</span>
+        </div>
+        <div class="panel-body steps">
+          <div class="step"><strong>1. Data Base</strong><span>Import Excel นักวิ่ง</span></div>
+          <div class="step"><strong>2. Assign BIB</strong><span>สร้าง BIB + Barcode/QR</span></div>
+          <div class="step"><strong>3. Create RFID</strong><span>ผูก RFID Tag กับ BIB</span></div>
+          <div class="step active"><strong>4. Pre Start Check-in</strong><span>สแกนก่อนปล่อยตัว</span></div>
+          <div class="step"><strong>5. Checkpoint</strong><span>บันทึกจุดผ่านทาง</span></div>
+          <div class="step"><strong>6. Finish + Result</strong><span>คำนวณเวลา / e-Slip</span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>Race Control</h2></div>
+        <div class="panel-body">
+          <button onclick="startWave()">Start Wave PST 50</button>
+          <div class="mini-actions">
+            <button class="secondary" onclick="simulateScan('5004')">Scan 5004</button>
+            <button class="secondary" onclick="simulateScan('2001')">Scan 2001</button>
+          </div>
+          <div class="mini-actions">
+            <button class="secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="danger" onclick="resetDemo()">Reset</button>
+          </div>
+          <p class="small">ตัวอย่างนี้เป็น Dashboard HTML Mockup ใช้โชว์ Flow ได้ก่อนเชื่อม API จริง</p>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="stats">
+        <div class="stat">
+          <div class="label">Registered</div>
+          <div class="value" id="statRegistered">0</div>
+          <div class="hint">นักวิ่งทั้งหมด</div>
+        </div>
+        <div class="stat">
+          <div class="label">RFID Assigned</div>
+          <div class="value blue" id="statAssigned">0</div>
+          <div class="hint">ผูกชิปแล้ว</div>
+        </div>
+        <div class="stat">
+          <div class="label">Pre Check-in</div>
+          <div class="value green" id="statCheckin">0</div>
+          <div class="hint">พร้อมปล่อยตัว</div>
+        </div>
+        <div class="stat">
+          <div class="label">Started</div>
+          <div class="value yellow" id="statStarted">0</div>
+          <div class="hint">เริ่มแข่งแล้ว</div>
+        </div>
+        <div class="stat">
+          <div class="label">On Course</div>
+          <div class="value orange" id="statCourse">0</div>
+          <div class="hint">อยู่ระหว่างทาง</div>
+        </div>
+        <div class="stat">
+          <div class="label">Finished</div>
+          <div class="value green" id="statFinish">0</div>
+          <div class="hint">เข้าเส้นชัย</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Scanner Station</h2>
+          <span class="small">รองรับ RFID EPC / BIB / Barcode / QR</span>
+        </div>
+        <div class="panel-body">
+          <div class="scanner">
+            <div>
+              <label>Scan Value</label>
+              <input id="scanInput" placeholder="ยิง RFID / Barcode / พิมพ์ BIB เช่น 5004 แล้วกด Enter" autocomplete="off" />
+            </div>
+            <div>
+              <label>Timing Point</label>
+              <select id="pointSelect">
+                <option value="PRE_START_CHECKIN">PRE_START_CHECKIN</option>
+                <option value="START">START</option>
+                <option value="CP1">CP1 · A1 Mae Kha Nin</option>
+                <option value="FINISH">FINISH</option>
+              </select>
+            </div>
+            <button onclick="handleScan()">Submit Scan</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="board">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Monitor Screen</h2>
+            <span id="lastStatus" class="badge warn">WAITING</span>
+          </div>
+          <div class="panel-body">
+            <div class="monitor">
+              <div>
+                <div class="bib" id="mBib">----</div>
+                <div class="name" id="mName">READY TO SCAN</div>
+                <div class="meta" id="mMeta">RFID / BIB / QR</div>
+                <div class="status" id="mStatus">Waiting for runner...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Live Scan Feed</h2>
+            <span class="small">ล่าสุด 20 รายการ</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>BIB</th>
+                  <th>Point</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="feedBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <aside class="rightbar">
+      <section class="panel">
+        <div class="panel-header"><h2>Runner Detail</h2></div>
+        <div class="panel-body">
+          <div class="runner-card">
+            <div class="bigbib" id="dBib">----</div>
+            <h3 id="dName">ยังไม่มีข้อมูล</h3>
+            <span id="dStatus" class="badge warn">WAITING</span>
+            <div class="kv">
+              <div>Race</div><div id="dRace">-</div>
+              <div>Age Group</div><div id="dAge">-</div>
+              <div>Country</div><div id="dCountry">-</div>
+              <div>RFID EPC</div><div id="dEpc">-</div>
+              <div>Last Point</div><div id="dPoint">-</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>Race Timeline</h2></div>
+        <div class="panel-body timeline" id="timeline">
+          <div class="timeitem">
+            <div class="t">--:--:--</div>
+            <div><strong>Waiting</strong><div class="d">ยังไม่มีการสแกน</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><h2>Result Preview</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>BIB</th>
+                <th>Name</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+<script>
+const initialRunners = [
+  { bib:'5004', epc:'E2000017221101441890ABCD', name:'SERMSAK THIPAN', race:'PST 50', age:'40-49', country:'THAI', status:'CHIP_ASSIGNED', checkin:null, start:null, cp1:null, finish:null },
+  { bib:'5005', epc:'E2000017221101441890ABCE', name:'NARIN KAEWTA', race:'PST 50', age:'30-39', country:'THAI', status:'CHIP_ASSIGNED', checkin:null, start:null, cp1:null, finish:null },
+  { bib:'5006', epc:'E2000017221101441890ABCF', name:'WORAWIT SURIYA', race:'PST 50', age:'40-49', country:'THAI', status:'CHIP_ASSIGNED', checkin:null, start:null, cp1:null, finish:null },
+  { bib:'2001', epc:'E2000017221101441890AACD', name:'ANONG PHAN', race:'PST 25', age:'30-39', country:'THAI', status:'CHIP_ASSIGNED', checkin:null, start:null, cp1:null, finish:null },
+  { bib:'1001', epc:'E2000017221101441890BBCD', name:'DAVID CHEN', race:'FUN RUN', age:'20-29', country:'SINGAPORE', status:'CHIP_ASSIGNED', checkin:null, start:null, cp1:null, finish:null }
+];
+
+let runners = JSON.parse(localStorage.getItem('rfidDemoRunners') || JSON.stringify(initialRunners));
+let events = JSON.parse(localStorage.getItem('rfidDemoEvents') || '[]');
+let selectedBib = localStorage.getItem('rfidDemoSelectedBib') || '';
+
+const pointLabel = {
+  PRE_START_CHECKIN:'Pre Start Check-in',
+  START:'Start',
+  CP1:'A1 Mae Kha Nin',
+  FINISH:'Finish'
+};
+
+function nowTime(){
+  return new Date().toLocaleTimeString('th-TH', { hour12:false });
+}
+
+function nowISO(){
+  return new Date().toISOString();
+}
+
+function formatTotal(startIso, finishIso){
+  if(!startIso || !finishIso) return '-';
+  const sec = Math.max(0, Math.floor((new Date(finishIso) - new Date(startIso))/1000));
+  const h = String(Math.floor(sec/3600)).padStart(2,'0');
+  const m = String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s = String(sec%60).padStart(2,'0');
+  return `${h}:${m}:${s}`;
+}
+
+function save(){
+  localStorage.setItem('rfidDemoRunners', JSON.stringify(runners));
+  localStorage.setItem('rfidDemoEvents', JSON.stringify(events));
+  localStorage.setItem('rfidDemoSelectedBib', selectedBib);
+}
+
+function findRunner(value){
+  const v = String(value || '').trim().toUpperCase();
+  return runners.find(r => r.bib.toUpperCase() === v || r.epc.toUpperCase() === v);
+}
+
+function handleScan(){
+  const value = document.getElementById('scanInput').value.trim();
+  const point = document.getElementById('pointSelect').value;
+  if(!value) return;
+
+  const runner = findRunner(value);
+  const t = nowISO();
+
+  if(!runner){
+    events.unshift({ time:t, bib:value, point, status:'INVALID', message:'ไม่พบข้อมูลนักวิ่ง' });
+    showInvalid(value, point);
+    document.getElementById('scanInput').value = '';
+    save();
+    render();
+    return;
+  }
+
+  selectedBib = runner.bib;
+
+  if(point === 'PRE_START_CHECKIN'){
+    if(!runner.checkin) runner.checkin = t;
+    runner.status = 'PRE_CHECKED_IN';
+  }
+
+  if(point === 'START'){
+    if(!runner.start) runner.start = t;
+    runner.status = 'STARTED';
+  }
+
+  if(point === 'CP1'){
+    if(!runner.cp1) runner.cp1 = t;
+    runner.status = 'ON_COURSE';
+  }
+
+  if(point === 'FINISH'){
+    if(!runner.finish) runner.finish = t;
+    runner.status = 'FINISHED';
+  }
+
+  events.unshift({ time:t, bib:runner.bib, point, status:'VALID', message:`${pointLabel[point]} success` });
+  document.getElementById('scanInput').value = '';
+  save();
+  render();
+}
+
+function simulateScan(bib){
+  document.getElementById('scanInput').value = bib;
+  handleScan();
+}
+
+function showInvalid(value, point){
+  document.getElementById('mBib').textContent = value || '----';
+  document.getElementById('mName').textContent = 'INVALID SCAN';
+  document.getElementById('mMeta').textContent = pointLabel[point] || point;
+  document.getElementById('mStatus').textContent = 'ไม่พบข้อมูล BIB / RFID นี้';
+  document.getElementById('lastStatus').textContent = 'INVALID';
+  document.getElementById('lastStatus').className = 'badge bad';
+}
+
+function startWave(){
+  const t = nowISO();
+  runners.forEach(r => {
+    if(r.race === 'PST 50' && (r.status === 'PRE_CHECKED_IN' || r.status === 'CHIP_ASSIGNED')){
+      if(!r.start) r.start = t;
+      r.status = 'STARTED';
+      events.unshift({ time:t, bib:r.bib, point:'START', status:'VALID', message:'Mass Start PST 50' });
+    }
+  });
+  save();
+  render();
+}
+
+function resetDemo(){
+  runners = JSON.parse(JSON.stringify(initialRunners));
+  events = [];
+  selectedBib = '';
+  localStorage.removeItem('rfidDemoRunners');
+  localStorage.removeItem('rfidDemoEvents');
+  localStorage.removeItem('rfidDemoSelectedBib');
+  render();
+}
+
+function exportCSV(){
+  const rows = [['bib','name','race','status','checkin','start','cp1','finish','total']];
+  runners.forEach(r => rows.push([r.bib,r.name,r.race,r.status,r.checkin||'',r.start||'',r.cp1||'',r.finish||'',formatTotal(r.start,r.finish)]));
+  const csv = rows.map(row => row.map(v => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rfid_race_results.csv';
+  a.click();
+}
+
+function statusBadge(status){
+  if(status === 'FINISHED') return '<span class="badge ok">FINISHED</span>';
+  if(status === 'ON_COURSE') return '<span class="badge warn">ON COURSE</span>';
+  if(status === 'STARTED') return '<span class="badge done">STARTED</span>';
+  if(status === 'PRE_CHECKED_IN') return '<span class="badge ok">READY</span>';
+  if(status === 'INVALID') return '<span class="badge bad">INVALID</span>';
+  return '<span class="badge warn">WAITING</span>';
+}
+
+function renderStats(){
+  document.getElementById('statRegistered').textContent = runners.length;
+  document.getElementById('statAssigned').textContent = runners.filter(r => r.epc).length;
+  document.getElementById('statCheckin').textContent = runners.filter(r => r.checkin).length;
+  document.getElementById('statStarted').textContent = runners.filter(r => r.start).length;
+  document.getElementById('statCourse').textContent = runners.filter(r => r.status === 'ON_COURSE').length;
+  document.getElementById('statFinish').textContent = runners.filter(r => r.finish).length;
+}
+
+function renderMonitor(){
+  const last = events[0];
+  const runner = selectedBib ? runners.find(r => r.bib === selectedBib) : null;
+  if(!runner || !last || last.status === 'INVALID') return;
+
+  document.getElementById('mBib').textContent = runner.bib;
+  document.getElementById('mName').textContent = runner.name;
+  document.getElementById('mMeta').innerHTML = `${runner.race}<br>${runner.age}<br>${pointLabel[last.point] || last.point}`;
+  document.getElementById('mStatus').textContent = `${pointLabel[last.point] || last.point}: ${new Date(last.time).toLocaleTimeString('th-TH', {hour12:false})}`;
+  document.getElementById('lastStatus').textContent = runner.status;
+  document.getElementById('lastStatus').className = runner.status === 'FINISHED' ? 'badge ok' : 'badge done';
+}
+
+function renderDetail(){
+  const runner = selectedBib ? runners.find(r => r.bib === selectedBib) : null;
+  document.getElementById('dBib').textContent = runner ? runner.bib : '----';
+  document.getElementById('dName').textContent = runner ? runner.name : 'ยังไม่มีข้อมูล';
+  document.getElementById('dStatus').outerHTML = `<span id="dStatus" class="badge ${runner?.status === 'FINISHED' ? 'ok' : 'warn'}">${runner ? runner.status : 'WAITING'}</span>`;
+  document.getElementById('dRace').textContent = runner ? runner.race : '-';
+  document.getElementById('dAge').textContent = runner ? runner.age : '-';
+  document.getElementById('dCountry').textContent = runner ? runner.country : '-';
+  document.getElementById('dEpc').textContent = runner ? runner.epc : '-';
+  const last = events.find(e => e.bib === selectedBib);
+  document.getElementById('dPoint').textContent = last ? (pointLabel[last.point] || last.point) : '-';
+
+  const tl = document.getElementById('timeline');
+  if(!runner){
+    tl.innerHTML = `<div class="timeitem"><div class="t">--:--:--</div><div><strong>Waiting</strong><div class="d">ยังไม่มีการสแกน</div></div></div>`;
+    return;
+  }
+  const items = [
+    ['Check-in', runner.checkin, 'ยืนยันตัวก่อน Start'],
+    ['Start', runner.start, 'เริ่มการแข่งขัน'],
+    ['CP1', runner.cp1, 'A1 Mae Kha Nin'],
+    ['Finish', runner.finish, 'เข้าเส้นชัย']
+  ];
+  tl.innerHTML = items.map(([label,time,desc]) => `
+    <div class="timeitem">
+      <div class="t">${time ? new Date(time).toLocaleTimeString('th-TH',{hour12:false}) : '--:--:--'}</div>
+      <div><strong>${label}</strong><div class="d">${desc}</div></div>
+    </div>
+  `).join('');
+}
+
+function renderFeed(){
+  const body = document.getElementById('feedBody');
+  body.innerHTML = events.slice(0,20).map(e => `
+    <tr>
+      <td>${new Date(e.time).toLocaleTimeString('th-TH',{hour12:false})}</td>
+      <td>${e.bib}</td>
+      <td>${pointLabel[e.point] || e.point}</td>
+      <td>${statusBadge(e.status)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderResults(){
+  const finished = runners
+    .filter(r => r.finish)
+    .sort((a,b) => (new Date(a.finish)-new Date(a.start)) - (new Date(b.finish)-new Date(b.start)));
+  document.getElementById('resultBody').innerHTML = finished.length ? finished.map((r,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.bib}</td>
+      <td>${r.name}</td>
+      <td>${formatTotal(r.start, r.finish)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="4" class="small">ยังไม่มีผู้เข้าเส้นชัย</td></tr>`;
+}
+
+function render(){
+  renderStats();
+  renderMonitor();
+  renderDetail();
+  renderFeed();
+  renderResults();
+}
+
+function tickClock(){
+  const now = new Date();
+  document.getElementById('clockTime').textContent = now.toLocaleTimeString('th-TH', {hour12:false});
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+document.getElementById('scanInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') handleScan();
+});
+
+render();
+</script>
+</body>
+</html>

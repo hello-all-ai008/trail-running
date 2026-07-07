@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrailTime — Race Timing System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f7f8f9; --ink:#16181d; --ink-2:#5b6472; --line:#e6e9ed;
+  --start:#f5b60a; --cp:#f07f1a; --finish:#3346e0; --ok:#1a9e5c; --warn:#d94141;
+  --led-bg:#0c0d10; --led:#ffd400;
+  --radius:14px;
+  --sans:'IBM Plex Sans Thai',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:15px}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{width:232px;border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;background:var(--bg)}
+.logo{display:flex;align-items:center;gap:10px;padding:6px 10px 20px}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:13px}
+.logo b{font-size:15px;letter-spacing:.2px}
+.logo span{display:block;font-size:11px;color:var(--ink-2)}
+.nav-group{font-size:11px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em;padding:14px 10px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--ink-2);font-weight:500;border:none;background:none;width:100%;text-align:left;font-size:14px}
+.nav-item:hover{background:var(--bg-soft);color:var(--ink)}
+.nav-item.active{background:var(--ink);color:#fff}
+.nav-item .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.nav-item svg{flex:none}
+.main{flex:1;min-width:0;padding:28px 36px 60px;max-width:1120px}
+.page{display:none}
+.page.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.page-head{margin-bottom:22px}
+.page-head h1{font-size:22px;font-weight:700}
+.page-head p{color:var(--ink-2);margin-top:3px;font-size:14px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ---------- Cards / tables ---------- */
+.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--bg)}
+.card-pad{padding:20px}
+.grid{display:grid;gap:14px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.stat .eyebrow{display:block;margin-bottom:8px}
+.stat .num{font-family:var(--mono);font-size:30px;font-weight:600;line-height:1}
+.stat .sub{font-size:12px;color:var(--ink-2);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--bg-soft)}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+td.mono,.mono{font-family:var(--mono)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--ink-2)}
+.badge .dot{width:7px;height:7px;border-radius:50%}
+.b-reg .dot{background:#c3c9d2}
+.b-start{border-color:#f2dfa3;background:#fdf7e3;color:#8a6a06}.b-start .dot{background:var(--start)}
+.b-cp{border-color:#f3d2b3;background:#fdf1e5;color:#9c5210}.b-cp .dot{background:var(--cp)}
+.b-fin{border-color:#c4caf5;background:#eceffd;color:#2434ad}.b-fin .dot{background:var(--finish)}
+.btn{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:600;color:var(--ink)}
+.btn:hover{background:var(--bg-soft)}
+.btn-dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-dark:hover{background:#2b2f37}
+.btn-sm{padding:5px 10px;font-size:12.5px}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:200px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;outline:none}
+.search:focus{border-color:var(--ink)}
+select.search{flex:none;width:auto}
+
+/* ---------- Scan station ---------- */
+.station{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+.scan-input-wrap{position:relative;margin-bottom:16px}
+.scan-input{width:100%;border:2px solid var(--ink);border-radius:12px;padding:16px 16px 16px 50px;font-family:var(--mono);font-size:22px;letter-spacing:.06em;outline:none}
+.scan-input:focus{box-shadow:0 0 0 4px rgba(22,24,29,.08)}
+.scan-input-wrap svg{position:absolute;left:16px;top:50%;transform:translateY(-50%)}
+.scan-hint{font-size:12.5px;color:var(--ink-2);margin-top:8px}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--bg-soft)}
+/* LED board — ซิกเนเจอร์ตามจอในผัง flow */
+.led{background:var(--led-bg);border-radius:var(--radius);padding:26px 22px;text-align:center;color:var(--led);font-family:var(--mono);min-height:250px;display:flex;flex-direction:column;justify-content:center;gap:8px;position:relative;overflow:hidden}
+.led::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.025) 3px 4px);pointer-events:none}
+.led .bib{font-size:40px;font-weight:600;letter-spacing:.08em}
+.led .name{font-size:19px;font-weight:500}
+.led .meta{font-size:14px;opacity:.85}
+.led .time{font-size:22px;font-weight:600;margin-top:6px}
+.led .idle{opacity:.45;font-size:15px}
+.led.flash-ok{animation:flash .5s ease}
+.led.flash-warn .time,.led.flash-warn .meta-warn{color:#ff6b6b}
+@keyframes flash{0%{box-shadow:inset 0 0 0 3px var(--led)}100%{box-shadow:inset 0 0 0 0 transparent}}
+.led-caption{font-size:11.5px;color:var(--ink-2);text-align:center;margin-top:8px}
+.station-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:99px;margin-bottom:14px}
+.tag-start{background:#fdf7e3;color:#8a6a06}
+.tag-cp{background:#fdf1e5;color:#9c5210}
+.tag-fin{background:#eceffd;color:#2434ad}
+.station-tag .dot{width:8px;height:8px;border-radius:50%}
+.tag-start .dot{background:var(--start)}.tag-cp .dot{background:var(--cp)}.tag-fin .dot{background:var(--finish)}
+
+/* ---------- Dashboard bars ---------- */
+.bar-row{display:grid;grid-template-columns:110px 1fr 70px;gap:12px;align-items:center;padding:8px 0;font-size:13.5px}
+.bar-track{height:8px;border-radius:99px;background:var(--bg-soft);overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--ink);transition:width .4s ease}
+.bar-row .mono{text-align:right;color:var(--ink-2);font-size:12.5px}
+.cp-flow{display:flex;gap:10px}
+.cp-node{flex:1;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.cp-node .eyebrow{display:block;margin-bottom:6px}
+.cp-node .num{font-family:var(--mono);font-size:24px;font-weight:600}
+
+/* ---------- Toast & modal ---------- */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;max-width:360px;z-index:60}
+.toast.show{opacity:1;transform:none}
+.toast.err{background:var(--warn)}
+.modal-bg{position:fixed;inset:0;background:rgba(15,17,21,.45);display:none;place-items:center;z-index:50;padding:20px}
+.modal-bg.open{display:grid}
+.eslip{background:#fff;border-radius:14px;width:330px;max-height:92vh;overflow:auto;padding:26px 26px 20px;font-family:var(--mono);font-size:13px}
+.eslip .head{text-align:center;border-bottom:1.5px dashed var(--line);padding-bottom:14px;margin-bottom:14px}
+.eslip .head .logo-mark{margin:0 auto 8px}
+.eslip .row{display:flex;justify-content:space-between;padding:3.5px 0}
+.eslip .row span:first-child{color:var(--ink-2)}
+.eslip .hr{border-top:1.5px dashed var(--line);margin:12px 0}
+.eslip .rank{text-align:center;font-size:15px;font-weight:600;padding:6px 0}
+.eslip .foot{text-align:center;color:var(--ink-2);font-size:11px;margin-top:14px}
+.eslip .actions{display:flex;gap:8px;margin-top:16px;font-family:var(--sans)}
+.eslip .actions .btn{flex:1}
+
+.empty{padding:34px;text-align:center;color:var(--ink-2);font-size:14px}
+.note{font-size:12.5px;color:var(--ink-2);background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:18px}
+
+@media (max-width:960px){
+  .station{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .sidebar{width:72px;padding:16px 8px}
+  .sidebar .label,.logo b,.logo span,.nav-group{display:none}
+  .nav-item{justify-content:center;padding:11px}
+  .main{padding:20px 16px 60px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== Sidebar ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">TT</div>
+      <div><b>TrailTime</b><span>Race Timing System</span></div>
+    </div>
+    <div class="nav-group">ภาพรวม</div>
+    <button class="nav-item active" data-page="dashboard">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <span class="label">แดชบอร์ด</span>
+    </button>
+    <button class="nav-item" data-page="runners">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="label">รายชื่อนักวิ่ง</span>
+    </button>
+    <div class="nav-group">จุดสแกน</div>
+    <button class="nav-item" data-page="checkin"><span class="dot" style="background:var(--start)"></span><span class="label">Check-in (Start)</span></button>
+    <button class="nav-item" data-page="checkpoint"><span class="dot" style="background:var(--cp)"></span><span class="label">Check Point</span></button>
+    <button class="nav-item" data-page="finish"><span class="dot" style="background:var(--finish)"></span><span class="label">Finish Line</span></button>
+    <div class="nav-group">รายงาน</div>
+    <button class="nav-item" data-page="results">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M17 4H7v5a5 5 0 0 0 10 0V4z"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2.5-2 4-4 4"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.5 2 4 4 4"/></svg>
+      <span class="label">ผลการแข่งขัน</span>
+    </button>
+    <button class="nav-item" data-page="log">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span class="label">Scan Log</span>
+    </button>
+  </aside>
+
+  <!-- ===== Main ===== -->
+  <main class="main">
+
+    <!-- ========== Dashboard ========== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-head">
+        <span class="eyebrow">Live Overview</span>
+        <h1>แดชบอร์ด</h1>
+        <p>สรุปสถานะการแข่งขันแบบเรียลไทม์ อัปเดตทันทีเมื่อมีการสแกน</p>
+      </div>
+      <div class="grid grid-4" id="dash-stats"></div>
+      <div class="grid grid-2" style="margin-top:14px">
+        <div class="card card-pad">
+          <span class="eyebrow">Progress by Category</span>
+          <div id="dash-bars" style="margin-top:12px"></div>
+        </div>
+        <div class="card card-pad">
+          <span class="eyebrow">Runner Flow</span>
+          <div class="cp-flow" style="margin-top:14px" id="dash-flow"></div>
+          <span class="eyebrow" style="display:block;margin-top:22px">Latest Finishers</span>
+          <div id="dash-latest" style="margin-top:8px;font-size:13.5px"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Runners ========== -->
+    <section class="page" id="page-runners">
+      <div class="page-head">
+        <span class="eyebrow">Database</span>
+        <h1>รายชื่อนักวิ่ง</h1>
+        <p>ฐานข้อมูลผู้สมัคร (นำเข้าจากไฟล์ Excel) — ค้นหาจาก BIB หรือชื่อเพื่อตรวจสอบสถานะ</p>
+      </div>
+      <div class="toolbar">
+        <input class="search" id="runner-search" placeholder="ค้นหา BIB, ชื่อ-นามสกุล…">
+        <select class="search" id="runner-cat-filter"><option value="">ทุกระยะ</option></select>
+        <button class="btn" onclick="exportRunnersCSV()">Export CSV</button>
+      </div>
+      <div class="card" style="overflow:auto"><table id="runners-table"></table></div>
+    </section>
+
+    <!-- ========== Check-in ========== -->
+    <section class="page" id="page-checkin">
+      <div class="page-head">
+        <span class="station-tag tag-start"><span class="dot"></span>Station · Start</span>
+        <h1>Check-in จุดปล่อยตัว</h1>
+        <p>ยิงบาร์โค้ดบน BIB หรือพิมพ์หมายเลขแล้วกด Enter — ระบบบันทึกเวลาเช็คอินอัตโนมัติ</p>
+      </div>
+      <div class="station">
+        <div>
+          <div class="scan-input-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M11 8v8M15 8v6M18 8v8" stroke-width="1.6"/></svg>
+            <input class="scan-input" id="scan-checkin" placeholder="สแกน BIB Barcode…" autocomplete="off" inputmode="numeric">
+          </div>
+          <p class="scan-hint">เครื่องยิงบาร์โค้ดจะพิมพ์หมายเลขและกด <span class="kbd">Enter</span> ให้อัตโนมัติ · โฟกัสค้างที่ช่องนี้เสมอ</p>
+          <div class="card" style="margin-top:16px;overflow:auto"><table id="recent-checkin"></table></div>
+        </div>
+        <div>
+          <div class="led" id="led-checkin"><div class="idle">— รอการสแกน —</div></div>
+          <div class="led-caption">แสดงผลบน Monitor / Tablet / Mobile</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Check Point ========== -->
+    <section class="page" id="page-checkpoint">
+      <div class="page-head">
+        <span class="station-tag tag-cp"><span class="dot"></span>Station · Check Point</span>
+        <h1>Check Point ระหว่างเส้นทาง</h1>
+        <p>เลือกจุดเช็คพอยต์ที่เจ้าหน้าที่ประจำอยู่ แล้วยิงบาร์โค้ดนักวิ่งที่ผ่านจุด</p>
+      </div>
+      <div class="station">
+        <div>
+          <div class="toolbar">
+            <select class="search" id="cp-select"></select>
+          </div>
+          <div class="scan-input-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M11 8v8M15 8v6M18 8v8" stroke-width="1.6"/></svg>
+            <input class="scan-input" id="scan-checkpoint" placeholder="สแกน BIB Barcode…" autocomplete="off" inputmode="numeric">
+          </div>
+          <p class="scan-hint">นักวิ่งต้องผ่าน Check-in ก่อน จึงจะบันทึกเวลาที่จุดนี้ได้</p>
+          <div class="card" style="margin-top:16px;overflow:auto"><table id="recent-checkpoint"></table></div>
+        </div>
+        <div>
+          <div class="led" id="led-checkpoint"><div class="idle">— รอการสแกน —</div></div>
+          <div class="led-caption">แสดงผลบน Monitor / Tablet / Mobile</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Finish ========== -->
+    <section class="page" id="page-finish">
+      <div class="page-head">
+        <span class="station-tag tag-fin"><span class="dot"></span>Station · Finish</span>
+        <h1>Finish Line เส้นชัย</h1>
+        <p>ยิงบาร์โค้ดเมื่อนักวิ่งเข้าเส้นชัย ระบบคำนวณ Total Time และจัดอันดับให้ทันที</p>
+      </div>
+      <div class="station">
+        <div>
+          <div class="scan-input-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M11 8v8M15 8v6M18 8v8" stroke-width="1.6"/></svg>
+            <input class="scan-input" id="scan-finish" placeholder="สแกน BIB Barcode…" autocomplete="off" inputmode="numeric">
+          </div>
+          <p class="scan-hint">สแกนซ้ำจะไม่ทับเวลาเดิม — ยึดเวลา Finish ครั้งแรกเสมอ</p>
+          <div class="card" style="margin-top:16px;overflow:auto"><table id="recent-finish"></table></div>
+        </div>
+        <div>
+          <div class="led" id="led-finish"><div class="idle">— รอการสแกน —</div></div>
+          <div class="led-caption">แสดงผลบน Monitor / Tablet / Mobile</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== Results ========== -->
+    <section class="page" id="page-results">
+      <div class="page-head">
+        <span class="eyebrow">Report</span>
+        <h1>ผลการแข่งขัน</h1>
+        <p>จัดอันดับจาก Total Time (Finish − Check-in) แยกตามระยะ · กดดู e-Slip รายบุคคล</p>
+      </div>
+      <div class="toolbar">
+        <select class="search" id="result-cat-filter"><option value="">ทุกระยะ</option></select>
+        <select class="search" id="result-gender-filter">
+          <option value="">ทุกเพศ</option><option value="M">ชาย</option><option value="F">หญิง</option>
+        </select>
+        <button class="btn btn-dark" onclick="exportResultsCSV()">Export ผลการแข่งขัน (CSV)</button>
+      </div>
+      <div class="card" style="overflow:auto"><table id="results-table"></table></div>
+    </section>
+
+    <!-- ========== Scan Log ========== -->
+    <section class="page" id="page-log">
+      <div class="page-head">
+        <span class="eyebrow">Audit</span>
+        <h1>Scan Log</h1>
+        <p>ประวัติการสแกนทั้งหมดทุกจุด เรียงจากล่าสุด — ใช้ตรวจสอบย้อนหลังกรณีมีข้อโต้แย้ง</p>
+      </div>
+      <div class="card" style="overflow:auto"><table id="log-table"></table></div>
+      <div class="note">💡 เวอร์ชันตัวอย่างนี้เก็บข้อมูลในหน่วยความจำของหน้าเว็บ (รีเฟรชแล้วข้อมูลรีเซ็ต) — ระบบจริงควรต่อฐานข้อมูล เช่น Supabase/PostgreSQL เพื่อให้ทุกจุดสแกนซิงก์ข้อมูลถึงกันแบบเรียลไทม์</div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- e-Slip modal -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeSlip()">
+  <div class="eslip" id="eslip"></div>
+</div>
+
+<script>
+/* ================= Data ================= */
+const CHECKPOINTS = [
+  {id:'A1', name:'A1 Mae Kha Nin'},
+  {id:'A2', name:'A2 Doi Pha Daeng'},
+  {id:'A3', name:'A3 Huai Nam Sai'},
+];
+const CATEGORIES = ['MKT10','MKT25','PST50'];
+const firstTH = ['สมชาย','วิภา','อนันต์','กมล','ธนพล','สุนิสา','ปรีชา','อรทัย','ณัฐพงษ์','จิราพร','เสริมศักดิ์','พิมพ์ชนก','วีระ','ศิริพร','ชัยวัฒน์','นภัสสร','ก้องภพ','อัญชลี','ภูมิ','ดวงใจ'];
+const lastTH  = ['ใจดี','ทิพย์พันธ์','แสงทอง','บุญมา','ศรีสุข','คำมูล','วงศ์ใหญ่','จันทร์เพ็ญ','อินทะวงศ์','สุขสวัสดิ์','ทองดี','ปัญญาดี','แก้วมณี','พรมมา','ตันติกุล','ไชยวงศ์','มาลัย','สุริยะ','บัวคำ','ธาราทิพย์'];
+const ageGroups = ['20-29','30-39','40-49','50-59'];
+
+let runners = [];
+(function seed(){
+  let n=0;
+  const plan=[{cat:'MKT10',base:1001,count:14},{cat:'MKT25',base:2001,count:12},{cat:'PST50',base:5001,count:12}];
+  plan.forEach(p=>{
+    for(let i=0;i<p.count;i++){
+      const g = Math.random()<.6?'M':'F';
+      runners.push({
+        bib:String(p.base+i),
+        name:firstTH[(n*7)%20]+' '+lastTH[(n*11)%20],
+        gender:g, age:ageGroups[n%4], nat:'THAI', cat:p.cat,
+        checkin:null, cps:{}, finish:null
+      });
+      n++;
+    }
+  });
+  // เดโม่: บางคนเช็คอิน/ผ่านจุด/ฟินิชแล้ว เพื่อให้แดชบอร์ดมีข้อมูลตั้งต้น
+  const now = Date.now();
+  runners.forEach((r,i)=>{
+    if(i%3!==0){ r.checkin = now - rnd(3.5,5)*3600e3; }
+  });
+  runners.filter(r=>r.checkin).forEach((r,i)=>{
+    if(i%2===0){ r.cps['A1'] = r.checkin + rnd(.8,1.4)*3600e3; }
+    if(i%4===0){ r.cps['A2'] = r.checkin + rnd(1.8,2.4)*3600e3; }
+    if(i%5===0){ r.finish = r.checkin + rnd(2.6,4.2)*3600e3; }
+  });
+  function rnd(a,b){return a+Math.random()*(b-a)}
+})();
+
+let scanLog = []; // {time, station, bib, name, ok, msg}
+runners.forEach(r=>{ // seed log จากข้อมูลตั้งต้น
+  if(r.checkin) scanLog.push({time:r.checkin,station:'Check-in',bib:r.bib,name:r.name,ok:true});
+  Object.entries(r.cps).forEach(([cp,t])=>scanLog.push({time:t,station:cpName(cp),bib:r.bib,name:r.name,ok:true}));
+  if(r.finish) scanLog.push({time:r.finish,station:'Finish',bib:r.bib,name:r.name,ok:true});
+});
+scanLog.sort((a,b)=>b.time-a.time);
+
+/* ================= Helpers ================= */
+function cpName(id){const c=CHECKPOINTS.find(c=>c.id===id);return c?c.name:id}
+function fmtTime(ts){ if(!ts) return '—'; const d=new Date(ts); return d.toTimeString().slice(0,8); }
+function fmtDur(ms){ if(ms==null) return '—'; const s=Math.floor(ms/1e3); const h=String(Math.floor(s/3600)).padStart(2,'0'), m=String(Math.floor(s%3600/60)).padStart(2,'0'), ss=String(s%60).padStart(2,'0'); return `${h}:${m}:${ss}`; }
+function statusOf(r){
+  if(r.finish) return {cls:'b-fin',dot:true,txt:'Finished'};
+  const cps=Object.keys(r.cps);
+  if(cps.length) return {cls:'b-cp',dot:true,txt:'At '+cps.sort().pop()};
+  if(r.checkin) return {cls:'b-start',dot:true,txt:'Checked-in'};
+  return {cls:'b-reg',dot:true,txt:'Registered'};
+}
+function badge(r){const s=statusOf(r);return `<span class="badge ${s.cls}"><span class="dot"></span>${s.txt}</span>`}
+function toast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(err?' err':'');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',2600);
+}
+function findRunner(bib){return runners.find(r=>r.bib===bib.trim())}
+function download(name,text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));
+  a.download=name; a.click();
+}
+
+/* ================= Navigation ================= */
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    renderAll();
+    const map={checkin:'scan-checkin',checkpoint:'scan-checkpoint',finish:'scan-finish'};
+    if(map[btn.dataset.page]) setTimeout(()=>document.getElementById(map[btn.dataset.page]).focus(),80);
+  });
+});
+
+/* ================= LED board ================= */
+function showLED(id, lines, warn=false){
+  const el=document.getElementById(id);
+  el.innerHTML=lines;
+  el.classList.remove('flash-ok','flash-warn'); void el.offsetWidth;
+  el.classList.add(warn?'flash-warn':'flash-ok');
+}
+function ledRunner(r, extra, warn=false){
+  return `<div class="bib">${r.bib}</div>
+    <div class="name">${r.name.toUpperCase()}</div>
+    <div class="meta">${r.nat} · ${r.age} · ${r.cat}</div>${extra}`;
+}
+
+/* ================= Scan logic ================= */
+function handleScan(station, bib){
+  const r=findRunner(bib);
+  const now=Date.now();
+  if(!r){
+    scanLog.unshift({time:now,station,bib,name:'ไม่พบในระบบ',ok:false});
+    toast(`ไม่พบ BIB ${bib} ในฐานข้อมูล`,true);
+    return {r:null};
+  }
+  return {r,now};
+}
+
+function scanCheckin(bib){
+  const {r,now}=handleScan('Check-in',bib);
+  if(!r){ showLED('led-checkin',`<div class="bib">${bib}</div><div class="meta meta-warn">NOT FOUND · ไม่พบในระบบ</div>`,true); return; }
+  if(r.checkin){
+    showLED('led-checkin',ledRunner(r,`<div class="time meta-warn">Already checked-in : ${fmtTime(r.checkin)}</div>`),true);
+    toast(`BIB ${r.bib} เช็คอินไปแล้วเมื่อ ${fmtTime(r.checkin)}`,true);
+    scanLog.unshift({time:now,station:'Check-in',bib,name:r.name,ok:false,msg:'ซ้ำ'});
+  } else {
+    r.checkin=now;
+    showLED('led-checkin',ledRunner(r,`<div class="time">Check in : ${fmtTime(now)}</div>`));
+    toast(`✓ Check-in สำเร็จ — BIB ${r.bib} ${r.name}`);
+    scanLog.unshift({time:now,station:'Check-in',bib,name:r.name,ok:true});
+  }
+  renderAll();
+}
+
+function scanCheckpoint(bib){
+  const cp=document.getElementById('cp-select').value;
+  const {r,now}=handleScan(cpName(cp),bib);
+  if(!r){ showLED('led-checkpoint',`<div class="bib">${bib}</div><div class="meta meta-warn">NOT FOUND · ไม่พบในระบบ</div>`,true); return; }
+  if(!r.checkin){
+    showLED('led-checkpoint',ledRunner(r,`<div class="time meta-warn">ยังไม่ได้ Check-in ที่จุดสตาร์ท</div>`),true);
+    toast(`BIB ${r.bib} ยังไม่ผ่าน Check-in`,true);
+    scanLog.unshift({time:now,station:cpName(cp),bib,name:r.name,ok:false,msg:'ยังไม่เช็คอิน'});
+  } else if(r.cps[cp]){
+    showLED('led-checkpoint',ledRunner(r,`<div class="meta">${cpName(cp)}</div><div class="time meta-warn">Already scanned : ${fmtTime(r.cps[cp])}</div>`),true);
+    toast(`BIB ${r.bib} ผ่าน ${cp} ไปแล้ว`,true);
+    scanLog.unshift({time:now,station:cpName(cp),bib,name:r.name,ok:false,msg:'ซ้ำ'});
+  } else {
+    r.cps[cp]=now;
+    showLED('led-checkpoint',ledRunner(r,`<div class="meta">${cpName(cp)}</div><div class="time">Check in : ${fmtTime(now)}</div>`));
+    toast(`✓ ${cpName(cp)} — BIB ${r.bib} ${r.name}`);
+    scanLog.unshift({time:now,station:cpName(cp),bib,name:r.name,ok:true});
+  }
+  renderAll();
+}
+
+function scanFinish(bib){
+  const {r,now}=handleScan('Finish',bib);
+  if(!r){ showLED('led-finish',`<div class="bib">${bib}</div><div class="meta meta-warn">NOT FOUND · ไม่พบในระบบ</div>`,true); return; }
+  if(!r.checkin){
+    showLED('led-finish',ledRunner(r,`<div class="time meta-warn">ยังไม่ได้ Check-in — ไม่สามารถบันทึก Finish</div>`),true);
+    toast(`BIB ${r.bib} ยังไม่ผ่าน Check-in`,true);
+    scanLog.unshift({time:now,station:'Finish',bib,name:r.name,ok:false,msg:'ยังไม่เช็คอิน'});
+  } else if(r.finish){
+    showLED('led-finish',ledRunner(r,`<div class="time meta-warn">Already finished : ${fmtTime(r.finish)}</div>`),true);
+    toast(`BIB ${r.bib} เข้าเส้นชัยแล้ว (ยึดเวลาแรก)`,true);
+    scanLog.unshift({time:now,station:'Finish',bib,name:r.name,ok:false,msg:'ซ้ำ'});
+  } else {
+    r.finish=now;
+    showLED('led-finish',ledRunner(r,`<div class="time">Finish : ${fmtTime(now)}</div><div class="meta">Total Time ${fmtDur(now-r.checkin)}</div>`));
+    toast(`🏁 Finish! BIB ${r.bib} ${r.name} — ${fmtDur(now-r.checkin)}`);
+    scanLog.unshift({time:now,station:'Finish',bib,name:r.name,ok:true});
+  }
+  renderAll();
+}
+
+// bind scan inputs (barcode scanner = keyboard + Enter)
+[['scan-checkin',scanCheckin],['scan-checkpoint',scanCheckpoint],['scan-finish',scanFinish]].forEach(([id,fn])=>{
+  const el=document.getElementById(id);
+  el.addEventListener('keydown',e=>{
+    if(e.key==='Enter' && el.value.trim()){ fn(el.value); el.value=''; }
+  });
+});
+
+/* ================= Rendering ================= */
+function renderDashboard(){
+  const total=runners.length;
+  const ci=runners.filter(r=>r.checkin).length;
+  const onCourse=runners.filter(r=>r.checkin&&!r.finish).length;
+  const fin=runners.filter(r=>r.finish).length;
+  const stats=[
+    ['ผู้สมัครทั้งหมด',total,'Registered runners'],
+    ['Check-in แล้ว',ci,`${total?Math.round(ci/total*100):0}% ของผู้สมัคร`],
+    ['อยู่ในเส้นทาง',onCourse,'On course'],
+    ['เข้าเส้นชัย',fin,`${ci?Math.round(fin/ci*100):0}% ของผู้เริ่มวิ่ง`],
+  ];
+  document.getElementById('dash-stats').innerHTML=stats.map(s=>
+    `<div class="card card-pad stat"><span class="eyebrow">${s[0]}</span><div class="num">${s[1]}</div><div class="sub">${s[2]}</div></div>`).join('');
+
+  document.getElementById('dash-bars').innerHTML=CATEGORIES.map(c=>{
+    const grp=runners.filter(r=>r.cat===c);
+    const f=grp.filter(r=>r.finish).length;
+    const pct=grp.length?Math.round(f/grp.length*100):0;
+    return `<div class="bar-row"><b class="mono" style="text-align:left;color:var(--ink)">${c}</b>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <span class="mono">${f}/${grp.length} จบ</span></div>`;
+  }).join('');
+
+  const flow=[['Start',runners.filter(r=>r.checkin).length,'var(--start)'],
+    ...CHECKPOINTS.map(c=>[c.id,runners.filter(r=>r.cps[c.id]).length,'var(--cp)']),
+    ['Finish',fin,'var(--finish)']];
+  document.getElementById('dash-flow').innerHTML=flow.map(f=>
+    `<div class="cp-node"><span class="eyebrow" style="color:${f[2]}">${f[0]}</span><div class="num">${f[1]}</div></div>`).join('');
+
+  const latest=runners.filter(r=>r.finish).sort((a,b)=>b.finish-a.finish).slice(0,5);
+  document.getElementById('dash-latest').innerHTML = latest.length
+    ? latest.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)">
+        <span><b class="mono">${r.bib}</b> · ${r.name} <span style="color:var(--ink-2)">(${r.cat})</span></span>
+        <span class="mono" style="color:var(--ink-2)">${fmtDur(r.finish-r.checkin)}</span></div>`).join('')
+    : '<div class="empty">ยังไม่มีผู้เข้าเส้นชัย</div>';
+}
+
+function renderRunners(){
+  const q=(document.getElementById('runner-search').value||'').toLowerCase();
+  const cat=document.getElementById('runner-cat-filter').value;
+  const rows=runners.filter(r=>(!cat||r.cat===cat)&&(r.bib.includes(q)||r.name.toLowerCase().includes(q)));
+  document.getElementById('runners-table').innerHTML=
+    `<thead><tr><th>BIB</th><th>ชื่อ-นามสกุล</th><th>เพศ</th><th>Age Group</th><th>ระยะ</th><th>Check-in</th><th>Finish</th><th>สถานะ</th></tr></thead><tbody>`+
+    (rows.length?rows.map(r=>`<tr><td class="mono"><b>${r.bib}</b></td><td>${r.name}</td><td>${r.gender==='M'?'ชาย':'หญิง'}</td><td class="mono">${r.age}</td><td class="mono">${r.cat}</td><td class="mono">${fmtTime(r.checkin)}</td><td class="mono">${fmtTime(r.finish)}</td><td>${badge(r)}</td></tr>`).join('')
+    :`<tr><td colspan="8"><div class="empty">ไม่พบข้อมูล</div></td></tr>`)+'</tbody>';
+}
+
+function renderRecent(tableId, filterFn, cols){
+  const rows=scanLog.filter(filterFn).slice(0,8);
+  document.getElementById(tableId).innerHTML=
+    `<thead><tr><th>เวลา</th><th>BIB</th><th>ชื่อ</th><th>${cols||'ผลลัพธ์'}</th></tr></thead><tbody>`+
+    (rows.length?rows.map(l=>`<tr><td class="mono">${fmtTime(l.time)}</td><td class="mono"><b>${l.bib}</b></td><td>${l.name}</td>
+      <td>${l.ok?'<span class="badge b-fin" style="border-color:#bfe8d2;background:#e9f8f0;color:#137a46"><span class="dot" style="background:var(--ok)"></span>สำเร็จ</span>':`<span class="badge" style="border-color:#f3c8c8;background:#fdeeee;color:#a12626"><span class="dot" style="background:var(--warn)"></span>${l.msg||'ไม่สำเร็จ'}</span>`}</td></tr>`).join('')
+    :`<tr><td colspan="4"><div class="empty">ยังไม่มีการสแกนที่จุดนี้</div></td></tr>`)+'</tbody>';
+}
+
+function renderResults(){
+  const cat=document.getElementById('result-cat-filter').value;
+  const g=document.getElementById('result-gender-filter').value;
+  let rows=runners.filter(r=>r.finish&&(!cat||r.cat===cat)&&(!g||r.gender===g))
+    .map(r=>({...r,total:r.finish-r.checkin}));
+  // อันดับแยกตามระยะเสมอ (overall ภายในระยะ)
+  const rankMap={};
+  CATEGORIES.forEach(c=>{
+    runners.filter(r=>r.finish&&r.cat===c).sort((a,b)=>(a.finish-a.checkin)-(b.finish-b.checkin))
+      .forEach((r,i)=>rankMap[r.bib]=i+1);
+  });
+  rows.sort((a,b)=>a.total-b.total);
+  document.getElementById('results-table').innerHTML=
+    `<thead><tr><th>อันดับ (ระยะ)</th><th>BIB</th><th>ชื่อ-นามสกุล</th><th>ระยะ</th><th>เพศ</th><th>Start</th><th>Finish</th><th>Total Time</th><th></th></tr></thead><tbody>`+
+    (rows.length?rows.map(r=>`<tr>
+      <td class="mono"><b>${rankMap[r.bib]}</b></td><td class="mono"><b>${r.bib}</b></td><td>${r.name}</td>
+      <td class="mono">${r.cat}</td><td>${r.gender==='M'?'ชาย':'หญิง'}</td>
+      <td class="mono">${fmtTime(r.checkin)}</td><td class="mono">${fmtTime(r.finish)}</td>
+      <td class="mono"><b>${fmtDur(r.total)}</b></td>
+      <td><button class="btn btn-sm" onclick="openSlip('${r.bib}')">e-Slip</button></td></tr>`).join('')
+    :`<tr><td colspan="9"><div class="empty">ยังไม่มีผู้เข้าเส้นชัยตามเงื่อนไขที่เลือก</div></td></tr>`)+'</tbody>';
+}
+
+function renderLog(){
+  document.getElementById('log-table').innerHTML=
+    `<thead><tr><th>เวลา</th><th>จุดสแกน</th><th>BIB</th><th>ชื่อ</th><th>ผลลัพธ์</th></tr></thead><tbody>`+
+    (scanLog.length?scanLog.slice(0,120).map(l=>`<tr><td class="mono">${fmtTime(l.time)}</td><td>${l.station}</td><td class="mono"><b>${l.bib}</b></td><td>${l.name}</td>
+      <td>${l.ok?'<span style="color:var(--ok);font-weight:600">✓ บันทึกแล้ว</span>':`<span style="color:var(--warn);font-weight:600">✕ ${l.msg||'ไม่พบ'}</span>`}</td></tr>`).join('')
+    :`<tr><td colspan="5"><div class="empty">ยังไม่มีประวัติ</div></td></tr>`)+'</tbody>';
+}
+
+function renderAll(){
+  renderDashboard(); renderRunners(); renderResults(); renderLog();
+  renderRecent('recent-checkin',l=>l.station==='Check-in');
+  renderRecent('recent-checkpoint',l=>CHECKPOINTS.some(c=>l.station===c.name));
+  renderRecent('recent-finish',l=>l.station==='Finish');
+}
+
+/* ================= e-Slip ================= */
+function openSlip(bib){
+  const r=findRunner(bib); if(!r) return;
+  const rank=(()=>{const g=runners.filter(x=>x.finish&&x.cat===r.cat).sort((a,b)=>(a.finish-a.checkin)-(b.finish-b.checkin));return g.findIndex(x=>x.bib===bib)+1})();
+  const gRank=(()=>{const g=runners.filter(x=>x.finish&&x.cat===r.cat&&x.gender===r.gender).sort((a,b)=>(a.finish-a.checkin)-(b.finish-b.checkin));return g.findIndex(x=>x.bib===bib)+1})();
+  const aRank=(()=>{const g=runners.filter(x=>x.finish&&x.cat===r.cat&&x.gender===r.gender&&x.age===r.age).sort((a,b)=>(a.finish-a.checkin)-(b.finish-b.checkin));return g.findIndex(x=>x.bib===bib)+1})();
+  document.getElementById('eslip').innerHTML=`
+    <div class="head">
+      <div class="logo-mark">TT</div>
+      <b>TRAILTIME RACE RESULT</b><br><span style="color:var(--ink-2)">*Provisional Result</span>
+    </div>
+    <div class="row"><span>Bib No</span><b>${r.bib}</b></div>
+    <div class="row"><span>Name</span><b>${r.name}</b></div>
+    <div class="row"><span>Gender</span><span>${r.gender==='M'?'Male':'Female'}</span></div>
+    <div class="row"><span>Age Group</span><span>${r.age}</span></div>
+    <div class="row"><span>Nationality</span><span>${r.nat}</span></div>
+    <div class="row"><span>Category</span><span>${r.cat}</span></div>
+    <div class="hr"></div>
+    <div class="row"><span>Check in</span><span>${fmtTime(r.checkin)}</span></div>
+    ${CHECKPOINTS.filter(c=>r.cps[c.id]).map(c=>`<div class="row"><span>${c.id} ${c.name.replace(c.id+' ','')}</span><span>${fmtTime(r.cps[c.id])}</span></div>`).join('')}
+    <div class="row"><span>Finish Time</span><span>${fmtTime(r.finish)}</span></div>
+    <div class="row"><span>Total Time</span><b>${fmtDur(r.finish?r.finish-r.checkin:null)}</b></div>
+    <div class="hr"></div>
+    <div class="rank">Overall Rank : ${rank||'—'}</div>
+    <div class="row"><span>Gender Rank</span><span>${gRank||'—'}</span></div>
+    <div class="row"><span>Age Group Rank</span><span>${aRank||'—'}</span></div>
+    <div class="foot">Timing System · TrailTime<br>Monitor / Tablet / Mobile / Web-site</div>
+    <div class="actions">
+      <button class="btn" onclick="closeSlip()">ปิด</button>
+      <button class="btn btn-dark" onclick="window.print()">พิมพ์ e-Slip</button>
+    </div>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeSlip(){document.getElementById('modal').classList.remove('open')}
+
+/* ================= Export ================= */
+function exportRunnersCSV(){
+  const head='BIB,Name,Gender,AgeGroup,Category,Checkin,Finish,Status\n';
+  const body=runners.map(r=>[r.bib,r.name,r.gender,r.age,r.cat,fmtTime(r.checkin),fmtTime(r.finish),statusOf(r).txt].join(',')).join('\n');
+  download('runners.csv','\uFEFF'+head+body);
+}
+function exportResultsCSV(){
+  const head='Rank,BIB,Name,Category,Gender,Start,Finish,TotalTime\n';
+  const rows=[];
+  CATEGORIES.forEach(c=>{
+    runners.filter(r=>r.finish&&r.cat===c).sort((a,b)=>(a.finish-a.checkin)-(b.finish-b.checkin))
+      .forEach((r,i)=>rows.push([i+1,r.bib,r.name,r.cat,r.gender,fmtTime(r.checkin),fmtTime(r.finish),fmtDur(r.finish-r.checkin)].join(',')));
+  });
+  download('race-results.csv','\uFEFF'+head+rows.join('\n'));
+}
+
+/* ================= Init ================= */
+document.getElementById('cp-select').innerHTML=CHECKPOINTS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+['runner-cat-filter','result-cat-filter'].forEach(id=>{
+  document.getElementById(id).innerHTML+=CATEGORIES.map(c=>`<option>${c}</option>`).join('');
+});
+document.getElementById('runner-search').addEventListener('input',renderRunners);
+document.getElementById('runner-cat-filter').addEventListener('change',renderRunners);
+document.getElementById('result-cat-filter').addEventListener('change',renderResults);
+document.getElementById('result-gender-filter').addEventListener('change',renderResults);
+renderAll();
+</script>
+</body>
+</html>

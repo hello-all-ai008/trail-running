@@ -1,0 +1,42 @@
+:root {
+  /* trail palette — earthy base, sunrise accent */
+  --color-bg: oklch(96% 0.015 120);
+  --color-bg-deep: oklch(28% 0.04 150);
+  --color-surface: oklch(99% 0.005 100);
+  --color-forest: oklch(38% 0.08 155);
+  --color-forest-dim: oklch(55% 0.06 155);
+  --color-soil: oklch(42% 0.05 55);
+  --color-sky: oklch(72% 0.09 235);
+  --color-accent: oklch(72% 0.16 55); /* sunrise orange */
+  --color-text: oklch(22% 0.02 150);
+  --color-text-muted: oklch(45% 0.02 150);
+
+  /* status colors — carried over from implament_plan mockup, reserved for dashboard states */
+  --color-status-yellow: #fff200;
+  --color-status-green: #44ff9a;
+  --color-status-red: #ff5c7c;
+  --color-status-blue: #5aa8ff;
+  --color-status-orange: #ffb547;
+
+  /* liquid glass */
+  --glass-bg: oklch(99% 0 0 / 0.45);
+  --glass-bg-strong: oklch(99% 0 0 / 0.65);
+  --glass-border: oklch(100% 0 0 / 0.5);
+  --glass-blur: 20px;
+  --glass-shadow: 0 18px 50px oklch(28% 0.04 150 / 0.18);
+  --radius-glass: 24px;
+
+  /* type */
+  --text-base: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+  --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
+  --text-hero: clamp(2.5rem, 1.6rem + 4vw, 4.5rem);
+
+  /* rhythm */
+  --space-section: clamp(3rem, 2.4rem + 3vw, 6rem);
+  --space-md: 1.5rem;
+
+  /* motion */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
