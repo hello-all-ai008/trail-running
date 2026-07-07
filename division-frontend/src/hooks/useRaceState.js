@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { initialRunners, CATEGORIES, totalMs } from '../lib/raceData'
 import { applyCheckin, applyCheckpoint, applyFinish, seedScanLog } from '../lib/raceEngine'
+import * as api from '../lib/api'
 
 // v2: data shape changed (real event database) — new keys so stale v1 data is ignored
 const STORAGE_KEYS = {
   runners: 'tt:v2:runners',
   scanLog: 'tt:v2:scanLog',
 }
+
+/** Set VITE_USE_MOCK_DATA=false to point this hook at the real Go API + Supabase Realtime. */
+export const USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
 
 /**
  * Read + parse a localStorage key, falling back to a default on any error.
@@ -25,47 +29,102 @@ function readStored(key, makeFallback) {
   }
 }
 
+const SCAN_CODES = { checkin: 'CHECKIN', finish: 'FINISH' }
+
 /**
- * Owns app state: runners (seeded from the real event database), the audit
- * scanLog, and per-station last-scan results for the LED boards.
- * Persists to localStorage. All updates immutable via raceEngine.
+ * Owns app state: runners, the audit scanLog, and per-station last-scan
+ * results for the LED boards. Mock mode persists to localStorage and
+ * applies raceEngine.js locally; live mode calls division-backend's API
+ * and syncs across stations via Supabase Realtime on live_progress.
  */
 export function useRaceState() {
-  const [runners, setRunners] = useState(() => readStored(STORAGE_KEYS.runners, () => initialRunners))
-  const [scanLog, setScanLog] = useState(() => readStored(STORAGE_KEYS.scanLog, () => seedScanLog(initialRunners)))
+  const [runners, setRunners] = useState(() =>
+    USE_MOCK ? readStored(STORAGE_KEYS.runners, () => initialRunners) : [],
+  )
+  const [scanLog, setScanLog] = useState(() =>
+    USE_MOCK ? readStored(STORAGE_KEYS.scanLog, () => seedScanLog(initialRunners)) : [],
+  )
   /** last ScanResult per station key: 'checkin' | 'checkpoint' | 'finish' */
   const [lastScan, setLastScan] = useState({})
 
   useEffect(() => {
+    if (!USE_MOCK) return
     window.localStorage.setItem(STORAGE_KEYS.runners, JSON.stringify(runners))
   }, [runners])
   useEffect(() => {
+    if (!USE_MOCK) return
     window.localStorage.setItem(STORAGE_KEYS.scanLog, JSON.stringify(scanLog))
   }, [scanLog])
 
-  const commit = useCallback((stationKey, { state, result }) => {
+  // Live mode: initial load + resync on any scan from any station.
+  useEffect(() => {
+    if (USE_MOCK) return
+    let cancelled = false
+    const refresh = () => api.fetchRunners().then((data) => { if (!cancelled) setRunners(data) })
+    refresh()
+    const unsubscribe = api.subscribeLiveProgress(refresh)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
+  }, [])
+
+  const commitMock = useCallback((stationKey, { state, result }) => {
     setRunners(state.runners)
     setScanLog(state.scanLog)
     setLastScan((prev) => ({ ...prev, [stationKey]: result }))
     return result
   }, [])
 
+  // Real backend: server is the source of truth for runners; the scan log
+  // here is a client-accumulated view of this device's own scans only —
+  // a full server-side scan-log endpoint is a follow-up (out of scope
+  // for this pass, see ~/.claude/plans backend plan's "out of scope" list).
+  const commitLive = useCallback((stationKey, result) => {
+    if (result.runner) {
+      setRunners((prev) => prev.map((r) => (r.bib === result.runner.bib ? result.runner : r)))
+    }
+    setScanLog((prev) => [
+      {
+        time: new Date().toISOString(),
+        station: result.station,
+        bib: result.runner?.bib ?? '—',
+        name: result.runner?.name ?? '',
+        ok: result.outcome === 'ok',
+        msg: result.outcome === 'ok' ? '' : result.outcome,
+      },
+      ...prev,
+    ])
+    setLastScan((prev) => ({ ...prev, [stationKey]: result }))
+    return result
+  }, [])
+
   const scanCheckin = useCallback(
-    (value) => commit('checkin', applyCheckin({ runners, scanLog }, value)),
-    [commit, runners, scanLog],
+    (value) => {
+      if (USE_MOCK) return Promise.resolve(commitMock('checkin', applyCheckin({ runners, scanLog }, value)))
+      return api.postScan(value, SCAN_CODES.checkin).then((result) => commitLive('checkin', result))
+    },
+    [commitMock, commitLive, runners, scanLog],
   )
 
   const scanCheckpoint = useCallback(
-    (value, cpId) => commit('checkpoint', applyCheckpoint({ runners, scanLog }, value, cpId)),
-    [commit, runners, scanLog],
+    (value, cpId) => {
+      if (USE_MOCK) return Promise.resolve(commitMock('checkpoint', applyCheckpoint({ runners, scanLog }, value, cpId)))
+      return api.postScan(value, cpId).then((result) => commitLive('checkpoint', result))
+    },
+    [commitMock, commitLive, runners, scanLog],
   )
 
   const scanFinish = useCallback(
-    (value) => commit('finish', applyFinish({ runners, scanLog }, value)),
-    [commit, runners, scanLog],
+    (value) => {
+      if (USE_MOCK) return Promise.resolve(commitMock('finish', applyFinish({ runners, scanLog }, value)))
+      return api.postScan(value, SCAN_CODES.finish).then((result) => commitLive('finish', result))
+    },
+    [commitMock, commitLive, runners, scanLog],
   )
 
   const resetDemo = useCallback(() => {
+    if (!USE_MOCK) return
     setRunners(initialRunners)
     setScanLog(seedScanLog(initialRunners))
     setLastScan({})

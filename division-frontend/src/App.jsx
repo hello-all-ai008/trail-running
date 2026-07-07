@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useRaceState } from './hooks/useRaceState'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRaceState, USE_MOCK } from './hooks/useRaceState'
 import { useHashRoute } from './hooks/useHashRoute'
 import { fmtTime, fmtTotal } from './lib/raceData'
+import * as api from './lib/api'
 import Sidebar from './components/sidebar/Sidebar'
 import Toast from './components/ui/Toast'
 import ESlipModal from './components/eslip/ESlipModal'
+import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import RunnersPage from './pages/RunnersPage'
 import StationPage from './pages/StationPage'
@@ -32,8 +34,27 @@ function noticeFor(result) {
   }
 }
 
+/**
+ * Real-backend auth gate. Mock mode never needs a session, so it resolves
+ * to "signed in" immediately. Not a hook itself — used inside App's own
+ * useState/useEffect below to keep the rules-of-hooks call order fixed
+ * regardless of USE_MOCK (a build-time constant, not a runtime toggle).
+ */
+function useStaffSession() {
+  const [session, setSession] = useState(() => (USE_MOCK ? null : undefined))
+
+  useEffect(() => {
+    if (USE_MOCK) return
+    api.getSession().then(setSession)
+    return api.onAuthChange(setSession)
+  }, [])
+
+  return session
+}
+
 function App() {
   const [page, navigate] = useHashRoute()
+  const session = useStaffSession()
   const race = useRaceState()
   const [notice, setNotice] = useState(null)
   const [slipBib, setSlipBib] = useState(null)
@@ -43,17 +64,20 @@ function App() {
   }, [])
 
   const { scanCheckin, scanCheckpoint, scanFinish } = race
-  const onScanCheckin = useCallback((value) => notify(scanCheckin(value)), [notify, scanCheckin])
+  const onScanCheckin = useCallback((value) => { scanCheckin(value).then(notify) }, [notify, scanCheckin])
   const onScanCheckpoint = useCallback(
-    (value, cpId) => notify(scanCheckpoint(value, cpId)),
+    (value, cpId) => { scanCheckpoint(value, cpId).then(notify) },
     [notify, scanCheckpoint],
   )
-  const onScanFinish = useCallback((value) => notify(scanFinish(value)), [notify, scanFinish])
+  const onScanFinish = useCallback((value) => { scanFinish(value).then(notify) }, [notify, scanFinish])
 
   const slipRunner = useMemo(
     () => (slipBib ? race.runners.find((r) => r.bib === slipBib) ?? null : null),
     [slipBib, race.runners],
   )
+
+  if (!USE_MOCK && session === undefined) return null
+  if (!USE_MOCK && !session) return <LoginPage onSignedIn={() => {}} />
 
   return (
     <div className="app">

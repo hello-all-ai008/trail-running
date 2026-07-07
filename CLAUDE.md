@@ -13,7 +13,7 @@ Tone: direct, short, terse. Praise when earned, criticize when earned. No sugarc
 
 Product: web-based RFID timing + management system for trail races (Check-in → Start → Checkpoint → Finish → Result).
 
-**Actual state (2026-07-07):** Frontend is a real React app (`division-frontend/`) seeded with real event data, still localStorage-only. Backend is scaffolded (`division-backend/`, Go + Supabase confirmed) but **zero code written**. No database, no auth, no real-time. Not a git repo yet.
+**Actual state (2026-07-07):** Frontend is a real React app (`division-frontend/`) seeded with real event data; defaults to localStorage but can point at the real backend (`VITE_USE_MOCK_DATA=false`). Backend (`division-backend/`, Go + Supabase) is live for check-in/checkpoint/finish scanning against a real Supabase Postgres project, staff-JWT-authed, with Realtime sync across stations — not yet verified end-to-end pending one real staff account Gong needs to create. Now a git repo.
 
 6-step workflow hardcoded in the mockup (use as anchor for roadmap talk):
 1. Data Base — import runner Excel
@@ -33,9 +33,9 @@ Status: multi-page app live (sidebar + 7 pages), real 121-runner dataset seeded 
 Missing: still localStorage-only — no real backend, no cross-device sync between checkpoint stations. Blocked on Backend/API.
 
 ### 2. Backend / API — Korn
-Owns `division-backend/` (Go) + `supabase/` (Postgres). Direction confirmed: Go talks to Postgres directly via pgx/sqlc, Supabase for Auth + Realtime + hosting, Fly.io for the Go service. See `division-backend/CLAUDE.md` for full schema/API plan.
-Status: **division scaffolded, zero code**. `division-backend/` and `supabase/` are empty. Frontend is ahead of backend right now — its scan/rank logic already works, just needs a real API + DB behind it instead of localStorage.
-Missing: everything — migrations, Go service, cross-device data sync (multiple checkpoint stations need a central server, not per-device localStorage).
+Owns `division-backend/` (Go) + `supabase/` (Postgres). Direction: Go talks to Postgres directly via pgx, Supabase for Auth + Realtime + hosting. See `division-backend/CLAUDE.md` for full schema/API detail.
+Status: **live for Steps 4-6**. Real Supabase project (`trail-running`, ap-southeast-1), schema + RLS applied, seeded with the real 121-runner database. `POST /scan` + read endpoints (runners/checkpoints/results/stats) built, staff-JWT-authed, unit tested. `division-frontend` wired behind `VITE_USE_MOCK_DATA=false` — real path calls this API + subscribes to Realtime; default mock/localStorage path untouched.
+Missing: a real staff Supabase Auth account to verify the loop end-to-end (Gong needs to create one via the Supabase dashboard — I won't script around Auth's user creation). BIB/RFID admin endpoints (Steps 2-3), Excel import in Go (Step 1), Fly.io deploy, server-side scan-log read endpoint.
 
 ### 3. RFID / Hardware Integration
 Status: mocked with EPC/BIB strings in code, no real reader connected.
@@ -60,5 +60,6 @@ Before executing any plan — new feature, bug fix, or anything that follows a r
 
 ## Self-reminders
 
-- This project isn't a git repo yet — once code gets serious, remind Gong to `git init`.
+- Git repo since 2026-07-07. `.obsidian/`, `.codex/`, and `.claude/settings.local.json` are gitignored — they hold local tool secrets (Obsidian REST API key, Codex bearer token). Never re-add them.
 - Don't stuff departments/features into the plan that don't exist in the actual code.
+- `division-backend/.env` and `division-frontend/.env` hold real secrets (DB password, Supabase keys) once Gong fills them from `.env.example` — never commit those either.
