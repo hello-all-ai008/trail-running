@@ -1,0 +1,28 @@
+# Fly.io config for the Trail Running Timing API.
+# Region nrt (Tokyo) sits next to the Supabase project (ap-northeast-1) to
+# keep DB latency low. Secrets (DATABASE_URL, SUPABASE_URL) are NOT set here —
+# they are injected via `fly secrets set` so they never land in git.
+
+app = "trail-running-api"
+primary_region = "nrt"
+
+[build]
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Keep one machine warm so the first client scan during a demo doesn't pay
+  # a cold-start penalty (pool init + JWKS fetch happen at boot).
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "5s"
+    method = "get"
+    path = "/healthz"

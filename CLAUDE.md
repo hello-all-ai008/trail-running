@@ -34,7 +34,7 @@ Missing: still localStorage-only — no real backend, no cross-device sync betwe
 
 ### 2. Backend / API — Korn
 Owns `division-backend/` (Go) + `supabase/` (Postgres). Direction: Go talks to Postgres directly via pgx, Supabase for Auth + Realtime + hosting. See `division-backend/CLAUDE.md` for full schema/API detail.
-Status: **live for Steps 4-6**. Real Supabase project (`trail-running`, ap-southeast-1), schema + RLS applied, seeded with the real 121-runner database. `POST /scan` + read endpoints (runners/checkpoints/results/stats) built, staff-JWT-authed, unit tested. `division-frontend` wired behind `VITE_USE_MOCK_DATA=false` — real path calls this API + subscribes to Realtime; default mock/localStorage path untouched.
+Status: **live for Steps 4-6**. Real Supabase project (`backend-trail-running`, `emuojzwieluldwvbskxp`, ap-northeast-1 — migrated 2026-07-07 from the original MCP-created `trail-running` project, which is now paused), schema + RLS applied, seeded with the real 121-runner database. `POST /scan` + read endpoints (runners/checkpoints/results/stats) built, staff-JWT-authed, unit tested. `division-frontend` wired behind `VITE_USE_MOCK_DATA=false` — real path calls this API + subscribes to Realtime; default mock/localStorage path untouched.
 Missing: a real staff Supabase Auth account to verify the loop end-to-end (Gong needs to create one via the Supabase dashboard — I won't script around Auth's user creation). BIB/RFID admin endpoints (Steps 2-3), Excel import in Go (Step 1), Fly.io deploy, server-side scan-log read endpoint.
 
 ### 3. RFID / Hardware Integration
