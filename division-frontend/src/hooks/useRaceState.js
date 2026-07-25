@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { initialRunners, CATEGORIES, totalMs } from '../lib/raceData'
+import { initialRunners, totalMs } from '../lib/raceData'
 import { applyCheckin, applyCheckpoint, applyFinish, seedScanLog } from '../lib/raceEngine'
+import { computeRanks } from '../lib/results'
 import * as api from '../lib/api'
 
 // v2: data shape changed (real event database) — new keys so stale v1 data is ignored
@@ -145,28 +146,7 @@ export function useRaceState() {
   }, [runners])
 
   /** bib -> { overall, gender, age } ranks within category (gun time). */
-  const ranks = useMemo(() => {
-    const map = {}
-    CATEGORIES.forEach((cat) => {
-      const finished = runners
-        .filter((r) => r.finish && r.category === cat)
-        .slice()
-        .sort((a, b) => totalMs(a) - totalMs(b))
-      finished.forEach((r, i) => {
-        map[r.bib] = { overall: i + 1 }
-      })
-      const byGender = {}
-      const byAge = {}
-      finished.forEach((r) => {
-        byGender[r.gender] = (byGender[r.gender] || 0) + 1
-        map[r.bib].gender = byGender[r.gender]
-        const ageKey = `${r.gender}:${r.ageGroup}`
-        byAge[ageKey] = (byAge[ageKey] || 0) + 1
-        map[r.bib].age = byAge[ageKey]
-      })
-    })
-    return map
-  }, [runners])
+  const ranks = useMemo(() => computeRanks(runners), [runners])
 
   /** All finishers sorted by gun time (fastest first, across categories). */
   const finishers = useMemo(

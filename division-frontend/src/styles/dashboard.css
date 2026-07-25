@@ -120,6 +120,24 @@
 }
 .sidebar__item svg { flex: none; }
 
+.sidebar__preview-link {
+  margin-top: auto;
+  padding: 0.6rem 0.65rem 0.2rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+}
+.sidebar__preview-link:hover,
+.sidebar__preview-link:focus-visible {
+  text-decoration: underline;
+  color: var(--color-text);
+}
+
 /* ---- Page head ---- */
 .page-head { margin-bottom: 1.4rem; }
 .page-head h1 {
@@ -307,13 +325,35 @@
   background: linear-gradient(135deg, var(--color-status-red), oklch(70% 0.18 25));
 }
 .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+/* Pill-shaped toggle button for filter strips — pair with btn-accent (pressed)
+   / btn-secondary (idle) and aria-pressed, like .scan-mode-toggle does. */
+.filter-chip {
+  border-radius: 999px;
+  padding: 0.34rem 0.85rem;
+  font-size: 0.78rem;
+}
+.filter-chip[aria-pressed='true'] {
+  box-shadow: 0 4px 14px color-mix(in oklch, var(--color-accent) 26%, transparent);
+}
 
 /* ---- Station pages ---- */
 .station {
   display: grid;
   grid-template-columns: 1fr 380px;
+  grid-template-areas:
+    "scan led"
+    "table led";
   gap: 1.1rem;
   align-items: start;
+}
+.station__scan { grid-area: scan; }
+.station__led { grid-area: led; }
+.station__recent { grid-area: table; }
+
+.scan-mode-toggle {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 .station-tag {
   display: inline-flex;
@@ -372,7 +412,83 @@
   color: var(--color-text-muted);
   margin: 0.5rem 0 0;
 }
-.station__recent { margin-top: 1rem; }
+
+/* ---- Camera scan (mobile) ---- */
+.cam-scan {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 420px;
+  border: 2px solid var(--color-forest);
+  border-radius: 14px;
+  overflow: hidden;
+  background: oklch(10% 0 0);
+}
+.cam-scan__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cam-scan__frame {
+  position: absolute;
+  inset: 14% 18%;
+  border: 3px solid var(--color-accent);
+  border-radius: 12px;
+  box-shadow: 0 0 0 999px oklch(0% 0 0 / 0.35);
+  pointer-events: none;
+}
+.cam-scan__hint {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: oklch(98% 0 0);
+  text-shadow: 0 1px 3px oklch(0% 0 0 / 0.6);
+}
+.cam-scan__status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: oklch(90% 0.02 150);
+  font-size: 0.9rem;
+}
+.cam-scan__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  color: oklch(95% 0.01 150);
+  background: oklch(15% 0.01 260 / 0.85);
+}
+.cam-scan__torch {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid oklch(100% 0 0 / 0.4);
+  background: oklch(0% 0 0 / 0.45);
+  color: oklch(98% 0 0);
+  font-size: 1.2rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.cam-scan__torch.is-on {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
 
 /* ---- LED board (signature device) ---- */
 .led {
@@ -444,7 +560,10 @@
   border-bottom: 1px solid var(--glass-border);
   white-space: nowrap;
 }
-.data-table th {
+/* Scoped to thead on purpose: a th elsewhere in the table (a grouped-results
+   row-group header) must not inherit sticky/uppercase. Every th in the app
+   lives in a thead, so this is a no-op for the other tables. */
+.data-table thead th {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -524,7 +643,7 @@
   background: oklch(99% 0.003 100);
   color: oklch(22% 0.02 150);
   border-radius: 14px;
-  width: 330px;
+  width: min(330px, 92vw);
   max-height: 92vh;
   overflow: auto;
   padding: 1.6rem 1.6rem 1.25rem;
@@ -605,22 +724,63 @@
   .eslip__actions { display: none; }
 }
 
-/* ---- Responsive ---- */
-@media (max-width: 960px) {
+/* ---- Responsive — breakpoints match web/testing.md's standard set (768/1024) ---- */
+@media (max-width: 1023px) {
   .app { gap: 0.75rem; }
   .sidebar { width: 66px; padding: 0.9rem 0.5rem; }
   .sidebar__brand, .sidebar__label, .sidebar__group { display: none; }
   .sidebar__logo { justify-content: center; padding-bottom: 0.8rem; }
   .sidebar__item { justify-content: center; padding: 0.7rem 0.5rem; }
-  .station { grid-template-columns: 1fr; }
+  .station { grid-template-columns: 1fr 320px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dash-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 560px) {
+/* <768px: nav rail -> fixed bottom tab bar (thumb reach for one-handed scan stations) */
+@media (max-width: 767px) {
+  .app { gap: 0; padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
+  .app__main { max-width: none; }
+
+  .sidebar {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto;
+    max-height: none;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.4rem 0.4rem calc(0.4rem + env(safe-area-inset-bottom));
+    border-radius: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    z-index: 40;
+  }
+  .sidebar__logo { display: none; }
+  .sidebar__nav {
+    flex-direction: row;
+    flex: 1;
+    justify-content: space-around;
+    gap: 0;
+  }
+  .sidebar__group { display: none; }
+  .sidebar__preview-link { display: none; }
+  .sidebar__item {
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.4rem;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 0.6rem;
+  }
+  .sidebar__label { display: block; font-size: 0.62rem; }
+
+  .station {
+    grid-template-columns: 1fr;
+    grid-template-areas: "scan" "led" "table";
+  }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .dash-grid { grid-template-columns: 1fr; }
   .cp-flow { flex-wrap: wrap; }
   .cp-node { min-width: 42%; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* ---- Staff login gate (real-backend path only) ---- */

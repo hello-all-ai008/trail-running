@@ -1,0 +1,202 @@
+/* ---- Results page: division filter bar + grouped results table ----
+   Layered on top of dashboard.css. Everything here is scoped to .filter-bar /
+   .results-* so the other three data tables keep their current behaviour. */
+
+/* ---- Filter bar ---- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.7rem 1.15rem;
+  margin-bottom: 0.75rem;
+}
+.filter-bar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.filter-bar__legend {
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.filter-bar__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+/* Own row, right-aligned, always. Sharing row 1 works only until the
+   conditional ล้างตัวกรอง button appears, and the resulting reflow would shove
+   the whole table down the moment a filter is applied. */
+.filter-bar__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1 1 100%;
+  justify-content: flex-end;
+}
+
+/* ---- Summary line (the page's only live region) ---- */
+.results-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.results-summary__count {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.results-summary__sep { opacity: 0.4; }
+.results-summary__filter {
+  color: var(--color-forest);
+  font-weight: 700;
+}
+
+/* ---- Table shell ----
+   Cancels .glass-panel's hover lift: a 560px data grid should not levitate
+   while it is being read. Results only — the other tables keep the lift.
+
+   Must out-specify .glass-panel:hover, not merely follow it: this file is
+   @import-ed from index.css, so its rules are inlined ABOVE index.css's own
+   .glass-panel:hover and would lose an equal-specificity tie on source order. */
+.glass-panel.results-wrap:hover {
+  transform: none;
+  box-shadow: var(--glass-shadow);
+}
+
+/* 11 columns overflow .app__main by ~34px at the default cell padding, so the
+   e-Slip action sits outside the visible area and needs a horizontal scroll to
+   reach (.table-wrap is overflow:auto — it scrolls, it does not clip). Tighter
+   gutters fit the whole row on screen. Declared before the group-header rule so
+   that rule's own padding still wins (equal specificity, later wins). */
+.results-table th,
+.results-table td {
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+}
+
+/* ---- Group header row ----
+   A th outside thead, so it inherits none of .data-table thead th — it sets its
+   own padding/background/borders and skips the uppercase + letter-spacing that
+   would mangle Thai text. */
+.results-group__head > th {
+  padding: 0.75rem 0.85rem 0.5rem;
+  text-align: left;
+  white-space: normal;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--color-forest);
+  background: color-mix(in oklch, var(--color-forest) 6%, var(--glass-bg-strong));
+  border-top: 1px solid color-mix(in oklch, var(--color-forest) 22%, transparent);
+  border-bottom: 1px solid var(--glass-border);
+}
+.results-table tbody:first-of-type .results-group__head > th {
+  border-top: none;
+}
+
+/* Sticky on the inner span, never on the th: .data-table is border-collapse,
+   and sticky table cells under collapsed borders are unreliable (iOS Safari).
+   Keeps the division label readable while the wide table is scrolled right. */
+.results-group__label {
+  position: sticky;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-left: 0.6rem;
+}
+.results-group__label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+.results-group__count {
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+}
+
+/* ---- Rank columns: order is fixed, only emphasis follows the grouping depth ---- */
+.data-table .rank--primary {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+.data-table .rank--muted {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+.data-table thead th.rank--primary {
+  font-size: 0.68rem;
+  color: var(--color-accent);
+}
+.data-table thead th.rank--muted {
+  opacity: 1;
+}
+
+/* .empty loses to `.data-table td { text-align: left }` on specificity. Scoped
+   to this table rather than fixed globally, which would move the other three. */
+.results-table td.empty {
+  text-align: center;
+}
+
+/* max-width on a td is ignored under table-layout: auto — truncate the span. */
+.results-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Responsive — 768/1024, matching the project standard ---- */
+@media (max-width: 1023px) {
+  /* Start and Finish are the two least decision-relevant columns — Total Time
+     is what settles a placing. Dropping both keeps the e-Slip action reachable
+     without a horizontal scroll on a tablet. */
+  .results-table .col-start,
+  .results-table .col-finish {
+    display: none;
+  }
+  .results-name { max-width: 26vw; }
+  /* Last ~34px: scale the type down rather than drop a ninth column. */
+  .results-table { font-size: 0.8rem; }
+  .filter-bar { gap: 0.6rem 0.85rem; }
+}
+
+@media (max-width: 767px) {
+  /* Down to 5 columns: the rank that matches the current depth, BIB, name,
+     total time, e-Slip. col-start/col-finish are already hidden by the 1023px
+     block above. Hiding .rank--muted works because the class is on the th as
+     well as the td. */
+  .results-table .col-gender,
+  .results-table .col-age,
+  .results-table .rank--muted {
+    display: none;
+  }
+
+  .results-name { max-width: 42vw; }
+  .results-wrap { max-height: none; }
+
+  .filter-bar__group { flex: 1 1 100%; }
+  .filter-bar .search--select { width: 100%; }
+}

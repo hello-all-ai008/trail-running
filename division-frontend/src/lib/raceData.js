@@ -28,6 +28,58 @@ export const initialRunners = runnersJson
 
 export const CATEGORIES = ['MKT33', 'MKT50']
 
+/**
+ * Demographic vocabulary shared by the public registration form and the
+ * results page. Mirrored by hand in SQL CHECK constraints —
+ * supabase/migrations/0001_init.sql:48 and 0004_registrations.sql:12.
+ * Adding a gender is a two-place change (here + a migration).
+ */
+export const GENDERS = ['Male', 'Female', 'LGBTIQAN+']
+
+/**
+ * Age brackets in ascending order; `minAge` is the inclusive lower bound.
+ * Doubles as the display/sort order. Keys are the exact strings used in
+ * src/data/runners.json and in the `age_group` column, so a registration
+ * slots straight into the same rankings as the seeded event.
+ */
+export const AGE_BRACKETS = [
+  { key: '20-39', minAge: 0 },
+  { key: '40-49', minAge: 40 },
+  { key: '50-59', minAge: 50 },
+  { key: '60 Plus', minAge: 60 },
+]
+
+/** @type {ReadonlyArray<string>} */
+export const AGE_GROUPS = AGE_BRACKETS.map((b) => b.key)
+
+/** Imported records may carry an empty gender/ageGroup — e.g. BIB 5050. */
+export const UNSPECIFIED = ''
+export const UNSPECIFIED_LABEL = 'ไม่ระบุ'
+
+const GENDER_TH = { Male: 'ชาย', Female: 'หญิง', 'LGBTIQAN+': 'LGBTIQAN+' }
+
+/**
+ * Thai display label for a gender value. Unknown values pass through so a new
+ * backend value shows up instead of silently reading as "unspecified".
+ * @param {string} value
+ * @returns {string}
+ */
+export function genderLabel(value) {
+  if (!value) return UNSPECIFIED_LABEL
+  return GENDER_TH[value] ?? value
+}
+
+/**
+ * Display label for an age bracket. Brackets stay untranslated on purpose
+ * ('60 Plus', not '60 ปีขึ้นไป') so group headers, the e-Slip, the CSV export
+ * and the source Excel all read identically — do not "fix" this to Thai.
+ * @param {string} value
+ * @returns {string}
+ */
+export function ageGroupLabel(value) {
+  return value || UNSPECIFIED_LABEL
+}
+
 export const CHECKPOINTS = [
   { id: 'A1', name: 'A1 Mae Kha Nin' },
   { id: 'A2', name: 'A2 Doi Pha Daeng' },
@@ -117,6 +169,18 @@ export function findRunner(runners, value) {
   const v = String(value || '').trim().toUpperCase().replaceAll('*', '')
   if (!v) return undefined
   return runners.find((r) => r.bib === v || r.barcode.replaceAll('*', '') === v)
+}
+
+/**
+ * RFC 4180 field — quoted only when it contains a separator, a quote, a line
+ * break, or edge whitespace. Runner and registration names are free text, and
+ * one comma would silently shift every column to its right.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function csvCell(value) {
+  const s = value === null || value === undefined ? '' : String(value)
+  return /[",\r\n]|^\s|\s$/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
 }
 
 /**

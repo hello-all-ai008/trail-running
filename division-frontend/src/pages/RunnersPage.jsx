@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
 import StatusBadge from '../components/ui/StatusBadge'
-import { CATEGORIES, fmtTime, statusOf, downloadCSV } from '../lib/raceData'
-
-const GENDER_TH = { Male: 'ชาย', Female: 'หญิง' }
+import { CATEGORIES, ageGroupLabel, csvCell, fmtTime, genderLabel, statusOf, downloadCSV } from '../lib/raceData'
 
 /**
  * Runner database — real entrants imported from Timing System.xlsx.
@@ -27,7 +25,9 @@ function RunnersPage({ runners }) {
     const head = 'BIB,Name,Gender,AgeGroup,Category,Checkin,Finish,Status\n'
     const body = rows
       .map((r) =>
-        [r.bib, r.name, r.gender, r.ageGroup, r.category, fmtTime(r.checkin), fmtTime(r.finish), statusOf(r).label].join(','),
+        [r.bib, r.name, r.gender, r.ageGroup, r.category, fmtTime(r.checkin), fmtTime(r.finish), statusOf(r).label]
+          .map(csvCell)
+          .join(','),
       )
       .join('\n')
     downloadCSV('runners.csv', head + body)
@@ -82,8 +82,8 @@ function RunnersPage({ runners }) {
                   <tr key={r.bib}>
                     <td className="mono"><b>{r.bib}</b></td>
                     <td>{r.name}</td>
-                    <td>{GENDER_TH[r.gender] ?? r.gender}</td>
-                    <td className="mono">{r.ageGroup}</td>
+                    <td>{genderLabel(r.gender)}</td>
+                    <td className="mono">{ageGroupLabel(r.ageGroup)}</td>
                     <td className="mono">{r.category}</td>
                     <td className="mono">{fmtTime(r.checkin)}</td>
                     <td className="mono">{fmtTime(r.finish)}</td>

@@ -1,35 +1,46 @@
 import { useMemo, useState } from 'react'
-import Button from '../components/ui/Button'
-import { CATEGORIES, fmtTime, fmtTotal, downloadCSV } from '../lib/raceData'
-
-const GENDER_TH = { Male: 'ชาย', Female: 'หญิง' }
+import ResultsFilterBar from '../components/results/ResultsFilterBar'
+import ResultsTable from '../components/results/ResultsTable'
+import { downloadCSV } from '../lib/raceData'
+import {
+  DEFAULT_GROUP_MODE,
+  EMPTY_FILTER,
+  buildResultsView,
+  resultsCsv,
+  resultsCsvFilename,
+} from '../lib/results'
 
 /**
- * Race results — rank within category by gun time (Finish − Start),
- * matching the real event's Excel. Filters + e-Slip + CSV export.
+ * Race results, grouped into award divisions (ระยะ × เพศ × รุ่นอายุ — the same
+ * dimensions the registration form collects) and ranked by gun time within
+ * each. Grouping is always at least by distance: a 33 km time is not
+ * comparable to a 50 km one, so a single cross-distance list would make every
+ * rank column misleading.
  * @param {{
  *   finishers: Array<import('../lib/raceData').Runner>,
- *   ranks: Record<string, { overall?: number }>,
+ *   ranks: Record<string, { overall: number, gender: number, age: number }>,
  *   onOpenSlip: (bib: string) => void
  * }} props
  */
 function ResultsPage({ finishers, ranks, onOpenSlip }) {
-  const [category, setCategory] = useState('')
-  const [gender, setGender] = useState('')
+  const [filter, setFilter] = useState(EMPTY_FILTER)
+  const [groupBy, setGroupBy] = useState(DEFAULT_GROUP_MODE)
 
-  const rows = useMemo(
-    () => finishers.filter((r) => (!category || r.category === category) && (!gender || r.gender === gender)),
-    [finishers, category, gender],
+  const view = useMemo(
+    () => buildResultsView({ finishers, ranks, filter, groupBy }),
+    [finishers, ranks, filter, groupBy],
   )
 
+  function handleFilter(key, value) {
+    setFilter((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function clearFilter() {
+    setFilter(EMPTY_FILTER)
+  }
+
   function exportCSV() {
-    const head = 'Rank,BIB,Name,Category,Gender,Start,Finish,TotalTime\n'
-    const body = rows
-      .map((r) =>
-        [ranks[r.bib]?.overall ?? '', r.bib, r.name, r.category, r.gender, fmtTime(r.startTime), fmtTime(r.finish), fmtTotal(r)].join(','),
-      )
-      .join('\n')
-    downloadCSV('race-results.csv', head + body)
+    downloadCSV(resultsCsvFilename(filter), resultsCsv(view))
   }
 
   return (
@@ -37,65 +48,23 @@ function ResultsPage({ finishers, ranks, onOpenSlip }) {
       <header className="page-head">
         <span className="eyebrow">Report</span>
         <h1 id="results-heading">ผลการแข่งขัน</h1>
-        <p>จัดอันดับจาก Total Time (Finish − Start เวลาปล่อยตัว) แยกตามระยะ · กดดู e-Slip รายบุคคล</p>
+        <p>
+          จัดอันดับจาก Total Time (Finish − Start เวลาปล่อยตัว) แยกรุ่นตามระยะ · เพศ · อายุ
+          — เทียบเวลาข้ามระยะไม่ได้ อันดับทุกคอลัมน์จึงนับภายในระยะเดียวกัน
+        </p>
       </header>
 
-      <div className="toolbar">
-        <select className="search search--select" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter category">
-          <option value="">ทุกระยะ</option>
-          {CATEGORIES.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select className="search search--select" value={gender} onChange={(e) => setGender(e.target.value)} aria-label="Filter gender">
-          <option value="">ทุกเพศ</option>
-          <option value="Male">ชาย</option>
-          <option value="Female">หญิง</option>
-          <option value="LGBTIQAN+">LGBTIQAN+</option>
-        </select>
-        <Button onClick={exportCSV}>Export ผลการแข่งขัน (CSV)</Button>
-      </div>
+      <ResultsFilterBar
+        filter={filter}
+        groupBy={groupBy}
+        view={view}
+        onFilter={handleFilter}
+        onGroupBy={setGroupBy}
+        onClear={clearFilter}
+        onExport={exportCSV}
+      />
 
-      <div className="glass-panel table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>อันดับ (ระยะ)</th>
-              <th>BIB</th>
-              <th>ชื่อ-นามสกุล</th>
-              <th>ระยะ</th>
-              <th>เพศ</th>
-              <th>Start</th>
-              <th>Finish</th>
-              <th>Total Time</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr><td colSpan={9} className="empty">ยังไม่มีผู้เข้าเส้นชัยตามเงื่อนไขที่เลือก</td></tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.bib}>
-                  <td className="mono data-table__rank"><b>{ranks[r.bib]?.overall ?? '—'}</b></td>
-                  <td className="mono"><b>{r.bib}</b></td>
-                  <td>{r.name}</td>
-                  <td className="mono">{r.category}</td>
-                  <td>{GENDER_TH[r.gender] ?? r.gender}</td>
-                  <td className="mono">{fmtTime(r.startTime)}</td>
-                  <td className="mono">{fmtTime(r.finish)}</td>
-                  <td className="mono data-table__total"><b>{fmtTotal(r)}</b></td>
-                  <td>
-                    <Button variant="secondary" className="btn-sm" onClick={() => onOpenSlip(r.bib)}>
-                      e-Slip
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ResultsTable view={view} onOpenSlip={onOpenSlip} onClear={clearFilter} />
     </section>
   )
 }

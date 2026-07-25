@@ -6,9 +6,9 @@ import { fmtTime, fmtDur } from '../../lib/raceData'
  * flash animation on each scan. The "designed device" focal object of every
  * scan station, sitting inside the glass layout.
  *
- * @param {{ result: import('../../lib/raceEngine').ScanResult | undefined }} props
+ * @param {{ result: import('../../lib/raceEngine').ScanResult | undefined, className?: string }} props
  */
-function LedBoard({ result }) {
+function LedBoard({ result, className }) {
   const ref = useRef(null)
 
   // retrigger flash animation on every new scan
@@ -22,7 +22,7 @@ function LedBoard({ result }) {
   }, [result])
 
   return (
-    <div>
+    <div className={className}>
       <div ref={ref} className="led" role="status" aria-live="polite">
         {!result ? (
           <div className="led__idle">— รอการสแกน —</div>

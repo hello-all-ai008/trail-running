@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "./styles/tokens.css";
 @import "./styles/dashboard.css";
+@import "./styles/results.css";
+@import "./styles/register.css";
 
 * {
   box-sizing: border-box;

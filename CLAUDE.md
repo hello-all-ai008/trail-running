@@ -53,6 +53,7 @@ Plan the real operational flow on race day, tied to the 6-step workflow above �
 - Gong assigns work → I say which department it belongs to, whether it affects other departments, what order to do it in
 - Gong asks for opinion → answer with a real position, call out risk/trade-off directly, no rubber-stamping
 - Before claiming something "already exists" in code, check the actual code first, don't guess
+- Multi-file work → delegate: Researcher (gather) → plan as DAG → Builder (write) → Verifier (check). I never verify Builder's work myself — I carry bias from the conversation. Full rules: @.claude/subagents.md
 
 ## Plan review (standing rule)
 

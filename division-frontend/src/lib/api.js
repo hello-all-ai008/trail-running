@@ -92,6 +92,16 @@ export async function postScan(rawValue, checkpointCode, stationId = '') {
 }
 
 /**
+ * Insert a public runner registration. Anon insert-only per RLS policy
+ * `registrations_public_insert` — no read/update/delete access from here.
+ * @param {Record<string, unknown>} row  snake_case columns matching the `registrations` table
+ */
+export async function insertRegistration(row) {
+  const { error } = await getSupabase().from('registrations').insert(row)
+  if (error) throw error
+}
+
+/**
  * Subscribes to live_progress row changes (any scan, from any station).
  * @param {() => void} onChange
  * @returns {() => void} unsubscribe

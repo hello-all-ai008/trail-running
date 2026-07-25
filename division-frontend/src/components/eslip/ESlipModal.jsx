@@ -1,4 +1,4 @@
-import { CHECKPOINTS, fmtTime, fmtTotal } from '../../lib/raceData'
+import { CHECKPOINTS, ageGroupLabel, fmtTime, fmtTotal, genderLabel } from '../../lib/raceData'
 import Button from '../ui/Button'
 
 /**
@@ -32,8 +32,8 @@ function ESlipModal({ runner, ranks, onClose }) {
 
         <div className="eslip__row"><span>Bib No</span><b>{runner.bib}</b></div>
         <div className="eslip__row"><span>Name</span><b>{runner.name}</b></div>
-        <div className="eslip__row"><span>Gender</span><span>{runner.gender}</span></div>
-        <div className="eslip__row"><span>Age Group</span><span>{runner.ageGroup}</span></div>
+        <div className="eslip__row"><span>Gender</span><span>{genderLabel(runner.gender)}</span></div>
+        <div className="eslip__row"><span>Age Group</span><span>{ageGroupLabel(runner.ageGroup)}</span></div>
         <div className="eslip__row"><span>Nationality</span><span>{runner.nationality}</span></div>
         <div className="eslip__row"><span>Category</span><span>{runner.category}</span></div>
 

@@ -85,6 +85,10 @@ function Sidebar({ page, onNavigate }) {
           ),
         )}
       </nav>
+
+      <button type="button" className="sidebar__preview-link" onClick={() => onNavigate('register')}>
+        ดูตัวอย่างหน้าลงทะเบียน
+      </button>
     </aside>
   )
 }

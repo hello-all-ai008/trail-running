@@ -7,6 +7,7 @@ import Sidebar from './components/sidebar/Sidebar'
 import Toast from './components/ui/Toast'
 import ESlipModal from './components/eslip/ESlipModal'
 import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import RunnersPage from './pages/RunnersPage'
 import StationPage from './pages/StationPage'
@@ -75,6 +76,9 @@ function App() {
     () => (slipBib ? race.runners.find((r) => r.bib === slipBib) ?? null : null),
     [slipBib, race.runners],
   )
+
+  // Public registration is a standalone surface — no auth gate, no admin shell.
+  if (page === 'register') return <RegisterPage />
 
   if (!USE_MOCK && session === undefined) return null
   if (!USE_MOCK && !session) return <LoginPage onSignedIn={() => {}} />
