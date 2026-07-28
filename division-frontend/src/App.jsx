@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRaceState, USE_MOCK } from './hooks/useRaceState'
 import { useHashRoute } from './hooks/useHashRoute'
 import { fmtTime, fmtTotal } from './lib/raceData'
@@ -14,6 +14,10 @@ import StationPage from './pages/StationPage'
 import ResultsPage from './pages/ResultsPage'
 import MonitorPage from './pages/MonitorPage'
 import ScanLogPage from './pages/ScanLogPage'
+
+// @react-pdf/renderer is large (fontkit etc.) — code-split so it only loads
+// for staff who actually open the BIB generator, not on every page load.
+const BibGeneratorPage = lazy(() => import('./pages/BibGeneratorPage'))
 
 /** Toast message per scan outcome. */
 function noticeFor(result) {
@@ -93,6 +97,11 @@ function App() {
           <DashboardPage runners={race.runners} stats={race.stats} finishers={race.finishers} />
         )}
         {page === 'runners' && <RunnersPage runners={race.runners} />}
+        {page === 'bib' && (
+          <Suspense fallback={null}>
+            <BibGeneratorPage />
+          </Suspense>
+        )}
         {page === 'checkin' && (
           <StationPage stationKey="checkin" scanLog={race.scanLog} lastScan={race.lastScan.checkin} onScan={onScanCheckin} />
         )}

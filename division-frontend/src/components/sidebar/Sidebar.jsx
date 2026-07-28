@@ -7,6 +7,7 @@ const NAV = [
   { group: 'ภาพรวม' },
   { page: 'dashboard', label: 'แดชบอร์ด', icon: 'grid' },
   { page: 'runners', label: 'รายชื่อนักวิ่ง', icon: 'users' },
+  { page: 'bib', label: 'สร้าง BIB (PDF)', icon: 'bib' },
   { group: 'จุดสแกน' },
   { page: 'checkin', label: 'Check-in (Start)', dot: 'var(--station-start)' },
   { page: 'checkpoint', label: 'Check Point', dot: 'var(--station-cp)' },
@@ -55,6 +56,14 @@ const ICONS = {
       <path d="M8 21h8" />
       <path d="M12 17v4" />
       <path d="M8 12l2.5-3 3 4L17 8" />
+    </svg>
+  ),
+  bib: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M8 8h8" />
+      <path d="M8 12h8" />
+      <path d="M8 16h5" />
     </svg>
   ),
 }

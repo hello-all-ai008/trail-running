@@ -4,6 +4,7 @@
 @import "./styles/results.css";
 @import "./styles/monitor.css";
 @import "./styles/register.css";
+@import "./styles/bib.css";
 
 * {
   box-sizing: border-box;
