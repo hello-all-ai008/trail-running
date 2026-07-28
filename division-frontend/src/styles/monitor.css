@@ -1,0 +1,137 @@
+/* ---- Live Monitor: division cards (podium / recent-scan feed) ----
+   Layered on top of dashboard.css + results.css. Everything here is scoped
+   to .monitor-* so the other pages' tables keep their current behaviour. */
+
+.monitor-view-toggle {
+  margin-bottom: 0.9rem;
+}
+
+.monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 0.9rem;
+}
+
+/* Cancels .glass-panel's hover lift: a board of a dozen cards should not
+   levitate on hover, and a monitor is not clicked.
+
+   Must out-specify .glass-panel:hover, not merely follow it: this file is
+   @import-ed from index.css, so its rules are inlined ABOVE index.css's own
+   .glass-panel:hover and would lose an equal-specificity tie on source order
+   (this exact bug shipped once already on the Results page). */
+.glass-panel.monitor-card:hover {
+  transform: none;
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---- Card header ---- */
+.monitor-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.monitor-card__head h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--color-forest);
+}
+.monitor-card__badge {
+  flex: none;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  white-space: nowrap;
+}
+
+/* ---- Card table — its own class, not .data-table: no sticky thead, no
+   forced nowrap, no 560px-scroller assumptions a 310px card doesn't want. ---- */
+.monitor-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.monitor-table th,
+.monitor-table td {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.monitor-table tr:last-child td {
+  border-bottom: none;
+}
+.monitor-table thead th {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.monitor-row__btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.monitor-row__btn:hover span:last-child,
+.monitor-row__btn:focus-visible span:last-child {
+  color: var(--color-accent);
+}
+.monitor-row__btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.monitor-feed-scroll {
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* ---- Medal accents: places 1-3 read at a glance, 4-5 stay muted.
+   No emoji medals — inconsistent rendering on the Chromebooks/tablets
+   likely to man a finish line; colour + weight already carries the rank. ---- */
+.monitor-row--1 .monitor-row__place { color: oklch(72% 0.14 85); }   /* gold */
+.monitor-row--2 .monitor-row__place { color: oklch(70% 0.03 250); }  /* silver */
+.monitor-row--3 .monitor-row__place { color: oklch(58% 0.10 50); }   /* bronze */
+.monitor-row__place {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Arrival flash: a card gaining a row animates it in once. Compositor-
+   friendly properties only (opacity/transform), never layout-bound ones. ---- */
+@keyframes monitor-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.monitor-row--new {
+  animation: monitor-arrive var(--duration-normal) var(--ease-out-expo);
+}
+@media (prefers-reduced-motion: reduce) {
+  .monitor-row--new {
+    animation: none;
+  }
+}

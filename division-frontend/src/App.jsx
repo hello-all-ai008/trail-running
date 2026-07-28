@@ -12,6 +12,7 @@ import DashboardPage from './pages/DashboardPage'
 import RunnersPage from './pages/RunnersPage'
 import StationPage from './pages/StationPage'
 import ResultsPage from './pages/ResultsPage'
+import MonitorPage from './pages/MonitorPage'
 import ScanLogPage from './pages/ScanLogPage'
 
 /** Toast message per scan outcome. */
@@ -100,6 +101,15 @@ function App() {
         )}
         {page === 'finish' && (
           <StationPage stationKey="finish" scanLog={race.scanLog} lastScan={race.lastScan.finish} onScan={onScanFinish} />
+        )}
+        {page === 'monitor' && (
+          <MonitorPage
+            runners={race.runners}
+            finishers={race.finishers}
+            ranks={race.ranks}
+            scanLog={race.scanLog}
+            onOpenSlip={setSlipBib}
+          />
         )}
         {page === 'results' && (
           <ResultsPage finishers={race.finishers} ranks={race.ranks} onOpenSlip={setSlipBib} />

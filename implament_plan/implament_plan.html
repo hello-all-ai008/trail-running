@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>สถานะ — ผลการแข่งขัน: filter + แยกระยะ/เพศ/รุ่นอายุ (หลัง Verifier)</title>
+<title>แผน — ค้นหานักวิ่ง + การ์ด Overall Top 3 + กติกาตัดสิทธิ์รางวัลรุ่น</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -15,7 +15,9 @@
     --muted: oklch(45% 0.02 150);
     --line: oklch(85% 0.02 150);
     --danger: oklch(55% 0.19 25);
-    --ok: oklch(48% 0.13 155);
+    --gold: oklch(66% 0.14 85);
+    --silver: oklch(60% 0.03 250);
+    --bronze: oklch(54% 0.10 50);
     --mono: "SF Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; }
@@ -26,212 +28,195 @@
     color: var(--text);
     font: 15px/1.65 -apple-system, "Sukhumvit Set", "Noto Sans Thai", system-ui, sans-serif;
   }
-  main { max-width: 62rem; margin: 0 auto; }
-  .eyebrow {
-    font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--muted);
-  }
+  main { max-width: 60rem; margin: 0 auto; }
+  .eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
   h1 { font-size: clamp(1.4rem, 1.1rem + 1.3vw, 2rem); color: var(--forest); margin: .2rem 0 .3rem; letter-spacing: -.01em; }
-  h2 {
-    font-size: 1.05rem; color: var(--forest); margin: 2.2rem 0 .6rem;
-    padding-bottom: .35rem; border-bottom: 2px solid var(--line);
-  }
-  h3 { font-size: .92rem; margin: 1.3rem 0 .4rem; color: var(--soil); }
-  .lede { color: var(--muted); margin: 0 0 1.5rem; }
-  section.card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 1rem 1.15rem; margin: .9rem 0;
-  }
-  .banner {
-    border-left: 4px solid var(--danger); background: oklch(55% 0.19 25 / .06);
-    border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: 1rem 0;
-  }
-  .banner b { color: var(--danger); }
+  h2 { font-size: 1.05rem; color: var(--forest); margin: 2rem 0 .6rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
+  h3 { font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--soil); }
+  .lede { color: var(--muted); margin: 0 0 1.3rem; }
+  section.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.15rem; margin: .9rem 0; }
+  .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
+  .decide { border-left: 3px solid var(--accent); padding-left: .85rem; }
+  .risk { border-left: 3px solid var(--danger); padding-left: .85rem; margin: .8rem 0; }
+  .risk b { color: var(--danger); }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
   code, .mono { font-family: var(--mono); font-size: .86em; }
   code { background: oklch(92% 0.02 150); padding: .1em .35em; border-radius: 4px; }
-  pre {
-    background: oklch(24% 0.02 150); color: oklch(92% 0.02 120); padding: .85rem 1rem;
-    border-radius: 10px; overflow-x: auto; font-size: .8rem; line-height: 1.5;
-  }
+  pre { background: oklch(24% 0.02 150); color: oklch(92% 0.02 120); padding: .85rem 1rem; border-radius: 10px; overflow-x: auto; font-size: .8rem; line-height: 1.5; }
   pre code { background: none; padding: 0; color: inherit; }
   ul, ol { padding-left: 1.3rem; }
-  li { margin: .25rem 0; }
-  .sev {
-    display: inline-block; font-family: var(--mono); font-size: .64rem;
-    font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    padding: .12rem .5rem; border-radius: 999px; white-space: nowrap; border: 1px solid;
-  }
-  .sev--crit { color: var(--danger); border-color: var(--danger); background: oklch(55% 0.19 25 / .1); }
-  .sev--high { color: var(--soil); border-color: var(--soil); background: oklch(42% 0.05 55 / .1); }
-  .sev--med  { color: var(--muted); border-color: var(--line); }
-  .sev--done { color: var(--ok); border-color: var(--ok); background: oklch(48% 0.13 155 / .1); }
-  .finding { border-left: 3px solid var(--line); padding-left: .85rem; margin: 1.1rem 0; }
-  .finding--crit { border-left-color: var(--danger); }
-  .finding--high { border-left-color: var(--soil); }
+  li { margin: .3rem 0; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+  .tag--new { color: var(--forest); background: oklch(38% 0.08 155 / .1); }
+  .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
   .wrap { overflow-x: auto; }
-  .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
-  footer { margin-top: 2.5rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+
+  /* mock */
+  .mock-row { display: flex; flex-wrap: wrap; gap: .8rem; margin: .8rem 0; }
+  .mock-card { flex: 1 1 260px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  .mock-card--overall { border-color: color-mix(in oklch, var(--gold) 45%, var(--line)); border-top: 3px solid var(--gold); }
+  .mock-card__head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .7rem .85rem; border-bottom: 1px solid var(--line); background: color-mix(in oklch, var(--forest) 5%, transparent); }
+  .mock-card__title { font-weight: 800; font-size: .82rem; color: var(--forest); }
+  .mock-card__badge { font-family: var(--mono); font-size: .64rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: .1rem .5rem; white-space: nowrap; }
+  .mock-card__sub { font-size: .68rem; color: var(--danger); padding: .3rem .85rem 0; }
+  .mock-table { margin: 0; font-size: .78rem; }
+  .mock-table th { font-size: .6rem; padding: .35rem .85rem; }
+  .mock-table td { padding: .38rem .85rem; border-bottom: 1px solid oklch(90% 0.01 150); }
+  .mock-table tr:last-child td { border-bottom: none; }
+  .place { font-family: var(--mono); font-weight: 800; }
+  .place--1 { color: var(--gold); } .place--2 { color: var(--silver); } .place--3 { color: var(--bronze); }
+  .place--n { color: var(--muted); }
+  .t { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .strike { text-decoration: line-through; opacity: .4; }
+  footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-07-25 · รอบที่ 2 (หลัง Verifier)</span>
-<h1>สถานะงาน: ผลการแข่งขัน — filter + แยกระยะ / เพศ / รุ่นอายุ</h1>
+<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-07-25</span>
+<h1>ค้นหานักวิ่ง + การ์ด Overall Top 3 + กติกาตัดสิทธิ์รางวัลรุ่น</h1>
 <p class="lede">
-  ไฟล์นี้เขียนทับแผนรอบแรก เพราะโค้ดเดินไปไกลกว่าแผนนั้นแล้ว
-  เนื้อหาข้างล่างคือ <b>สิ่งที่ลงมือไปแล้วจริง</b> ไม่ใช่สิ่งที่กำลังจะทำ
+  เพิ่ม 2 อย่างจากที่ Gong ขอ: (1) ช่องค้นหาชื่อ/BIB บนทั้ง 2 หน้า (2) การ์ดใหม่ใน Live Monitor
+  โชว์ผู้ชนะ overall อันดับ 1-3 ของแต่ละระยะ (รวมทุกเพศทุกวัย) พร้อมกติกา — คนที่ติด overall แล้ว
+  ไม่มีสิทธิ์ในรางวัลรุ่นย่อยของระยะนั้นอีก และจะไม่โผล่ในการ์ดรุ่นย่อยเลย
 </p>
 
-<div class="banner">
-  <p style="margin:0 0 .5rem"><b>ผมผิดกฎเอง — บันทึกไว้ตรงนี้</b></p>
-  <p style="margin:0 0 .5rem">
-    กฎใน <code>CLAUDE.md</code>: เขียนแผนลง <code>implament_plan/implament_plan.html</code> ให้ Gong ตรวจในเบราว์เซอร์ <b>ก่อน</b> ลงมือ
-  </p>
-  <ul style="margin:.4rem 0 0">
-    <li><b>รอบแรก</b> — เขียน HTML ก่อนจริง แต่เขียนเสร็จแล้วลงมือต่อในเทิร์นเดียวกัน ไม่ได้เว้นช่องให้ตรวจ ผมถือเอาว่า ExitPlanMode แทนกันได้ ซึ่งไม่ใช่ประเด็นของกฎ</li>
-    <li><b>รอบสอง (แก้ตาม Verifier)</b> — <b>ไม่ได้เขียนแผนเลย</b> แก้ 12 รายการรวด รวมทั้ง CRITICAL และ HIGH อันนี้ผิดเต็ม ๆ</li>
-    <li>ผลข้างเคียง: ไฟล์แผนค้างอยู่ที่รอบแรก ไม่ตรงกับโค้ด จนถึงตอนที่เขียนไฟล์นี้</li>
-  </ul>
-</div>
-
-<h2>สถานะปัจจุบัน</h2>
-<section class="card">
-  <p style="margin:0 0 .6rem">
-    <span class="sev sev--done">54 tests pass</span>
-    <span class="sev sev--done">oxlint clean</span>
-    <span class="sev sev--done">build clean</span>
-    <span class="sev sev--done">ตรวจในเบราว์เซอร์จริงแล้ว</span>
-    <span class="sev sev--med">ยังไม่ commit</span>
-  </p>
-  <p style="margin:0">
-    ฟีเจอร์ทำงานครบตามที่ตกลง: กรอง ระยะ/เพศ/รุ่นอายุ, หัวข้อกลุ่มในตาราง 18 กลุ่ม,
-    3 คอลัมน์อันดับตายตัว, CSV ตรงหน้าจอ, บั๊กคอลัมน์อันดับที่เคยอ่านได้ <code>1,1,2,2,3…</code> หายแล้ว
-  </p>
-</section>
-
-<h2>Verifier เจออะไร แล้วผมทำอะไรกับมัน</h2>
-<p>Verifier คืน 15 findings — 2 อันเป็นบั๊กจริงที่ <b>ผมเป็นคนทำพัง</b> ในรอบแรก</p>
-
-<div class="finding finding--crit">
-  <p style="margin:0 0 .4rem"><span class="sev sev--crit">critical</span> <b>วันเกิดอนาคตทำให้ฟอร์มสมัครพังเงียบ ๆ</b> — <code>src/lib/registration.js:30</code></p>
-  <p style="margin:.3rem 0">
-    ตอน refactor ผมเปลี่ยน <code>computeAgeGroup</code> ไปใช้ <code>AGE_BRACKETS.findLast(...)</code>
-    ซึ่งคืน <code>undefined</code> เมื่ออายุติดลบ แล้ว <code>.key</code> โยน TypeError
-  </p>
-  <pre><code>computeAgeGroup('2026-12-31') → TypeError: Cannot read properties of undefined</code></pre>
-  <p style="margin:.3rem 0">
-    เคสอันตรายคือพิมพ์ปีผิด <code>1986-12-31</code> → <code>2026-12-31</code> ซึ่งเป็นวันที่ในปีปัจจุบัน
-    <code>&lt;input type="date"&gt;</code> ไม่มี <code>max</code> เบราว์เซอร์จึงรับไว้
-  </p>
-  <p style="margin:.3rem 0">
-    <b>ความเสียหาย:</b> <code>buildRegistration()</code> ถูกเรียก <i>นอก</i> try block ก่อน <code>saveRegistration()</code> →
-    error หลุดออกจาก <code>submit()</code> โดยไม่มีใครจับ → ไม่เขียน localStorage, ไม่ยิง Supabase,
-    ไม่ขึ้นข้อความ error ผู้สมัครกดปุ่มแล้วไม่มีอะไรเกิดขึ้น <b>ใบสมัครหายไปเฉย ๆ</b>
-  </p>
-  <p style="margin:.3rem 0">
-    เป็น regression ที่ผมสร้าง — if-chain เดิมตกไป <code>'20-39'</code> ไม่เคยพัง
-    และ <code>registration.test.js</code> ที่ผมเขียนเองโดยมีหน้าที่ "ตรึงพฤติกรรมข้าม refactor" กลับไม่มีเคสอายุติดลบ
-  </p>
-  <p style="margin:.3rem 0"><b>แก้แล้ว:</b> <code>?? UNSPECIFIED</code> (วันเกิดอนาคต = ข้อมูลไม่ถูกต้อง ไม่ใช่ยัดเข้ารุ่นเด็กสุด)
-     + ใส่ <code>max={วันนี้}</code> ที่ input + เพิ่ม regression test</p>
-</div>
-
-<div class="finding finding--high">
-  <p style="margin:0 0 .4rem"><span class="sev sev--high">high</span> <b>ข้อตกลงข้อ 4 (ยกเลิก hover lift เฉพาะ Results) ไม่ทำงานจริง</b> — <code>src/styles/results.css</code></p>
-  <p style="margin:.3rem 0">
-    <code>.results-wrap:hover</code> กับ <code>.glass-panel:hover</code> specificity เท่ากัน (0,2,0) → ตัดสินด้วยลำดับ
-    แต่ <code>results.css</code> ถูก <code>@import</code> เข้ามา จึงถูกแทรก <i>ก่อน</i> rule ของ <code>index.css</code> เอง
-    → <code>.glass-panel:hover</code> ชนะ ตารางยังลอย 4px เหมือนเดิม
-  </p>
-  <p style="margin:.3rem 0">
-    ผมรายงานไปว่า "ทำแล้ว" ทั้งที่ <b>ไม่เคย hover ทดสอบจริง</b> — นี่คือความผิดพลาดของผม ไม่ใช่ของแผน
-  </p>
-  <p style="margin:.3rem 0"><b>แก้แล้ว:</b> <code>.glass-panel.results-wrap:hover</code> (0,3,0) ชนะไม่ว่าลำดับไหน
-     ยืนยันในเบราว์เซอร์: <code>transform: none</code> ขณะ hover (ค่าที่อ่านผิดครั้งแรกมาจาก CSS ที่ cache ไว้)</p>
-</div>
-
-<h3>รายการอื่นที่แก้ไปด้วย</h3>
-<div class="wrap">
-<table>
-  <thead><tr><th>ระดับ</th><th>เรื่อง</th><th>ทำอะไร</th></tr></thead>
-  <tbody>
-    <tr><td><span class="sev sev--med">medium</span></td><td><code>csvCell</code> อยู่ผิดที่ — RunnersPage ต้องดึงโมดูล results ทั้งก้อนมาใช้ helper 3 บรรทัด</td><td>ย้ายไป <code>raceData.js</code> อยู่ข้าง <code>downloadCSV</code></td></tr>
-    <tr><td><span class="sev sev--med">medium</span></td><td><code>groupBy</code> ที่ไม่รู้จัก: <code>groupFinishers</code> ตกไป <code>category+gender</code> แต่ <code>primaryRankKey</code> ตกไป <code>rankAge</code> — ไม่ตรงกัน</td><td>normalize เป็น <code>DEFAULT_GROUP_MODE</code> ที่เดียว + test</td></tr>
-    <tr><td><span class="sev sev--med">medium</span></td><td><code>sortMs</code> คำนวณทุกแถวแต่ไม่มีใครอ่าน, <code>count: 0</code> ตั้งแล้วไม่เคยบวก</td><td>ลบทั้งคู่</td></tr>
-    <tr><td><span class="sev sev--med">medium</span></td><td>e-Slip ของ BIB 5050 ยังโชว์ Age Group ว่าง ทั้งที่แถวในตารางข้าง ๆ เขียน <code>ไม่ระบุ</code></td><td><code>ESlipModal</code> ใช้ <code>genderLabel</code>/<code>ageGroupLabel</code></td></tr>
-    <tr><td><span class="sev sev--med">low</span></td><td><code>role="status"</code> + <code>aria-live="polite"</code> ซ้ำซ้อน</td><td>ตัด <code>aria-live</code></td></tr>
-    <tr><td><span class="sev sev--med">low</span></td><td>comment 2 จุดเขียนเหตุผลไม่ตรงความจริง + <code>col-finish</code> ซ้ำใน media query</td><td>แก้ข้อความ / ลบบรรทัดซ้ำ</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h3>เพิ่ม test ปิดช่องที่ปล่อยให้ CRITICAL หลุด</h3>
-<ul>
-  <li>วันเกิดอนาคต → ไม่ throw และคืน <code>''</code></li>
-  <li><code>csvCell</code> กรณี <code>\n</code>, <code>\r\n</code>, ช่องว่างหัว/ท้าย (เดิมทดสอบแค่ comma/quote)</li>
-  <li>ทดสอบ end-to-end ว่า <code>resultsCsv</code> <i>เรียก</i> <code>csvCell</code> จริง — เดิมถอด <code>.map(csvCell)</code> ออกก็ยังผ่าน test</li>
-  <li><code>activeFilters</code> เส้นทาง <code>FILTER_UNSPECIFIED → 'ไม่ระบุ'</code> (เส้นทางเดียวที่ถ้าพังจะขึ้น chip ว่าง)</li>
-  <li><code>groupBy</code> ที่ไม่รู้จัก</li>
-</ul>
-
-<h2>สิ่งที่จงใจไม่แก้</h2>
-<section class="card">
-  <ul style="margin:0">
-    <li><b>ตัวกรองเพศไม่มีตัวเลือก ไม่ระบุ</b> ขณะที่รุ่นอายุมี — โค้ด <code>matches()</code> รองรับแต่เรียกไม่ถึง
-        เพศเป็น field บังคับ + มี CHECK constraint และข้อมูลจริงไม่มีค่าว่างสักคน
-        ผมเก็บ <code>matches()</code> ให้เป็น generic ไว้ แทนที่จะเพิ่ม chip ที่กดแล้วได้ 0 แถวเสมอ
-        <b>แต่ต้องรู้ไว้:</b> ถ้าวันหนึ่งมีคนเพศว่าง เขาจะโผล่ในกลุ่ม <code>ไม่ระบุ</code> แต่กรองหาไม่ได้</li>
-    <li>group key ชน <code>|</code>/<code>*</code> (เรียกไม่ถึงภายใต้ vocabulary ที่มี CHECK)</li>
-    <li><code>compareGroups</code> ใช้ <code>?? ''</code> แล้วผลหักล้างกันเองจนถูก — ถูกแต่ดูไม่ตรงไปตรงมา</li>
-    <li>mutation ใน accumulator ภายใน <code>groupFinishers</code> 1 จุด</li>
-    <li>Export CSV กดได้ตอน 0 แถว → ได้ไฟล์มีแต่ header</li>
-  </ul>
-</section>
-
-<h2>ยังไม่ได้ตรวจ</h2>
-<ul>
-  <li><b>iOS Safari</b> — sticky <code>thead</code> ยังไม่เคยตรวจบนเครื่องจริงมาตั้งแต่ก่อนหน้านี้ (ตาม <code>division-frontend/CLAUDE.md</code>)
-      ป้ายหัวข้อกลุ่มผมทำ sticky ไว้บน <code>&lt;span&gt;</code> ข้างใน ไม่ใช่ <code>&lt;th&gt;</code> เพื่อเลี่ยงบั๊ก collapsed border โดยเฉพาะ แต่ยังไม่มีเครื่องจริงรัน</li>
-  <li>ฟอร์มสมัครหลังแก้ CRITICAL — ผมทดสอบด้วย unit test ยังไม่ได้กรอกส่งจริงผ่านหน้าเว็บ</li>
-</ul>
-
-<h2>ไฟล์ที่แตะทั้งหมด (2 รอบรวมกัน)</h2>
-<div class="wrap">
-<table>
-  <thead><tr><th>ไฟล์</th><th>สถานะ</th></tr></thead>
-  <tbody>
-    <tr><td class="mono">src/lib/results.js</td><td>ใหม่ — logic บริสุทธิ์ทั้งหมด</td></tr>
-    <tr><td class="mono">src/lib/results.test.js</td><td>ใหม่</td></tr>
-    <tr><td class="mono">src/lib/registration.test.js</td><td>ใหม่</td></tr>
-    <tr><td class="mono">src/components/results/ResultsFilterBar.jsx</td><td>ใหม่</td></tr>
-    <tr><td class="mono">src/components/results/ResultsTable.jsx</td><td>ใหม่</td></tr>
-    <tr><td class="mono">src/styles/results.css</td><td>ใหม่</td></tr>
-    <tr><td class="mono">src/lib/raceData.js</td><td>+ vocabulary กลาง + <code>csvCell</code></td></tr>
-    <tr><td class="mono">src/lib/registration.js</td><td><code>computeAgeGroup</code> ใช้ <code>AGE_BRACKETS</code> + guard อายุติดลบ</td></tr>
-    <tr><td class="mono">src/hooks/useRaceState.js</td><td>ย้าย rank block ออกไป <code>computeRanks</code></td></tr>
-    <tr><td class="mono">src/pages/ResultsPage.jsx</td><td>เขียนใหม่ เหลือ 74 บรรทัด</td></tr>
-    <tr><td class="mono">src/pages/RunnersPage.jsx</td><td>ใช้ vocabulary กลาง + <code>csvCell</code></td></tr>
-    <tr><td class="mono">src/components/register/RegisterForm.jsx</td><td>label เพศไทย + <code>max</code> ที่ช่องวันเกิด</td></tr>
-    <tr><td class="mono">src/components/eslip/ESlipModal.jsx</td><td>ใช้ label ร่วม</td></tr>
-    <tr><td class="mono">src/styles/dashboard.css</td><td><code>thead</code> rescope + <code>.filter-chip</code></td></tr>
-    <tr><td class="mono">src/index.css</td><td>+ import results.css</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h2>รอ Gong ตัดสิน</h2>
 <div class="ask">
-  <ol style="margin:0">
-    <li>ตรวจไฟล์นี้ + โค้ด แล้วบอกว่าให้ commit หรือให้แก้อะไรก่อน</li>
-    <li>ตัวกรองเพศ "ไม่ระบุ" — เพิ่ม chip หรือลบ branch ที่เรียกไม่ถึงทิ้ง? (ตอนนี้คงไว้เฉย ๆ)</li>
-    <li>อยากให้ผมทดสอบส่งใบสมัครจริงผ่านหน้าเว็บเพื่อปิดเคส CRITICAL ไหม</li>
-  </ol>
-  <p style="margin:.7rem 0 0"><b>ต่อจากนี้:</b> เขียนไฟล์นี้แล้ว <b>หยุด</b> รอคุณตอบก่อนเสมอ ทั้งงานใหม่และงานแก้ตามรีวิว
-     ยกเว้นคุณบอก "just do it"</p>
+  <p style="margin:0"><b>ยังไม่ได้ลงมือ</b> — รอตรวจไฟล์นี้ก่อน โดยเฉพาะจุดที่ผมตัดสินใจเองแทน (ทำเครื่องหมายไว้ชัดด้านล่าง)</p>
+</div>
+
+<h2>ที่ Gong ยืนยันแล้ว</h2>
+<table>
+  <tbody>
+    <tr><th>ช่องค้นหา</th><td>ทั้ง Live Monitor และผลการแข่งขัน</td></tr>
+    <tr><th>กติกาตัดสิทธิ์</th><td>มีผล<b>เฉพาะการ์ด Live Monitor ใหม่</b> — หน้าผลการแข่งขัน/e-Slip อันดับรุ่นยังนับทุกคนเหมือนเดิม ไม่กระทบ</td></tr>
+    <tr><th>เมื่อตัดคนติด overall ออก</th><td><b>เติมคนถัดไปขึ้นมาแทนจนครบ 5</b> (renumber ใหม่ 1-5 เฉพาะคนที่ยังมีสิทธิ์)</td></tr>
+  </tbody>
+</table>
+
+<h2>หน้าตาที่จะได้</h2>
+<div class="mock-row">
+  <div class="mock-card mock-card--overall">
+    <div class="mock-card__head">
+      <span class="mock-card__title">🏆 MKT33 · Overall</span>
+      <span class="mock-card__badge">TOP 3 ภาพรวม</span>
+    </div>
+    <table class="mock-table">
+      <thead><tr><th>#</th><th>BIB</th><th>ชื่อ</th><th>เวลา</th></tr></thead>
+      <tbody>
+        <tr><td class="place place--1">1</td><td class="mono">3381</td><td>JANTARABOON K.</td><td class="t">03:22:37</td></tr>
+        <tr><td class="place place--2">2</td><td class="mono">3390</td><td>SUDARAT P.</td><td class="t">03:45:10</td></tr>
+        <tr><td class="place place--3">3</td><td class="mono">3399</td><td>KAMONNUT S.</td><td class="t">04:20:28</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mock-card">
+    <div class="mock-card__head">
+      <span class="mock-card__title">MKT33 · ชาย · 20-39</span>
+      <span class="mock-card__badge">จบ 18 คน</span>
+    </div>
+    <p class="mock-card__sub">ตัดสิทธิ์ 1 คน (ติด Overall)</p>
+    <table class="mock-table">
+      <thead><tr><th>#</th><th>BIB</th><th>ชื่อ</th><th>เวลา</th></tr></thead>
+      <tbody>
+        <tr class="strike"><td class="place">—</td><td class="mono">3381</td><td>JANTARABOON K. (ติด Overall #1)</td><td class="t">03:22:37</td></tr>
+        <tr><td class="place place--1">1</td><td class="mono">3399</td><td>KAMONNUT S.</td><td class="t">04:20:28</td></tr>
+        <tr><td class="place place--2">2</td><td class="mono">3379</td><td>ITTIPON U.</td><td class="t">04:52:10</td></tr>
+        <tr><td class="place place--3">3</td><td class="mono">3301</td><td>BLAKE W.</td><td class="t">04:54:39</td></tr>
+        <tr><td class="place place--n">4</td><td class="mono">3389</td><td>PANUPONG T.</td><td class="t">05:06:59</td></tr>
+        <tr><td class="place place--n">5</td><td class="mono">3348</td><td>OLIVER H.</td><td class="t">05:13:27</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p style="color:var(--muted); font-size:.84rem; margin-top:-.2rem">
+  แถวขีดฆ่า = ตัวอย่างเพื่ออธิบายเท่านั้น การ์ดจริง <b>จะไม่แสดงแถวนี้เลย</b> (3381 หายไปจากการ์ดรุ่นย่อย
+  เพราะชื่อไปโชว์ในการ์ด Overall แล้ว) — เลข #1-5 ที่เหลือคือคนที่ยังมีสิทธิ์ รับช่วงขึ้นมาแทนจนครบ 5
+  บรรทัดสีแดงเล็ก ๆ ใต้หัวการ์ดบอกว่ามีกี่คนที่ถูกตัดสิทธิ์ไป กันงงว่าทำไม "จบ 18 คน" แต่อันดับ 1 ไม่ใช่คนที่เร็วสุด
+</p>
+
+<h2>จุดที่ผมตัดสินใจเอง — อยากให้ตรวจเป็นพิเศษ</h2>
+<div class="decide">
+  <p style="margin:0 0 .5rem"><b>การ์ด Overall Top 3 กรองด้วย "ระยะ" (chip MKT33/MKT50) อย่างเดียว</b>
+  — ตัวกรอง เพศ / รุ่นอายุ / ค้นหา จะ<b>ไม่</b>มีผลกับการ์ดนี้</p>
+  <p style="margin:0">
+    เหตุผล: "Overall รวมทุกเพศทุกวัย" ตามนิยามคือข้ามมิติเพศ/อายุอยู่แล้ว ถ้าไปกรองด้วยเพศ/อายุจะขัดกับความหมายของการ์ด
+    แต่ระยะ (MKT33/MKT50) ยังกรองได้ตามปกติ (เลือกดูเฉพาะ MKT50 การ์ด MKT33 overall จะหายไป)
+    <br><b>ถ้า Gong อยากให้กรองอย่างอื่นได้ด้วย บอกได้เลย แก้ไม่ยาก</b>
+  </p>
+</div>
+
+<h2>รายละเอียด</h2>
+
+<h3>1. ช่องค้นหา</h3>
+<p>
+  ใช้ตรรกะเดียวกับช่องค้นหาที่มีอยู่แล้วในหน้า "รายชื่อนักวิ่ง" (<code>RunnersPage.jsx</code>) —
+  ค้นจาก BIB หรือชื่อ (ไม่สนตัวพิมพ์เล็ก/ใหญ่) แต่ต่างจากที่นั่นตรงที่ตรงนี้ผูกเข้ากับตัวกรองรวม (<code>results.js</code>)
+  ไม่ใช่กรองทีหลังฝั่งหน้าจอ — ไม่งั้น badge จำนวนคนต่อรุ่น/การซ่อนการ์ดว่างจะไม่อัพเดทตาม
+</p>
+<pre><code>// results.js
+EMPTY_FILTER: { category: ANY, gender: ANY, ageGroups: [], query: '' }
+filterFinishers: + query predicate (bib.includes(q) || name.toLowerCase().includes(q))
+describeFilter: + {key:'query', label: `ค้นหา "..."`}  เมื่อพิมพ์อะไรไว้
+resultsCsvFilename: ไม่เอา query ไปใส่ชื่อไฟล์ (free text ไม่เหมาะเป็นชื่อไฟล์)</code></pre>
+<p>วางเป็นช่อง <code>&lt;input className="search"&gt;</code> อยู่หน้าสุดของแถบตัวกรอง ทั้งสองหน้า</p>
+
+<h3>2. การ์ด Overall Top 3 + กติกาตัดสิทธิ์</h3>
+<p>
+  <code>rankCategory</code> ที่มีอยู่แล้ว (อันดับภายในระยะ ไม่แยกเพศ/วัย) <b>คือ</b> "อันดับ overall ของระยะนั้น" พอดี
+  ไม่ต้องคิดสูตรใหม่ — คนที่ <code>rankCategory &lt;= 3</code> คือคนที่ติด overall
+</p>
+<ul>
+  <li>คนติด overall: โผล่ในการ์ด Overall Top 3 ของระยะนั้น, <b>หายไปจากการ์ดรุ่นย่อยทั้งหมด</b></li>
+  <li>คนที่เหลือในรุ่นย่อย: เรียงลำดับใหม่ 1..N เฉพาะคนที่ยังมีสิทธิ์ (เวลาวิ่งเดิม แค่เลขอันดับขยับปิดช่องว่าง)
+      เรียกเลขนี้ว่า <code>awardRank</code> — คนละตัวกับ <code>rankAge</code> เดิมที่หน้าผลการแข่งขัน/e-Slip ยังใช้อยู่ ไม่แตะ</li>
+  <li>badge "จบ N คน" ยังนับรวมคนติด overall เหมือนเดิม (ขนาดสนามจริง) — มีบรรทัดเสริมสีแดง "ตัดสิทธิ์ N คน (ติด Overall)"
+      เมื่อมีคนโดนตัดสิทธิ์ กันงงตัวเลขไม่ตรงกัน</li>
+  <li>เคสรุ่นเล็กที่คนติด overall หมดรุ่น (เหลือ 0 คนมีสิทธิ์): การ์ดยังโชว์อยู่ (รุ่นนี้มีคนจบจริง) แต่ขึ้นข้อความแทนตาราง
+      "ผู้เข้าเส้นชัยทั้งหมดติด Overall — ไม่มีผู้มีสิทธิ์รับรางวัลรุ่นนี้"</li>
+  <li>โหมด "สแกนล่าสุด" ไม่มีแนวคิด overall — การ์ดนี้โชว์เฉพาะโหมด "อันดับ 1-5"</li>
+</ul>
+
+<h2>ไฟล์ที่จะแตะ</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">src/lib/results.js</td><td><span class="tag tag--edit">edit</span></td><td>+ <code>query</code> ในตัวกรอง (ดูรายละเอียด addendum ก่อนหน้าสำหรับ <code>ageGroups</code> multi-select ที่รวมอยู่ในรอบเดียวกัน)</td></tr>
+    <tr><td class="mono">src/lib/monitor.js</td><td><span class="tag tag--edit">edit</span></td><td>+ <code>buildMonitorOverall()</code>, <code>buildMonitorPodium</code> แยก eligible/exempt + renumber <code>awardRank</code></td></tr>
+    <tr><td class="mono">src/components/monitor/MonitorCard.jsx</td><td><span class="tag tag--edit">edit</span></td><td>ใช้ <code>awardRank</code> แทน <code>rankAge</code> ในโหมด podium, เพิ่มโหมด <code>overall</code>, sub-note ตัดสิทธิ์, empty-eligible message</td></tr>
+    <tr><td class="mono">src/pages/MonitorPage.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เรียก <code>buildMonitorOverall</code> เพิ่ม, วางแถวการ์ด overall เหนือ grid รุ่นย่อย (เฉพาะโหมด podium)</td></tr>
+    <tr><td class="mono">src/components/results/ResultsFilterBar.jsx / MonitorFilterBar.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เพิ่มช่องค้นหา</td></tr>
+    <tr><td class="mono">src/styles/monitor.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์การ์ด overall (เส้นขอบทอง), sub-note สีแดง, empty-eligible message</td></tr>
+    <tr><td class="mono">results.js ranks / rankAge / ESlipModal</td><td>ไม่แตะ</td><td>ตามที่ Gong ยืนยัน — กติกาตัดสิทธิ์มีผลแค่ Live Monitor</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>ความเสี่ยง</h2>
+<div class="risk"><b>1.</b> ตอนนี้มีเลขอันดับ 2 ชุดที่ไม่เท่ากันได้บนคนเดียวกัน (<code>rankAge</code> หน้าผล vs <code>awardRank</code> Monitor)
+  — เป็นไปตามที่ตกลง แต่ต้องมี comment กันคนมาสับสนว่าทำไมเลขไม่ตรงกัน</div>
+<div class="risk"><b>2.</b> การ renumber ต้องไม่แตะ <code>ranks</code> ที่ใช้ร่วมกัน — เป็น partition+reindex เฉพาะใน <code>monitor.js</code> เท่านั้น</div>
+<div class="risk"><b>3.</b> ตัวกรองของการ์ด Overall (ระยะอย่างเดียว) เป็นการตัดสินใจของผม ไม่ใช่สิ่งที่ Gong ยืนยันตรง ๆ — จุดที่มีโอกาสโดนแก้มากสุด</div>
+
+<h2>การตรวจ</h2>
+<pre><code>cd division-frontend
+npm test && npm run lint && npm run build</code></pre>
+<ol>
+  <li>ค้นหา BIB/ชื่อ ทั้งสองหน้า → เห็นเฉพาะคนที่ตรง การ์ด/แถวที่ไม่ตรงหายไป</li>
+  <li>Live Monitor เห็นการ์ด Overall Top 3 แยก MKT33/MKT50 คนละ 3 คน</li>
+  <li>คนที่ติด overall หายจากการ์ดรุ่นย่อยของตัวเอง อันดับ 1-5 ที่เหลือเรียงใหม่ไม่มีช่องว่าง</li>
+  <li>badge "จบ N คน" ไม่เปลี่ยน + มีบรรทัด "ตัดสิทธิ์ N คน" โผล่เมื่อมีคนถูกตัด</li>
+  <li>หน้าผลการแข่งขัน/e-Slip อันดับรุ่นยังนับทุกคนเหมือนเดิม ไม่เปลี่ยน</li>
+  <li>สลับไปโหมด "สแกนล่าสุด" → การ์ด Overall หายไป (โชว์เฉพาะโหมดอันดับ)</li>
+</ol>
+
+<div class="ask">
+  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> โดยเฉพาะช่วยยืนยันจุดตัวกรอง Overall card ด้านบนก่อน ไม่งั้นบอกจุดที่อยากแก้ได้เลย</p>
 </div>
 
 <footer>

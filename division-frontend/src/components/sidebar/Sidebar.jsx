@@ -12,6 +12,7 @@ const NAV = [
   { page: 'checkpoint', label: 'Check Point', dot: 'var(--station-cp)' },
   { page: 'finish', label: 'Finish Line', dot: 'var(--station-finish)' },
   { group: 'รายงาน' },
+  { page: 'monitor', label: 'Live Monitor', icon: 'monitor' },
   { page: 'results', label: 'ผลการแข่งขัน', icon: 'trophy' },
   { page: 'log', label: 'Scan Log', icon: 'clock' },
 ]
@@ -46,6 +47,14 @@ const ICONS = {
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 3" />
+    </svg>
+  ),
+  monitor: (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="2" y="4" width="20" height="13" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+      <path d="M8 12l2.5-3 3 4L17 8" />
     </svg>
   ),
 }

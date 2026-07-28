@@ -2,6 +2,7 @@
 @import "./styles/tokens.css";
 @import "./styles/dashboard.css";
 @import "./styles/results.css";
+@import "./styles/monitor.css";
 @import "./styles/register.css";
 
 * {
