@@ -1,11 +1,16 @@
 import Button from '../ui/Button'
 import ChipGroup from '../ui/ChipGroup'
 import { AGE_GROUPS, CATEGORIES, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
-import { ANY, FILTER_UNSPECIFIED } from '../../lib/results'
+import { FILTER_UNSPECIFIED } from '../../lib/results'
 
 const VIEW_MODES = [
   { value: 'podium', label: 'อันดับ 1-5' },
   { value: 'feed', label: 'สแกนล่าสุด' },
+]
+
+const AGE_OPTIONS = [
+  ...AGE_GROUPS.map((a) => ({ value: a, label: ageGroupLabel(a) })),
+  { value: FILTER_UNSPECIFIED, label: UNSPECIFIED_LABEL },
 ]
 
 /**
@@ -33,15 +38,15 @@ function summaryText(viewMode, view) {
 }
 
 /**
- * Filter bar for the Live Monitor page: same division filters as Results
- * (ระยะ / เพศ / รุ่นอายุ), no group-by or export — the card grid is always at
- * full division depth. The podium/feed view toggle sits first since it
- * changes what every card on the page means.
+ * Filter bar for the Live Monitor page: search + same division filters as
+ * Results (ระยะ / เพศ / รุ่นอายุ multi-select), no group-by or export — the
+ * card grid is always at full division depth. The podium/feed view toggle
+ * sits first since it changes what every card on the page means.
  * @param {{
- *   filter: { category: string, gender: string, ageGroup: string },
+ *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   viewMode: 'podium'|'feed',
  *   view: import('../../lib/monitor').MonitorCardData|import('../../lib/monitor').MonitorFeedCard,
- *   onFilter: (key: string, value: string) => void,
+ *   onFilter: (key: string, value: unknown) => void,
  *   onViewMode: (mode: 'podium'|'feed') => void,
  *   onClear: () => void
  * }} props
@@ -64,6 +69,15 @@ function MonitorFilterBar({ filter, viewMode, view, onFilter, onViewMode, onClea
       </div>
 
       <div className="filter-bar">
+        <input
+          type="search"
+          className="search"
+          placeholder="ค้นหา BIB หรือชื่อ-นามสกุล…"
+          value={filter.query}
+          onChange={(e) => onFilter('query', e.target.value)}
+          aria-label="ค้นหานักวิ่ง"
+        />
+
         <ChipGroup
           id="monitor-filter-category-legend"
           legend="ระยะ"
@@ -82,21 +96,15 @@ function MonitorFilterBar({ filter, viewMode, view, onFilter, onViewMode, onClea
           onSelect={(v) => onFilter('gender', v)}
         />
 
-        <div className="filter-bar__group">
-          <span className="filter-bar__legend" id="monitor-filter-age-legend">รุ่นอายุ</span>
-          <select
-            className="search search--select"
-            value={filter.ageGroup}
-            onChange={(e) => onFilter('ageGroup', e.target.value)}
-            aria-labelledby="monitor-filter-age-legend"
-          >
-            <option value={ANY}>ทุกรุ่น</option>
-            {AGE_GROUPS.map((a) => (
-              <option key={a} value={a}>{ageGroupLabel(a)}</option>
-            ))}
-            <option value={FILTER_UNSPECIFIED}>{UNSPECIFIED_LABEL}</option>
-          </select>
-        </div>
+        <ChipGroup
+          multiSelect
+          id="monitor-filter-age-legend"
+          legend="รุ่นอายุ"
+          allLabel="ทุกรุ่น"
+          options={AGE_OPTIONS}
+          value={filter.ageGroups}
+          onSelect={(next) => onFilter('ageGroups', next)}
+        />
 
         <div className="filter-bar__actions">
           {view.isFiltered && (

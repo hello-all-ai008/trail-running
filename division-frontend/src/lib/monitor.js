@@ -8,10 +8,19 @@
  * through so this file cannot drift from results.js's behaviour.
  */
 
-import { DEFAULT_GROUP_MODE, buildResultsView, filterFinishers, groupFinishers } from './results'
+import {
+  DEFAULT_GROUP_MODE,
+  EMPTY_FILTER,
+  buildResultsView,
+  filterFinishers,
+  groupFinishers,
+} from './results'
 import { findRunner } from './raceData'
 
 export const MONITOR_TOP_N = 5
+
+/** Overall Top-N per distance; also the division-eligibility cutoff (rankCategory <= this = exempt). */
+export const OVERALL_TOP_N = 3
 
 /**
  * @typedef {Object} MonitorCardData
@@ -19,7 +28,8 @@ export const MONITOR_TOP_N = 5
  * @property {string} label
  * @property {string[]} labelParts
  * @property {number} total          finishers in the division — NOT rows.length
- * @property {import('./results').ResultRow[]} rows   top N, rank ascending
+ * @property {number} exemptCount    members excluded for being overall top-3 in their category
+ * @property {import('./results').ResultRow[]} rows   award-eligible top N, rank ascending; each row also carries `awardRank` (1..N, monitor-local, not the same as `rankAge`)
  */
 
 /**
@@ -45,7 +55,7 @@ export const MONITOR_TOP_N = 5
  * isFiltered flag), reusing buildResultsView's own derivation rather than
  * reimplementing it — passing an empty field costs nothing since that part
  * of the view depends only on `filter`, not on the finisher list.
- * @param {{ category: string, gender: string, ageGroup: string }} filter
+ * @param {{ category: string, gender: string, ageGroups: string[], query: string }} filter
  * @returns {{ activeFilters: Array<{ key: string, label: string }>, isFiltered: boolean }}
  */
 function filterMeta(filter) {
@@ -72,10 +82,18 @@ function divisionKey(runner) {
 /**
  * Top-N-per-division podium: places 1..limit ranked by gun time, badge
  * carries the division's real finisher count (captured before slicing).
+ *
+ * Division-eligibility rule: a member whose `rankCategory` is within
+ * OVERALL_TOP_N is overall-exempt — they belong to the new Overall Top-3
+ * card instead (see buildMonitorOverall) and are removed entirely from
+ * their division here. The remaining eligible members are renumbered
+ * 1..N (gun-time order unchanged) as `awardRank` — a Monitor-local number,
+ * distinct from and not replacing `rankAge` (Results/e-Slip keep counting
+ * everyone).
  * @param {{
  *   finishers: ReadonlyArray<import('./raceData').Runner>,
  *   ranks: Record<string, { overall: number, gender: number, age: number }>,
- *   filter: { category: string, gender: string, ageGroup: string },
+ *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   limit?: number
  * }} input
  * @returns {{ cards: MonitorCardData[], cardCount: number, shownCount: number, totalFinishers: number, activeFilters: Array<{ key: string, label: string }>, isFiltered: boolean }}
@@ -83,13 +101,27 @@ function divisionKey(runner) {
 export function buildMonitorPodium({ finishers, ranks, filter, limit = MONITOR_TOP_N }) {
   const view = buildResultsView({ finishers, ranks, filter, groupBy: DEFAULT_GROUP_MODE })
 
-  const cards = view.groups.map((group) => ({
-    key: group.key,
-    label: group.label,
-    labelParts: group.labelParts,
-    total: group.count,
-    rows: group.rows.slice(0, limit),
-  }))
+  const cards = view.groups.map((group) => {
+    const eligible = []
+    let exemptCount = 0
+    group.rows.forEach((row) => {
+      if (row.rankCategory != null && row.rankCategory <= OVERALL_TOP_N) {
+        exemptCount += 1
+      } else {
+        eligible.push(row)
+      }
+    })
+    const rows = eligible.slice(0, limit).map((row, i) => ({ ...row, awardRank: i + 1 }))
+
+    return {
+      key: group.key,
+      label: group.label,
+      labelParts: group.labelParts,
+      total: group.count,
+      exemptCount,
+      rows,
+    }
+  })
 
   return {
     cards,
@@ -102,13 +134,52 @@ export function buildMonitorPodium({ finishers, ranks, filter, limit = MONITOR_T
 }
 
 /**
+ * @typedef {Object} MonitorOverallCard
+ * @property {string} key
+ * @property {string} label   the category, e.g. 'MKT33'
+ * @property {import('./results').ResultRow[]} rows   places 1..limit by rankCategory
+ */
+
+/**
+ * Overall Top N per distance, all genders/ages combined. rankCategory already
+ * *is* this placing, so no new ranking logic — just a shallower grouping and
+ * a smaller slice.
+ *
+ * Deliberately filtered on category only: gender/ageGroups/query in `filter`
+ * are ignored even if set, because "overall, all genders/ages" is contradicted
+ * by filtering on gender or age. The category chip still applies, so
+ * narrowing to one distance hides the other's overall card.
+ * @param {{
+ *   finishers: ReadonlyArray<import('./raceData').Runner>,
+ *   ranks: Record<string, { overall: number, gender: number, age: number }>,
+ *   filter: { category: string },
+ *   limit?: number
+ * }} input
+ * @returns {{ cards: MonitorOverallCard[], cardCount: number }}
+ */
+export function buildMonitorOverall({ finishers, ranks, filter, limit = OVERALL_TOP_N }) {
+  const categoryOnlyFilter = { ...EMPTY_FILTER, category: filter.category }
+  const view = buildResultsView({ finishers, ranks, filter: categoryOnlyFilter, groupBy: 'category' })
+
+  const cards = view.groups
+    .map((group) => ({
+      key: group.key,
+      label: group.label,
+      rows: group.rows.filter((row) => row.rankCategory != null && row.rankCategory <= limit),
+    }))
+    .filter((card) => card.rows.length > 0)
+
+  return { cards, cardCount: cards.length }
+}
+
+/**
  * Recent-scan feed: every accepted (`ok: true`) scan, resolved to its
  * runner's division and bucketed the same way the podium groups divisions.
  * Rejected scans are excluded — this is a live board, not the audit trail.
  * @param {{
  *   runners: ReadonlyArray<import('./raceData').Runner>,
  *   scanLog: ReadonlyArray<import('./raceEngine').LogEntry>,
- *   filter: { category: string, gender: string, ageGroup: string }
+ *   filter: { category: string, gender: string, ageGroups: string[], query: string }
  * }} input
  * @returns {{ cards: MonitorFeedCard[], cardCount: number, activeFilters: Array<{ key: string, label: string }>, isFiltered: boolean }}
  */

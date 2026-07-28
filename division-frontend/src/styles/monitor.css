@@ -135,3 +135,27 @@
     animation: none;
   }
 }
+
+/* ---- Overall Top-3: its own row above the division grid, gold accent so it
+   doesn't get lost among a dozen division cards. ---- */
+.monitor-overall {
+  margin-bottom: 1.1rem;
+}
+.monitor-overall-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.5rem;
+}
+.monitor-card--overall {
+  border-top: 3px solid oklch(72% 0.14 85);
+}
+
+/* ---- Division-eligibility sub-note: explains a badge total that no longer
+   matches the visible row count once overall-exempt runners are excluded. ---- */
+.monitor-card__subnote {
+  margin: 0;
+  padding: 0.15rem 1rem 0;
+  font-size: 0.72rem;
+  color: var(--color-status-red);
+}

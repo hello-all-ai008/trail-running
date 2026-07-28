@@ -3,7 +3,7 @@ import Button from '../components/ui/Button'
 import MonitorCard from '../components/monitor/MonitorCard'
 import MonitorFilterBar from '../components/monitor/MonitorFilterBar'
 import { useRecentArrivals } from '../hooks/useRecentArrivals'
-import { buildMonitorFeed, buildMonitorPodium } from '../lib/monitor'
+import { buildMonitorFeed, buildMonitorOverall, buildMonitorPodium } from '../lib/monitor'
 import { EMPTY_FILTER } from '../lib/results'
 
 /**
@@ -30,6 +30,10 @@ function MonitorPage({ runners, finishers, ranks, scanLog, onOpenSlip }) {
   const feedView = useMemo(
     () => buildMonitorFeed({ runners, scanLog, filter }),
     [runners, scanLog, filter],
+  )
+  const overallView = useMemo(
+    () => buildMonitorOverall({ finishers, ranks, filter }),
+    [finishers, ranks, filter],
   )
   const activeView = viewMode === 'podium' ? podiumView : feedView
 
@@ -76,6 +80,17 @@ function MonitorPage({ runners, finishers, ranks, scanLog, onOpenSlip }) {
         onViewMode={setViewMode}
         onClear={clearFilter}
       />
+
+      {viewMode === 'podium' && overallView.cards.length > 0 && (
+        <section className="monitor-overall" aria-labelledby="monitor-overall-heading">
+          <span className="eyebrow" id="monitor-overall-heading">ภาพรวมแยกระยะ</span>
+          <div className="monitor-overall-grid">
+            {overallView.cards.map((card) => (
+              <MonitorCard key={card.key} card={card} mode="overall" recentIds={recentIds} onOpenSlip={onOpenSlip} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {activeView.cards.length === 0 ? (
         <div className="glass-panel empty">

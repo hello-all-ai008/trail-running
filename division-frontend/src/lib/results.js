@@ -35,7 +35,7 @@ export const FILTER_UNSPECIFIED = '__none__'
 export const GROUP_MODES = ['category', 'category+gender', 'category+gender+age']
 export const DEFAULT_GROUP_MODE = 'category+gender+age'
 
-export const EMPTY_FILTER = Object.freeze({ category: ANY, gender: ANY, ageGroup: ANY })
+export const EMPTY_FILTER = Object.freeze({ category: ANY, gender: ANY, ageGroups: [], query: '' })
 
 const RANK_KEY_BY_MODE = {
   category: 'rankCategory',
@@ -149,8 +149,33 @@ function matches(value, filterValue) {
 }
 
 /**
+ * True when a runner's ageGroup satisfies a multi-select filter. Empty
+ * selection = no constraint. FILTER_UNSPECIFIED may appear as one element
+ * among real brackets, so "20-39 + ไม่ระบุ" is expressible together.
+ * @param {string} value
+ * @param {string[]|undefined} selected
+ */
+function matchesAgeGroups(value, selected) {
+  const list = selected ?? []
+  if (list.length === 0) return true
+  return list.some((s) => (s === FILTER_UNSPECIFIED ? value === UNSPECIFIED : value === s))
+}
+
+/**
+ * True when a runner's BIB or name contains the (trimmed, lowercased) query.
+ * Empty/whitespace-only query matches everything.
+ * @param {import('./raceData').Runner} runner
+ * @param {string|undefined} query
+ */
+function matchesQuery(runner, query) {
+  const q = (query ?? '').trim().toLowerCase()
+  if (!q) return true
+  return runner.bib.toLowerCase().includes(q) || runner.name.toLowerCase().includes(q)
+}
+
+/**
  * @param {ReadonlyArray<import('./raceData').Runner>} finishers
- * @param {{ category: string, gender: string, ageGroup: string }} filter
+ * @param {{ category: string, gender: string, ageGroups: string[], query: string }} filter
  * @returns {Array<import('./raceData').Runner>}
  */
 export function filterFinishers(finishers, filter) {
@@ -158,7 +183,8 @@ export function filterFinishers(finishers, filter) {
     (r) =>
       matches(r.category, filter.category) &&
       matches(r.gender, filter.gender) &&
-      matches(r.ageGroup, filter.ageGroup),
+      matchesAgeGroups(r.ageGroup, filter.ageGroups) &&
+      matchesQuery(r, filter.query),
   )
 }
 
@@ -250,20 +276,29 @@ function compareGroups(a, b) {
   )
 }
 
-const FILTER_LABELS = {
-  category: (v) => v,
-  gender: (v) => (v === FILTER_UNSPECIFIED ? UNSPECIFIED_LABEL : genderLabel(v)),
-  ageGroup: (v) => (v === FILTER_UNSPECIFIED ? UNSPECIFIED_LABEL : ageGroupLabel(v)),
-}
-
 /**
- * @param {{ category: string, gender: string, ageGroup: string }} filter
+ * @param {{ category: string, gender: string, ageGroups: string[], query: string }} filter
  * @returns {Array<{ key: string, label: string }>}
  */
 function describeFilter(filter) {
-  return Object.keys(FILTER_LABELS)
-    .filter((key) => filter[key] !== ANY)
-    .map((key) => ({ key, label: FILTER_LABELS[key](filter[key]) }))
+  const parts = []
+  if (filter.category !== ANY) parts.push({ key: 'category', label: filter.category })
+  if (filter.gender !== ANY) {
+    parts.push({
+      key: 'gender',
+      label: filter.gender === FILTER_UNSPECIFIED ? UNSPECIFIED_LABEL : genderLabel(filter.gender),
+    })
+  }
+  const ageGroups = filter.ageGroups ?? []
+  if (ageGroups.length > 0) {
+    const label = ageGroups
+      .map((v) => (v === FILTER_UNSPECIFIED ? UNSPECIFIED_LABEL : ageGroupLabel(v)))
+      .join(', ')
+    parts.push({ key: 'ageGroup', label })
+  }
+  const query = (filter.query ?? '').trim()
+  if (query) parts.push({ key: 'query', label: `ค้นหา "${query}"` })
+  return parts
 }
 
 /**
@@ -271,7 +306,7 @@ function describeFilter(filter) {
  * @param {{
  *   finishers: ReadonlyArray<import('./raceData').Runner>,
  *   ranks: Record<string, { overall: number, gender: number, age: number }>,
- *   filter: { category: string, gender: string, ageGroup: string },
+ *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   groupBy: string
  * }} input
  * @returns {ResultsView}
@@ -329,7 +364,7 @@ export function resultsCsv(view) {
 /**
  * Filter-aware filename so staff can export several division sheets without
  * overwriting each other.
- * @param {{ category: string, gender: string, ageGroup: string }} filter
+ * @param {{ category: string, gender: string, ageGroups: string[], query: string }} filter
  * @returns {string}
  */
 export function resultsCsvFilename(filter) {
@@ -338,10 +373,12 @@ export function resultsCsvFilename(filter) {
       .replace(/[^A-Za-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-  const parts = ['category', 'gender', 'ageGroup']
-    .filter((key) => filter[key] !== ANY)
-    .map((key) => slug(filter[key]))
-    .filter(Boolean)
+  const parts = []
+  if (filter.category !== ANY) parts.push(slug(filter.category))
+  if (filter.gender !== ANY) parts.push(slug(filter.gender))
+  const ageGroups = filter.ageGroups ?? []
+  if (ageGroups.length > 0) parts.push(ageGroups.map(slug).join('+'))
+  // query is intentionally excluded — free text is a poor filename component
 
   return ['race-results', ...parts].join('-') + '.csv'
 }

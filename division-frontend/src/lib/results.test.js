@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { ageGroupLabel, csvCell, genderLabel } from './raceData'
 import {
-  ANY,
   DEFAULT_GROUP_MODE,
   EMPTY_FILTER,
   FILTER_UNSPECIFIED,
@@ -118,17 +117,17 @@ describe('filterFinishers', () => {
       .toEqual(['5001', '5002', '5050'])
     expect(filterFinishers(rows, { ...EMPTY_FILTER, gender: 'Female' }).map((r) => r.bib))
       .toEqual(['3303', '3304', '5002'])
-    expect(filterFinishers(rows, { ...EMPTY_FILTER, ageGroup: '40-49' }).map((r) => r.bib))
+    expect(filterFinishers(rows, { ...EMPTY_FILTER, ageGroups: ['40-49'] }).map((r) => r.bib))
       .toEqual(['3304'])
   })
 
   it('combines all three dimensions', () => {
-    const rows = filterFinishers(field(), { category: 'MKT33', gender: 'Female', ageGroup: '20-39' })
+    const rows = filterFinishers(field(), { category: 'MKT33', gender: 'Female', ageGroups: ['20-39'] })
     expect(rows.map((r) => r.bib)).toEqual(['3303'])
   })
 
   it('returns only blank-bracket runners for the unspecified sentinel', () => {
-    const rows = filterFinishers(field(), { ...EMPTY_FILTER, ageGroup: FILTER_UNSPECIFIED })
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, ageGroups: [FILTER_UNSPECIFIED] })
     expect(rows.map((r) => r.bib)).toEqual(['5050'])
   })
 
@@ -141,7 +140,7 @@ describe('filterFinishers', () => {
     expect(plain.isFiltered).toBe(false)
     expect(plain.activeFilters).toEqual([])
 
-    const filtered = view({ filter: { category: 'MKT33', gender: 'Female', ageGroup: ANY } })
+    const filtered = view({ filter: { category: 'MKT33', gender: 'Female', ageGroups: [] } })
     expect(filtered.isFiltered).toBe(true)
     expect(filtered.activeFilters).toEqual([
       { key: 'category', label: 'MKT33' },
@@ -150,8 +149,70 @@ describe('filterFinishers', () => {
   })
 
   it('labels the unspecified sentinel rather than showing a blank chip', () => {
-    const v = view({ filter: { ...EMPTY_FILTER, ageGroup: FILTER_UNSPECIFIED } })
+    const v = view({ filter: { ...EMPTY_FILTER, ageGroups: [FILTER_UNSPECIFIED] } })
     expect(v.activeFilters).toEqual([{ key: 'ageGroup', label: 'ไม่ระบุ' }])
+  })
+})
+
+describe('multi-select ageGroups', () => {
+  it('returns the union of multiple selected brackets', () => {
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, ageGroups: ['20-39', '40-49'] })
+    // 20-39: 3301,3302,3303,5001,5002 · 40-49: 3304 — union, not intersection
+    expect(rows.map((r) => r.bib).sort()).toEqual(['3301', '3302', '3303', '3304', '5001', '5002'].sort())
+  })
+
+  it('combines a real bracket with the unspecified sentinel', () => {
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, ageGroups: ['60 Plus', FILTER_UNSPECIFIED] })
+    expect(rows.map((r) => r.bib).sort()).toEqual(['3305', '5050'].sort())
+  })
+
+  it('empty array behaves as no constraint', () => {
+    expect(filterFinishers(field(), { ...EMPTY_FILTER, ageGroups: [] })).toHaveLength(8)
+  })
+
+  it('describeFilter joins multiple selections with a comma', () => {
+    const v = view({ filter: { ...EMPTY_FILTER, ageGroups: ['20-39', '50-59'] } })
+    expect(v.activeFilters).toEqual([{ key: 'ageGroup', label: '20-39, 50-59' }])
+  })
+
+  it('resultsCsvFilename joins multiple ageGroups with +', () => {
+    expect(resultsCsvFilename({ ...EMPTY_FILTER, ageGroups: ['20-39', '50-59'] }))
+      .toBe('race-results-20-39+50-59.csv')
+  })
+})
+
+describe('query filter', () => {
+  it('matches by BIB substring', () => {
+    // All of 3301-3305 share the '330' prefix in this fixture — substring
+    // match is intentionally broad, so all five are expected here.
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, query: '330' })
+    expect(rows.map((r) => r.bib).sort()).toEqual(['3301', '3302', '3303', '3304', '3305'].sort())
+  })
+
+  it('matches by name case-insensitively', () => {
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, query: 'runner 5050' })
+    expect(rows.map((r) => r.bib)).toEqual(['5050'])
+  })
+
+  it('empty or whitespace query matches everything', () => {
+    expect(filterFinishers(field(), { ...EMPTY_FILTER, query: '' })).toHaveLength(8)
+    expect(filterFinishers(field(), { ...EMPTY_FILTER, query: '   ' })).toHaveLength(8)
+  })
+
+  it('combines with other dimensions (AND, not OR)', () => {
+    const rows = filterFinishers(field(), { ...EMPTY_FILTER, category: 'MKT50', query: '3301' })
+    expect(rows).toEqual([])
+  })
+
+  it('describeFilter/isFiltered reflect an active query', () => {
+    const v = view({ filter: { ...EMPTY_FILTER, query: 'blake' } })
+    expect(v.isFiltered).toBe(true)
+    expect(v.activeFilters).toEqual([{ key: 'query', label: 'ค้นหา "blake"' }])
+  })
+
+  it('resultsCsvFilename excludes the query', () => {
+    expect(resultsCsvFilename({ ...EMPTY_FILTER, category: 'MKT33', query: 'blake' }))
+      .toBe('race-results-MKT33.csv')
   })
 })
 
@@ -323,9 +384,9 @@ describe('resultsCsv', () => {
 
   it('names the file after the active filter', () => {
     expect(resultsCsvFilename(EMPTY_FILTER)).toBe('race-results.csv')
-    expect(resultsCsvFilename({ category: 'MKT33', gender: 'LGBTIQAN+', ageGroup: '60 Plus' }))
+    expect(resultsCsvFilename({ category: 'MKT33', gender: 'LGBTIQAN+', ageGroups: ['60 Plus'] }))
       .toBe('race-results-MKT33-LGBTIQAN-60-Plus.csv')
-    expect(resultsCsvFilename({ ...EMPTY_FILTER, ageGroup: FILTER_UNSPECIFIED }))
+    expect(resultsCsvFilename({ ...EMPTY_FILTER, ageGroups: [FILTER_UNSPECIFIED] }))
       .toBe('race-results-unspecified.csv')
   })
 })

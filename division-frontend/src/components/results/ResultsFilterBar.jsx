@@ -1,7 +1,7 @@
 import Button from '../ui/Button'
 import ChipGroup from '../ui/ChipGroup'
 import { AGE_GROUPS, CATEGORIES, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
-import { ANY, FILTER_UNSPECIFIED, GROUP_MODES } from '../../lib/results'
+import { FILTER_UNSPECIFIED, GROUP_MODES } from '../../lib/results'
 
 const GROUP_MODE_TH = {
   category: 'ระยะ',
@@ -9,14 +9,20 @@ const GROUP_MODE_TH = {
   'category+gender+age': 'ระยะ + เพศ + รุ่น',
 }
 
+const AGE_OPTIONS = [
+  ...AGE_GROUPS.map((a) => ({ value: a, label: ageGroupLabel(a) })),
+  { value: FILTER_UNSPECIFIED, label: UNSPECIFIED_LABEL },
+]
+
 /**
  * Division filters for the results page: distance + gender as chip strips
- * (small, high-traffic sets), age bracket and grouping depth as selects.
+ * (small, high-traffic sets), age brackets as multi-select chips, group-by
+ * and export stay select/button.
  * @param {{
- *   filter: { category: string, gender: string, ageGroup: string },
+ *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   groupBy: string,
  *   view: import('../../lib/results').ResultsView,
- *   onFilter: (key: string, value: string) => void,
+ *   onFilter: (key: string, value: unknown) => void,
  *   onGroupBy: (mode: string) => void,
  *   onClear: () => void,
  *   onExport: () => void
@@ -26,6 +32,15 @@ function ResultsFilterBar({ filter, groupBy, view, onFilter, onGroupBy, onClear,
   return (
     <>
       <div className="filter-bar">
+        <input
+          type="search"
+          className="search"
+          placeholder="ค้นหา BIB หรือชื่อ-นามสกุล…"
+          value={filter.query}
+          onChange={(e) => onFilter('query', e.target.value)}
+          aria-label="ค้นหานักวิ่ง"
+        />
+
         <ChipGroup
           id="filter-category-legend"
           legend="ระยะ"
@@ -44,21 +59,15 @@ function ResultsFilterBar({ filter, groupBy, view, onFilter, onGroupBy, onClear,
           onSelect={(v) => onFilter('gender', v)}
         />
 
-        <div className="filter-bar__group">
-          <span className="filter-bar__legend" id="filter-age-legend">รุ่นอายุ</span>
-          <select
-            className="search search--select"
-            value={filter.ageGroup}
-            onChange={(e) => onFilter('ageGroup', e.target.value)}
-            aria-labelledby="filter-age-legend"
-          >
-            <option value={ANY}>ทุกรุ่น</option>
-            {AGE_GROUPS.map((a) => (
-              <option key={a} value={a}>{ageGroupLabel(a)}</option>
-            ))}
-            <option value={FILTER_UNSPECIFIED}>{UNSPECIFIED_LABEL}</option>
-          </select>
-        </div>
+        <ChipGroup
+          multiSelect
+          id="filter-age-legend"
+          legend="รุ่นอายุ"
+          allLabel="ทุกรุ่น"
+          options={AGE_OPTIONS}
+          value={filter.ageGroups}
+          onSelect={(next) => onFilter('ageGroups', next)}
+        />
 
         <div className="filter-bar__group">
           <span className="filter-bar__legend" id="filter-group-legend">แยกกลุ่มตาม</span>
