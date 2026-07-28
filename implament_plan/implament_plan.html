@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — ค้นหานักวิ่ง + การ์ด Overall Top 3 + กติกาตัดสิทธิ์รางวัลรุ่น</title>
+<title>แผน — หน้า BIB โหลดช้า เพราะโหลด @react-pdf/renderer ทั้งที่แค่พรีวิว</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -15,9 +15,6 @@
     --muted: oklch(45% 0.02 150);
     --line: oklch(85% 0.02 150);
     --danger: oklch(55% 0.19 25);
-    --gold: oklch(66% 0.14 85);
-    --silver: oklch(60% 0.03 250);
-    --bronze: oklch(54% 0.10 50);
     --mono: "SF Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; }
@@ -36,7 +33,6 @@
   .lede { color: var(--muted); margin: 0 0 1.3rem; }
   section.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.15rem; margin: .9rem 0; }
   .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
-  .decide { border-left: 3px solid var(--accent); padding-left: .85rem; }
   .risk { border-left: 3px solid var(--danger); padding-left: .85rem; margin: .8rem 0; }
   .risk b { color: var(--danger); }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
@@ -51,172 +47,134 @@
   .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
   .tag--new { color: var(--forest); background: oklch(38% 0.08 155 / .1); }
   .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
+  .tag--none { color: var(--muted); }
   .wrap { overflow-x: auto; }
 
-  /* mock */
-  .mock-row { display: flex; flex-wrap: wrap; gap: .8rem; margin: .8rem 0; }
-  .mock-card { flex: 1 1 260px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-  .mock-card--overall { border-color: color-mix(in oklch, var(--gold) 45%, var(--line)); border-top: 3px solid var(--gold); }
-  .mock-card__head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .7rem .85rem; border-bottom: 1px solid var(--line); background: color-mix(in oklch, var(--forest) 5%, transparent); }
-  .mock-card__title { font-weight: 800; font-size: .82rem; color: var(--forest); }
-  .mock-card__badge { font-family: var(--mono); font-size: .64rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: .1rem .5rem; white-space: nowrap; }
-  .mock-card__sub { font-size: .68rem; color: var(--danger); padding: .3rem .85rem 0; }
-  .mock-table { margin: 0; font-size: .78rem; }
-  .mock-table th { font-size: .6rem; padding: .35rem .85rem; }
-  .mock-table td { padding: .38rem .85rem; border-bottom: 1px solid oklch(90% 0.01 150); }
-  .mock-table tr:last-child td { border-bottom: none; }
-  .place { font-family: var(--mono); font-weight: 800; }
-  .place--1 { color: var(--gold); } .place--2 { color: var(--silver); } .place--3 { color: var(--bronze); }
-  .place--n { color: var(--muted); }
-  .t { font-family: var(--mono); font-variant-numeric: tabular-nums; }
-  .strike { text-decoration: line-through; opacity: .4; }
+  /* flow diagram */
+  .flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: .9rem 0; font-size: .82rem; }
+  .flow__step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .5rem .75rem; }
+  .flow__step--heavy { border-color: color-mix(in oklch, var(--danger) 45%, var(--line)); color: var(--danger); }
+  .flow__step--light { border-color: color-mix(in oklch, var(--forest) 45%, var(--line)); color: var(--forest); }
+  .flow__arrow { color: var(--muted); }
+
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-07-25</span>
-<h1>ค้นหานักวิ่ง + การ์ด Overall Top 3 + กติกาตัดสิทธิ์รางวัลรุ่น</h1>
+<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-07-28</span>
+<h1>หน้า BIB โหลดช้า — เพราะดึง @react-pdf/renderer มาแค่พรีวิว</h1>
 <p class="lede">
-  เพิ่ม 2 อย่างจากที่ Gong ขอ: (1) ช่องค้นหาชื่อ/BIB บนทั้ง 2 หน้า (2) การ์ดใหม่ใน Live Monitor
-  โชว์ผู้ชนะ overall อันดับ 1-3 ของแต่ละระยะ (รวมทุกเพศทุกวัย) พร้อมกติกา — คนที่ติด overall แล้ว
-  ไม่มีสิทธิ์ในรางวัลรุ่นย่อยของระยะนั้นอีก และจะไม่โผล่ในการ์ดรุ่นย่อยเลย
+  รอบก่อนลดพรีวิวจากทั้งชุด (43 หน้า) เหลือ 1 ใบไปแล้ว แต่หน้ายังรู้สึกช้าตอนเปิด — Gong ถามหาสาเหตุจริง
+  สาเหตุคือไลบรารี PDF เอง (<code>@react-pdf/renderer</code>, fontkit + PDF engine ~480KB gzip) ถูกโหลดมาทำงาน
+  ทุกครั้งที่เปิดหน้า ทั้งที่ 90% ของการเข้าหน้านี้คือ "ดูดีไซน์" ไม่ใช่ "กดดาวน์โหลด"
 </p>
 
 <div class="ask">
-  <p style="margin:0"><b>ยังไม่ได้ลงมือ</b> — รอตรวจไฟล์นี้ก่อน โดยเฉพาะจุดที่ผมตัดสินใจเองแทน (ทำเครื่องหมายไว้ชัดด้านล่าง)</p>
+  <p style="margin:0"><b>ยังไม่ได้ลงมือ</b> — รอ Gong ดูไฟล์นี้ก่อน ตามกติกา "เขียนแผนก่อนแตะโค้ดทุกครั้ง"</p>
 </div>
 
-<h2>ที่ Gong ยืนยันแล้ว</h2>
-<table>
-  <tbody>
-    <tr><th>ช่องค้นหา</th><td>ทั้ง Live Monitor และผลการแข่งขัน</td></tr>
-    <tr><th>กติกาตัดสิทธิ์</th><td>มีผล<b>เฉพาะการ์ด Live Monitor ใหม่</b> — หน้าผลการแข่งขัน/e-Slip อันดับรุ่นยังนับทุกคนเหมือนเดิม ไม่กระทบ</td></tr>
-    <tr><th>เมื่อตัดคนติด overall ออก</th><td><b>เติมคนถัดไปขึ้นมาแทนจนครบ 5</b> (renumber ใหม่ 1-5 เฉพาะคนที่ยังมีสิทธิ์)</td></tr>
-  </tbody>
-</table>
-
-<h2>หน้าตาที่จะได้</h2>
-<div class="mock-row">
-  <div class="mock-card mock-card--overall">
-    <div class="mock-card__head">
-      <span class="mock-card__title">🏆 MKT33 · Overall</span>
-      <span class="mock-card__badge">TOP 3 ภาพรวม</span>
-    </div>
-    <table class="mock-table">
-      <thead><tr><th>#</th><th>BIB</th><th>ชื่อ</th><th>เวลา</th></tr></thead>
-      <tbody>
-        <tr><td class="place place--1">1</td><td class="mono">3381</td><td>JANTARABOON K.</td><td class="t">03:22:37</td></tr>
-        <tr><td class="place place--2">2</td><td class="mono">3390</td><td>SUDARAT P.</td><td class="t">03:45:10</td></tr>
-        <tr><td class="place place--3">3</td><td class="mono">3399</td><td>KAMONNUT S.</td><td class="t">04:20:28</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="mock-card">
-    <div class="mock-card__head">
-      <span class="mock-card__title">MKT33 · ชาย · 20-39</span>
-      <span class="mock-card__badge">จบ 18 คน</span>
-    </div>
-    <p class="mock-card__sub">ตัดสิทธิ์ 1 คน (ติด Overall)</p>
-    <table class="mock-table">
-      <thead><tr><th>#</th><th>BIB</th><th>ชื่อ</th><th>เวลา</th></tr></thead>
-      <tbody>
-        <tr class="strike"><td class="place">—</td><td class="mono">3381</td><td>JANTARABOON K. (ติด Overall #1)</td><td class="t">03:22:37</td></tr>
-        <tr><td class="place place--1">1</td><td class="mono">3399</td><td>KAMONNUT S.</td><td class="t">04:20:28</td></tr>
-        <tr><td class="place place--2">2</td><td class="mono">3379</td><td>ITTIPON U.</td><td class="t">04:52:10</td></tr>
-        <tr><td class="place place--3">3</td><td class="mono">3301</td><td>BLAKE W.</td><td class="t">04:54:39</td></tr>
-        <tr><td class="place place--n">4</td><td class="mono">3389</td><td>PANUPONG T.</td><td class="t">05:06:59</td></tr>
-        <tr><td class="place place--n">5</td><td class="mono">3348</td><td>OLIVER H.</td><td class="t">05:13:27</td></tr>
-      </tbody>
-    </table>
-  </div>
+<h2>ตอนนี้เกิดอะไรขึ้น</h2>
+<div class="flow">
+  <span class="flow__step">เปิดหน้า BIB</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step flow__step--heavy">โหลด @react-pdf/renderer ทั้งก้อน (480KB gzip)</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step flow__step--heavy">PDFViewer สร้างไฟล์ PDF จริง + เมาท์ iframe แสดงผล</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step">เห็นตัวอย่าง 1 ใบ</span>
 </div>
-<p style="color:var(--muted); font-size:.84rem; margin-top:-.2rem">
-  แถวขีดฆ่า = ตัวอย่างเพื่ออธิบายเท่านั้น การ์ดจริง <b>จะไม่แสดงแถวนี้เลย</b> (3381 หายไปจากการ์ดรุ่นย่อย
-  เพราะชื่อไปโชว์ในการ์ด Overall แล้ว) — เลข #1-5 ที่เหลือคือคนที่ยังมีสิทธิ์ รับช่วงขึ้นมาแทนจนครบ 5
-  บรรทัดสีแดงเล็ก ๆ ใต้หัวการ์ดบอกว่ามีกี่คนที่ถูกตัดสิทธิ์ไป กันงงว่าทำไม "จบ 18 คน" แต่อันดับ 1 ไม่ใช่คนที่เร็วสุด
+<p>
+  ปัญหาไม่ใช่จำนวนหน้าอีกแล้ว (แก้รอบก่อนแล้ว) แต่คือ<b>ตัวเอนจิน PDF เองมีต้นทุนคงที่สูง</b> — แค่โชว์ 1 ใบ
+  ก็ต้องพา fontkit + PDF layout engine ทั้งชุดมาทำงานเหมือนเดิม แถมพิมพ์เลข/ปรับ Prefix ทีนึงก็รันเอนจินใหม่ทุกครั้ง
 </p>
 
-<h2>จุดที่ผมตัดสินใจเอง — อยากให้ตรวจเป็นพิเศษ</h2>
-<div class="decide">
-  <p style="margin:0 0 .5rem"><b>การ์ด Overall Top 3 กรองด้วย "ระยะ" (chip MKT33/MKT50) อย่างเดียว</b>
-  — ตัวกรอง เพศ / รุ่นอายุ / ค้นหา จะ<b>ไม่</b>มีผลกับการ์ดนี้</p>
-  <p style="margin:0">
-    เหตุผล: "Overall รวมทุกเพศทุกวัย" ตามนิยามคือข้ามมิติเพศ/อายุอยู่แล้ว ถ้าไปกรองด้วยเพศ/อายุจะขัดกับความหมายของการ์ด
-    แต่ระยะ (MKT33/MKT50) ยังกรองได้ตามปกติ (เลือกดูเฉพาะ MKT50 การ์ด MKT33 overall จะหายไป)
-    <br><b>ถ้า Gong อยากให้กรองอย่างอื่นได้ด้วย บอกได้เลย แก้ไม่ยาก</b>
-  </p>
+<h2>ทางแก้ที่เสนอ</h2>
+<div class="flow">
+  <span class="flow__step">เปิดหน้า BIB</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step flow__step--light">พรีวิวด้วย HTML/CSS ธรรมดา (ไม่มี react-pdf)</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step">เห็นตัวอย่าง 1 ใบ ทันที</span>
 </div>
+<div class="flow">
+  <span class="flow__step">กด "ดาวน์โหลด PDF"</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step flow__step--heavy">ตอนนี้ค่อยโหลด @react-pdf/renderer (ครั้งเดียว ตอนนี้เท่านั้น)</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step">สร้าง PDF จริงครบทุกใบ + ดาวน์โหลด</span>
+</div>
+<p>
+  พรีวิวเปลี่ยนไปวาดด้วย <code>div/img/span</code> ธรรมดา (ไม่โหลดไลบรารีอะไรเพิ่ม) — พิมพ์แก้ Prefix/จำนวนหลัก/จำนวน
+  Check Point แล้วเห็นผลทันที ไม่มีดีเลย์ ส่วนไฟล์ PDF จริง (ที่ต้องแม่นทุกพิกเซลสำหรับพิมพ์) ยังใช้
+  <code>@react-pdf/renderer</code> เหมือนเดิม แค่ย้ายไปโหลดตอนกดดาวน์โหลดแทน ผ่าน <code>import()</code> แบบ dynamic
+  ซึ่ง Vite จะแยกเป็นคนละไฟล์ (chunk) ให้อัตโนมัติ
+</p>
 
 <h2>รายละเอียด</h2>
 
-<h3>1. ช่องค้นหา</h3>
+<h3>1. พรีวิวใหม่แบบ HTML ล้วน</h3>
 <p>
-  ใช้ตรรกะเดียวกับช่องค้นหาที่มีอยู่แล้วในหน้า "รายชื่อนักวิ่ง" (<code>RunnersPage.jsx</code>) —
-  ค้นจาก BIB หรือชื่อ (ไม่สนตัวพิมพ์เล็ก/ใหญ่) แต่ต่างจากที่นั่นตรงที่ตรงนี้ผูกเข้ากับตัวกรองรวม (<code>results.js</code>)
-  ไม่ใช่กรองทีหลังฝั่งหน้าจอ — ไม่งั้น badge จำนวนคนต่อรุ่น/การซ่อนการ์ดว่างจะไม่อัพเดทตาม
+  ไฟล์ใหม่ <code>src/components/bib/BibTagPreview.jsx</code> — วาด 1 ใบด้วย DOM ปกติ: แถบ Header (รูปที่อัปโหลด
+  หรือ placeholder สีเทา), เลข BIB ใหญ่ (ใช้ <code>generateBibNumbers()</code> เดิมจาก <code>lib/bibNumbering.js</code>,
+  เป็นแค่ฟังก์ชันคำนวณเลข ไม่เกี่ยวกับ react-pdf อยู่แล้ว), แถวกล่อง Start/Check Point/Finish, แถบ Footer
 </p>
-<pre><code>// results.js
-EMPTY_FILTER: { category: ANY, gender: ANY, ageGroups: [], query: '' }
-filterFinishers: + query predicate (bib.includes(q) || name.toLowerCase().includes(q))
-describeFilter: + {key:'query', label: `ค้นหา "..."`}  เมื่อพิมพ์อะไรไว้
-resultsCsvFilename: ไม่เอา query ไปใส่ชื่อไฟล์ (free text ไม่เหมาะเป็นชื่อไฟล์)</code></pre>
-<p>วางเป็นช่อง <code>&lt;input className="search"&gt;</code> อยู่หน้าสุดของแถบตัวกรอง ทั้งสองหน้า</p>
+<p>
+  กติกาป้าย Check Point (1 กล่อง = "Check Point", มากกว่า 1 = "CP1..CPn") ตอนนี้เขียนซ้ำอยู่ใน
+  <code>BibDocument.jsx</code> — ดึงออกมาเป็นฟังก์ชันกลางใน <code>lib/bibNumbering.js</code> ให้พรีวิวกับ PDF จริง
+  ใช้กฎเดียวกัน ไม่ต้องแก้ 2 ที่ถ้าเปลี่ยนกติกาในอนาคต
+</p>
 
-<h3>2. การ์ด Overall Top 3 + กติกาตัดสิทธิ์</h3>
-<p>
-  <code>rankCategory</code> ที่มีอยู่แล้ว (อันดับภายในระยะ ไม่แยกเพศ/วัย) <b>คือ</b> "อันดับ overall ของระยะนั้น" พอดี
-  ไม่ต้องคิดสูตรใหม่ — คนที่ <code>rankCategory &lt;= 3</code> คือคนที่ติด overall
-</p>
-<ul>
-  <li>คนติด overall: โผล่ในการ์ด Overall Top 3 ของระยะนั้น, <b>หายไปจากการ์ดรุ่นย่อยทั้งหมด</b></li>
-  <li>คนที่เหลือในรุ่นย่อย: เรียงลำดับใหม่ 1..N เฉพาะคนที่ยังมีสิทธิ์ (เวลาวิ่งเดิม แค่เลขอันดับขยับปิดช่องว่าง)
-      เรียกเลขนี้ว่า <code>awardRank</code> — คนละตัวกับ <code>rankAge</code> เดิมที่หน้าผลการแข่งขัน/e-Slip ยังใช้อยู่ ไม่แตะ</li>
-  <li>badge "จบ N คน" ยังนับรวมคนติด overall เหมือนเดิม (ขนาดสนามจริง) — มีบรรทัดเสริมสีแดง "ตัดสิทธิ์ N คน (ติด Overall)"
-      เมื่อมีคนโดนตัดสิทธิ์ กันงงตัวเลขไม่ตรงกัน</li>
-  <li>เคสรุ่นเล็กที่คนติด overall หมดรุ่น (เหลือ 0 คนมีสิทธิ์): การ์ดยังโชว์อยู่ (รุ่นนี้มีคนจบจริง) แต่ขึ้นข้อความแทนตาราง
-      "ผู้เข้าเส้นชัยทั้งหมดติด Overall — ไม่มีผู้มีสิทธิ์รับรางวัลรุ่นนี้"</li>
-  <li>โหมด "สแกนล่าสุด" ไม่มีแนวคิด overall — การ์ดนี้โชว์เฉพาะโหมด "อันดับ 1-5"</li>
-</ul>
+<h3>2. ย้าย react-pdf ไปโหลดตอนดาวน์โหลด</h3>
+<p><code>src/pages/BibGeneratorPage.jsx</code> — เอา import แบบ static ของ <code>PDFViewer</code>,
+  <code>PDFDownloadLink</code>, <code>BibDocument</code> ออกจากหัวไฟล์ทั้งหมด แทนที่ด้วย:</p>
+<pre><code>async function onDownload() {
+  setGenerating(true)
+  const [{ pdf }, { default: BibDocument }] = await Promise.all([
+    import('@react-pdf/renderer'),
+    import('../components/bib/BibDocument'),
+  ])
+  const blob = await pdf(&lt;BibDocument ... bibNumbers={bibNumbers} /&gt;).toBlob()
+  // blob → object URL → &lt;a download&gt; ชั่วคราว → click → revoke
+  // (แพทเทิร์นเดียวกับ downloadCSV() ใน src/lib/raceData.js:191-198 แค่เปลี่ยนเป็น PDF blob)
+  setGenerating(false)
+}</code></pre>
+<p>ปุ่มโชว์ "กำลังสร้าง PDF…" ระหว่างรอ เหมือนพฤติกรรมเดิมของ <code>PDFDownloadLink</code> ทุกอย่าง แค่เขียนเอง</p>
 
 <h2>ไฟล์ที่จะแตะ</h2>
 <div class="wrap">
 <table>
   <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">src/lib/results.js</td><td><span class="tag tag--edit">edit</span></td><td>+ <code>query</code> ในตัวกรอง (ดูรายละเอียด addendum ก่อนหน้าสำหรับ <code>ageGroups</code> multi-select ที่รวมอยู่ในรอบเดียวกัน)</td></tr>
-    <tr><td class="mono">src/lib/monitor.js</td><td><span class="tag tag--edit">edit</span></td><td>+ <code>buildMonitorOverall()</code>, <code>buildMonitorPodium</code> แยก eligible/exempt + renumber <code>awardRank</code></td></tr>
-    <tr><td class="mono">src/components/monitor/MonitorCard.jsx</td><td><span class="tag tag--edit">edit</span></td><td>ใช้ <code>awardRank</code> แทน <code>rankAge</code> ในโหมด podium, เพิ่มโหมด <code>overall</code>, sub-note ตัดสิทธิ์, empty-eligible message</td></tr>
-    <tr><td class="mono">src/pages/MonitorPage.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เรียก <code>buildMonitorOverall</code> เพิ่ม, วางแถวการ์ด overall เหนือ grid รุ่นย่อย (เฉพาะโหมด podium)</td></tr>
-    <tr><td class="mono">src/components/results/ResultsFilterBar.jsx / MonitorFilterBar.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เพิ่มช่องค้นหา</td></tr>
-    <tr><td class="mono">src/styles/monitor.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์การ์ด overall (เส้นขอบทอง), sub-note สีแดง, empty-eligible message</td></tr>
-    <tr><td class="mono">results.js ranks / rankAge / ESlipModal</td><td>ไม่แตะ</td><td>ตามที่ Gong ยืนยัน — กติกาตัดสิทธิ์มีผลแค่ Live Monitor</td></tr>
+    <tr><td class="mono">src/components/bib/BibTagPreview.jsx</td><td><span class="tag tag--new">new</span></td><td>พรีวิว 1 ใบ ด้วย HTML/CSS ล้วน ไม่มี react-pdf</td></tr>
+    <tr><td class="mono">src/lib/bibNumbering.js</td><td><span class="tag tag--edit">edit</span></td><td>เพิ่ม <code>checkpointLabels()</code> กลาง ให้พรีวิวกับ PDF จริงใช้ร่วมกัน</td></tr>
+    <tr><td class="mono">src/components/bib/BibDocument.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เรียกใช้ <code>checkpointLabels()</code> จากส่วนกลาง แทนโค้ดซ้ำเดิม (ไม่เปลี่ยนหน้าตา PDF)</td></tr>
+    <tr><td class="mono">src/pages/BibGeneratorPage.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เอา import react-pdf แบบ static ออก, พรีวิวเปลี่ยนเป็น <code>BibTagPreview</code>, ปุ่มดาวน์โหลดสร้าง PDF ผ่าน dynamic import</td></tr>
+    <tr><td class="mono">src/styles/bib.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์การ์ดพรีวิวใหม่, ถอด <code>.bib-page__viewer</code> (iframe เดิม) ที่ไม่ใช้แล้ว</td></tr>
+    <tr><td class="mono">src/pages/App.jsx</td><td><span class="tag tag--none">ไม่แตะ</span></td><td><code>lazy(() =&gt; import('./pages/BibGeneratorPage'))</code> เดิมยังทำงานถูก — แค่ก้อนที่โหลดจะเล็กลงเยอะ เพราะไม่มี react-pdf ติดมาด้วยแล้ว</td></tr>
   </tbody>
 </table>
 </div>
 
 <h2>ความเสี่ยง</h2>
-<div class="risk"><b>1.</b> ตอนนี้มีเลขอันดับ 2 ชุดที่ไม่เท่ากันได้บนคนเดียวกัน (<code>rankAge</code> หน้าผล vs <code>awardRank</code> Monitor)
-  — เป็นไปตามที่ตกลง แต่ต้องมี comment กันคนมาสับสนว่าทำไมเลขไม่ตรงกัน</div>
-<div class="risk"><b>2.</b> การ renumber ต้องไม่แตะ <code>ranks</code> ที่ใช้ร่วมกัน — เป็น partition+reindex เฉพาะใน <code>monitor.js</code> เท่านั้น</div>
-<div class="risk"><b>3.</b> ตัวกรองของการ์ด Overall (ระยะอย่างเดียว) เป็นการตัดสินใจของผม ไม่ใช่สิ่งที่ Gong ยืนยันตรง ๆ — จุดที่มีโอกาสโดนแก้มากสุด</div>
+<div class="risk"><b>1.</b> พรีวิว HTML จะไม่ตรงพิกเซลกับ PDF จริง 100% (ฟอนต์/ระยะห่างอาจต่างเล็กน้อย) —
+  ยอมรับได้เพราะพรีวิวมีไว้ดูดีไซน์คร่าวๆ ไฟล์ PDF ตอนดาวน์โหลดคือของจริงที่เอาไปพิมพ์</div>
+<div class="risk"><b>2.</b> กดดาวน์โหลดครั้งแรกของเซสชันจะมีดีเลย์สั้นๆ (โหลด react-pdf ตอนนั้นแทน) — มีข้อความ
+  "กำลังสร้าง PDF…" กันงงว่าไม่ได้ค้าง หลังจากนั้นเบราว์เซอร์แคชไว้ กดซ้ำจะไว</div>
 
 <h2>การตรวจ</h2>
 <pre><code>cd division-frontend
 npm test && npm run lint && npm run build</code></pre>
 <ol>
-  <li>ค้นหา BIB/ชื่อ ทั้งสองหน้า → เห็นเฉพาะคนที่ตรง การ์ด/แถวที่ไม่ตรงหายไป</li>
-  <li>Live Monitor เห็นการ์ด Overall Top 3 แยก MKT33/MKT50 คนละ 3 คน</li>
-  <li>คนที่ติด overall หายจากการ์ดรุ่นย่อยของตัวเอง อันดับ 1-5 ที่เหลือเรียงใหม่ไม่มีช่องว่าง</li>
-  <li>badge "จบ N คน" ไม่เปลี่ยน + มีบรรทัด "ตัดสิทธิ์ N คน" โผล่เมื่อมีคนถูกตัด</li>
-  <li>หน้าผลการแข่งขัน/e-Slip อันดับรุ่นยังนับทุกคนเหมือนเดิม ไม่เปลี่ยน</li>
-  <li>สลับไปโหมด "สแกนล่าสุด" → การ์ด Overall หายไป (โชว์เฉพาะโหมดอันดับ)</li>
+  <li>ดู build output: มี chunk react-pdf แยกออกมาต่างหาก ไม่ได้ติดไปกับ chunk ของหน้า BibGeneratorPage</li>
+  <li>เปิด DevTools → Network, เข้าหน้า "สร้าง BIB (PDF)" — หน้าขึ้นเร็ว ไม่มี request โหลดก้อน react-pdf (~480KB) จนกว่าจะกดดาวน์โหลด</li>
+  <li>พิมพ์แก้ Prefix / จำนวนหลักรวม / จำนวน Check Point — พรีวิวอัปเดตทันที ไม่มีดีเลย์</li>
+  <li>กด "ดาวน์โหลด PDF" — เห็น "กำลังสร้าง PDF…" ระหว่างรอ, ไฟล์ที่ได้ถูกต้องเหมือนที่ตรวจผ่านรอบก่อน (เช่น MKT33 Prefix "3" → 3001, 3002… CP1/CP2/CP3 ถูกต้อง, จัดหน้าคว่ำ 2 ใบต่อแผ่นเหมือนเดิม)</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> โดยเฉพาะช่วยยืนยันจุดตัวกรอง Overall card ด้านบนก่อน ไม่งั้นบอกจุดที่อยากแก้ได้เลย</p>
+  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> — ไม่มีจุดไหนต้องให้ Gong ตัดสินใจเพิ่ม เป็นแค่การย้ายว่าไลบรารีหนักโหลดตอนไหน ไม่เปลี่ยนพฤติกรรมที่ใช้งานจริง</p>
 </div>
 
 <footer>

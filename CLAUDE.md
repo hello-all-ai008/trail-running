@@ -57,7 +57,7 @@ Plan the real operational flow on race day, tied to the 6-step workflow above �
 
 ## Plan review (standing rule)
 
-Before executing any plan — new feature, bug fix, or anything that follows a research/search task — write/overwrite `implament_plan/implament_plan.html` with that plan (title, why, steps, files touched, verification) so Gong can review it in a browser first. Applies with or without formal Plan Mode, unless Gong already said "just do it." Single rolling file, not an archive — each new plan overwrites the last. Not the same file as the product mockup (`mockup-web-trail-running.html`).
+**Every time, before touching any code** — new feature, bug fix, refactor, config change, anything — write/overwrite `implament_plan/implament_plan.html` first (title, why, steps, files touched, risks, verification) so Gong reviews it in a browser before I code. No exceptions except Gong explicitly says "just do it" / "ลุยได้" / equivalent for that specific task. Applies with or without formal Plan Mode. Single rolling file, not an archive — each new plan overwrites the last. Not the same file as the product mockup (`mockup-web-trail-running.html`).
 
 ## Self-reminders
 
