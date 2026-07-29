@@ -68,6 +68,11 @@
   white-space: nowrap;
 }
 
+.bib-form__banner-hint {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
 .bib-form__categories {
   display: flex;
   flex-direction: column;
@@ -132,10 +137,71 @@
   text-decoration: none;
 }
 
-.bib-page__viewer {
-  flex: 1;
+/*
+ * Plain-HTML approximation of BibDocument.jsx's PDF tag layout — kept in
+ * sync by hand with the react-pdf styles (BAND_HEIGHT, box 76x52, etc).
+ * The real PDF (download button) is the source of truth for print output.
+ */
+.bib-tag-preview {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  min-height: 60vh;
-  border: none;
+  max-width: 640px;
+  margin: 0 auto;
+  aspect-ratio: 210 / 148.5;
+  border: 2px solid var(--color-text);
   border-radius: 12px;
+  overflow: hidden;
+  font-family: Helvetica, Arial, sans-serif;
+  background: var(--color-surface);
+}
+
+.bib-tag-preview__band-image {
+  height: var(--bib-tag-preview-band-height);
+  width: 100%;
+  object-fit: cover;
+}
+
+.bib-tag-preview__band--placeholder {
+  height: var(--bib-tag-preview-band-height);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(94% 0 0);
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.bib-tag-preview__number-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) 0;
+}
+
+.bib-tag-preview__number {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.bib-tag-preview__checkpoints {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding-bottom: 1rem;
+}
+
+.bib-tag-preview__checkpoint {
+  width: 76px;
+  height: 52px;
+  border: 1px solid var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--color-text);
 }

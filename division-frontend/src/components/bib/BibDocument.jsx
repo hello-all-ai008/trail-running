@@ -1,4 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet } from '@react-pdf/renderer'
+import { checkpointLabels } from '../../lib/bibNumbering'
 
 const BAND_HEIGHT = 70
 
@@ -78,18 +79,6 @@ function Band({ src, placeholder }) {
       <Text style={styles.bandPlaceholder}>{placeholder}</Text>
     </View>
   )
-}
-
-/**
- * Checkpoint box labels: a single generic "Check Point" box when there's
- * only one, else CP1..CPn — matches the reference design (BIB.png) which
- * only labels boxes individually once there's more than one checkpoint.
- * @param {number} checkpointCount
- * @returns {string[]}
- */
-function checkpointLabels(checkpointCount) {
-  if (checkpointCount <= 1) return ['Check Point']
-  return Array.from({ length: checkpointCount }, (_, i) => `CP${i + 1}`)
 }
 
 /**

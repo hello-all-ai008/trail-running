@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
-import { PDFViewer, PDFDownloadLink } from '@react-pdf/renderer'
 import { useBibConfig } from '../hooks/useBibConfig'
 import { initialRunners } from '../lib/raceData'
 import { generateBibNumbers } from '../lib/bibNumbering'
 import BibConfigForm from '../components/bib/BibConfigForm'
-import BibDocument from '../components/bib/BibDocument'
+import BibTagPreview from '../components/bib/BibTagPreview'
 
 /** @returns {Record<string, number>} category code -> real seeded runner count */
 function countRunnersByCategory() {
@@ -18,11 +17,18 @@ function countRunnersByCategory() {
  * Custom BIB PDF generator — Step 2 tooling. Admin uploads header/footer
  * banner images, sets numbering + checkpoint-count per category, and
  * downloads a print-ready PDF (two tags per A4 sheet, second rotated 180°).
+ *
+ * The heavy `@react-pdf/renderer` engine (~480KB gzip incl. fontkit) is
+ * never statically imported here — the live preview is plain HTML/CSS
+ * (`BibTagPreview`), and the PDF-generation code (`@react-pdf/renderer` +
+ * `BibDocument`) is only pulled in via dynamic `import()` when the admin
+ * actually clicks download.
  */
 function BibGeneratorPage() {
   const { config, setHeaderImage, setFooterImage, updateCategory } = useBibConfig()
   const runnerCounts = useMemo(countRunnersByCategory, [])
   const [selectedCode, setSelectedCode] = useState(config.categories[0]?.code ?? '')
+  const [generating, setGenerating] = useState(false)
 
   const selectedCategory = config.categories.find((c) => c.code === selectedCode) ?? config.categories[0]
   const runnerCount = selectedCategory ? runnerCounts[selectedCategory.code] ?? 0 : 0
@@ -32,12 +38,40 @@ function BibGeneratorPage() {
     return generateBibNumbers(selectedCategory, runnerCount)
   }, [selectedCategory, runnerCount])
 
-  // Live preview only ever needs one tag — feeding the full (up to
-  // hundreds-of-pages) bibNumbers into PDFViewer made the page slow to open.
+  // Live preview only ever needs one tag.
   const previewBibNumbers = useMemo(() => {
     if (!selectedCategory) return []
     return generateBibNumbers(selectedCategory, 1)
   }, [selectedCategory])
+
+  /** Lazily loads the PDF engine + document, builds the blob, and triggers a download. */
+  async function onDownload() {
+    if (!selectedCategory) return
+    setGenerating(true)
+    try {
+      const [{ pdf }, { default: BibDocument }] = await Promise.all([
+        import('@react-pdf/renderer'),
+        import('../components/bib/BibDocument'),
+      ])
+      const blob = await pdf(
+        <BibDocument
+          headerImage={config.headerImage}
+          footerImage={config.footerImage}
+          checkpointCount={selectedCategory.checkpointCount}
+          bibNumbers={bibNumbers}
+        />
+      ).toBlob()
+
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bib-${selectedCategory.code}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   return (
     <div className="bib-page">
@@ -64,30 +98,17 @@ function BibGeneratorPage() {
                 <span>
                   ตัวอย่าง {selectedCategory.code} — {runnerCount} ใบ ({Math.ceil(runnerCount / 2)} หน้า)
                 </span>
-                <PDFDownloadLink
-                  document={
-                    <BibDocument
-                      headerImage={config.headerImage}
-                      footerImage={config.footerImage}
-                      checkpointCount={selectedCategory.checkpointCount}
-                      bibNumbers={bibNumbers}
-                    />
-                  }
-                  fileName={`bib-${selectedCategory.code}.pdf`}
-                  className="btn btn-accent"
-                >
-                  {({ loading }) => (loading ? 'กำลังสร้าง PDF…' : 'ดาวน์โหลด PDF')}
-                </PDFDownloadLink>
+                <button type="button" className="btn btn-accent" onClick={onDownload} disabled={generating}>
+                  {generating ? 'กำลังสร้าง PDF…' : 'ดาวน์โหลด PDF'}
+                </button>
               </div>
 
-              <PDFViewer className="bib-page__viewer" showToolbar={false}>
-                <BibDocument
-                  headerImage={config.headerImage}
-                  footerImage={config.footerImage}
-                  checkpointCount={selectedCategory.checkpointCount}
-                  bibNumbers={previewBibNumbers}
-                />
-              </PDFViewer>
+              <BibTagPreview
+                headerImage={config.headerImage}
+                footerImage={config.footerImage}
+                checkpointCount={selectedCategory.checkpointCount}
+                bibNumber={previewBibNumbers[0]}
+              />
             </>
           ) : (
             <p>ยังไม่มีประเภทการแข่งขัน</p>

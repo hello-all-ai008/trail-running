@@ -28,3 +28,15 @@ export function generateBibNumbers({ prefix, totalDigits, startSeq }, count) {
     return `${prefix}${seq}`
   })
 }
+
+/**
+ * Checkpoint box labels: a single generic "Check Point" box when there's
+ * only one, else CP1..CPn — matches the reference design (BIB.png) which
+ * only labels boxes individually once there's more than one checkpoint.
+ * @param {number} checkpointCount
+ * @returns {string[]}
+ */
+export function checkpointLabels(checkpointCount) {
+  if (checkpointCount <= 1) return ['Check Point']
+  return Array.from({ length: checkpointCount }, (_, i) => `CP${i + 1}`)
+}

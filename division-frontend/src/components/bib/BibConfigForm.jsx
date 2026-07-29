@@ -35,6 +35,7 @@ function BannerUpload({ label, src, onChange }) {
           </button>
         )}
       </div>
+      <span className="bib-form__banner-hint">แนะนำ 1600×190px (แนวนอน ~8:1) — ภาพจะถูก crop ให้พอดีแถบสูง 70px เสมอ</span>
     </div>
   )
 }
