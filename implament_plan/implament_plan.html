@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — หน้า BIB โหลดช้า เพราะโหลด @react-pdf/renderer ทั้งที่แค่พรีวิว</title>
+<title>แผน — ต่อ Frontend กับ Backend จริง ดึงข้อมูลจาก Supabase (เลื่อนลบ mockData ไปทีหลัง)</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -31,10 +31,9 @@
   h2 { font-size: 1.05rem; color: var(--forest); margin: 2rem 0 .6rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
   h3 { font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--soil); }
   .lede { color: var(--muted); margin: 0 0 1.3rem; }
-  section.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.15rem; margin: .9rem 0; }
   .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
-  .risk { border-left: 3px solid var(--danger); padding-left: .85rem; margin: .8rem 0; }
-  .risk b { color: var(--danger); }
+  .blocker { border-left: 4px solid var(--danger); background: oklch(55% 0.19 25 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .8rem 0; }
+  .blocker b { color: var(--danger); }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
@@ -49,142 +48,107 @@
   .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
   .tag--none { color: var(--muted); }
   .wrap { overflow-x: auto; }
-
-  /* flow diagram */
   .flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: .9rem 0; font-size: .82rem; }
   .flow__step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .5rem .75rem; }
-  .flow__step--heavy { border-color: color-mix(in oklch, var(--danger) 45%, var(--line)); color: var(--danger); }
-  .flow__step--light { border-color: color-mix(in oklch, var(--forest) 45%, var(--line)); color: var(--forest); }
+  .flow__step--wait { border-color: color-mix(in oklch, var(--danger) 45%, var(--line)); color: var(--danger); }
   .flow__arrow { color: var(--muted); }
-
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--forest); color: white; font-size: .72rem; font-weight: 700; margin-right: .5rem; flex-shrink: 0; }
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-07-28</span>
-<h1>หน้า BIB โหลดช้า — เพราะดึง @react-pdf/renderer มาแค่พรีวิว</h1>
+<span class="eyebrow">Backend (Korn) + Frontend (Puttra) · Whale · 2026-07-30</span>
+<h1>ต่อ Frontend ↔ Backend จริง ↔ Supabase ก่อน ลบ mockData ทีหลัง</h1>
 <p class="lede">
-  รอบก่อนลดพรีวิวจากทั้งชุด (43 หน้า) เหลือ 1 ใบไปแล้ว แต่หน้ายังรู้สึกช้าตอนเปิด — Gong ถามหาสาเหตุจริง
-  สาเหตุคือไลบรารี PDF เอง (<code>@react-pdf/renderer</code>, fontkit + PDF engine ~480KB gzip) ถูกโหลดมาทำงาน
-  ทุกครั้งที่เปิดหน้า ทั้งที่ 90% ของการเข้าหน้านี้คือ "ดูดีไซน์" ไม่ใช่ "กดดาวน์โหลด"
+  Gong เปลี่ยนลำดับจากแผนก่อนหน้า — ขอให้ <b>ต่อสายจริงและพิสูจน์ว่าข้อมูลไหลจาก Supabase มาโชว์ในแอปได้ก่อน</b>
+  ค่อยไปลบ MKT33/MKT50 + mockData เป็นงานถัดไปแยกต่างหาก แผนนี้ครอบคลุมแค่ขั้นตอนต่อสายเท่านั้น
 </p>
 
-<div class="ask">
-  <p style="margin:0"><b>ยังไม่ได้ลงมือ</b> — รอ Gong ดูไฟล์นี้ก่อน ตามกติกา "เขียนแผนก่อนแตะโค้ดทุกครั้ง"</p>
+<div class="blocker">
+  <b>ติดอยู่ 2 จุด ที่ script ทำแทนไม่ได้ ต้อง Gong ทำเอง:</b>
+  <ol style="margin:.5rem 0 0">
+    <li><code>division-backend/.env</code> ยังไม่มี — ต้องเอา <b>password จริงของ DATABASE_URL</b> จาก
+      Supabase Dashboard → Project Settings → Database → Connection string → <b>Session pooler</b></li>
+    <li><code>staff_users</code> มี <b>0 แถว</b> — ยังไม่มี staff account จริงเลย ต้องสร้างที่
+      Dashboard → Authentication → <b>Add user</b> (อีเมล+รหัสผ่านอะไรก็ได้ที่จะใช้ login) แล้วบอกอีเมลกลับมา
+      ให้ Whale ผูกเข้า <code>staff_users</code></li>
+  </ol>
+  <p style="margin:.6rem 0 0">ทั้งสองอย่างนี้เป็นความลับ/ต้องทำผ่าน Dashboard เอง — เขียนสคริปต์แทนไม่ได้ (ตามกติกาเดิมที่วางไว้ใน backend CLAUDE.md)</p>
 </div>
 
-<h2>ตอนนี้เกิดอะไรขึ้น</h2>
+<h2>Flow ที่จะเกิดขึ้นหลังมีของ 2 อย่างข้างบน</h2>
 <div class="flow">
-  <span class="flow__step">เปิดหน้า BIB</span>
+  <span class="flow__step">Gong ให้ password + อีเมล staff</span>
   <span class="flow__arrow">→</span>
-  <span class="flow__step flow__step--heavy">โหลด @react-pdf/renderer ทั้งก้อน (480KB gzip)</span>
+  <span class="flow__step">เขียน division-backend/.env</span>
   <span class="flow__arrow">→</span>
-  <span class="flow__step flow__step--heavy">PDFViewer สร้างไฟล์ PDF จริง + เมาท์ iframe แสดงผล</span>
+  <span class="flow__step">รัน Go API (localhost:8080)</span>
   <span class="flow__arrow">→</span>
-  <span class="flow__step">เห็นตัวอย่าง 1 ใบ</span>
+  <span class="flow__step">ผูก staff_users</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step">พลิก VITE_USE_MOCK_DATA=false</span>
+  <span class="flow__arrow">→</span>
+  <span class="flow__step">login จริง + เห็นข้อมูลจริง</span>
 </div>
+
+<h2>ข้อควรรู้ก่อนเริ่ม</h2>
 <p>
-  ปัญหาไม่ใช่จำนวนหน้าอีกแล้ว (แก้รอบก่อนแล้ว) แต่คือ<b>ตัวเอนจิน PDF เองมีต้นทุนคงที่สูง</b> — แค่โชว์ 1 ใบ
-  ก็ต้องพา fontkit + PDF layout engine ทั้งชุดมาทำงานเหมือนเดิม แถมพิมพ์เลข/ปรับ Prefix ทีนึงก็รันเอนจินใหม่ทุกครั้ง
+  ตอนนี้ยังไม่ได้ลบอะไรใน Supabase เลย — <code>runners</code> table ยังมี <b>MKT33/MKT50 เดิม 121 คน</b> อยู่
+  ส่วน Baanpong 2026 (1003 คน) ยังนอนอยู่ใน <code>registrations</code> (ยังไม่ผ่าน assign BIB) รอบทดสอบนี้เลยจะ
+  <b>เห็นข้อมูล MKT33/MKT50 เดิม ไม่ใช่ Baanpong</b> — ตรงตามที่ควรจะเป็น เพราะจุดประสงค์รอบนี้คือพิสูจน์ว่า
+  "สายไฟ" ทำงาน (Go ↔ Postgres ↔ Auth ↔ Realtime ↔ React) ไม่ใช่พิสูจน์ว่าข้อมูล Baanpong ครบ
 </p>
 
-<h2>ทางแก้ที่เสนอ</h2>
-<div class="flow">
-  <span class="flow__step">เปิดหน้า BIB</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step flow__step--light">พรีวิวด้วย HTML/CSS ธรรมดา (ไม่มี react-pdf)</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">เห็นตัวอย่าง 1 ใบ ทันที</span>
-</div>
-<div class="flow">
-  <span class="flow__step">กด "ดาวน์โหลด PDF"</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step flow__step--heavy">ตอนนี้ค่อยโหลด @react-pdf/renderer (ครั้งเดียว ตอนนี้เท่านั้น)</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">สร้าง PDF จริงครบทุกใบ + ดาวน์โหลด</span>
-</div>
-<p>
-  พรีวิวเปลี่ยนไปวาดด้วย <code>div/img/span</code> ธรรมดา (ไม่โหลดไลบรารีอะไรเพิ่ม) — พิมพ์แก้ Prefix/จำนวนหลัก/จำนวน
-  Check Point แล้วเห็นผลทันที ไม่มีดีเลย์ ส่วนไฟล์ PDF จริง (ที่ต้องแม่นทุกพิกเซลสำหรับพิมพ์) ยังใช้
-  <code>@react-pdf/renderer</code> เหมือนเดิม แค่ย้ายไปโหลดตอนกดดาวน์โหลดแทน ผ่าน <code>import()</code> แบบ dynamic
-  ซึ่ง Vite จะแยกเป็นคนละไฟล์ (chunk) ให้อัตโนมัติ
-</p>
-
-<h2>รายละเอียด</h2>
-
-<h3>1. พรีวิวใหม่แบบ HTML ล้วน</h3>
-<p>
-  ไฟล์ใหม่ <code>src/components/bib/BibTagPreview.jsx</code> — วาด 1 ใบด้วย DOM ปกติ: แถบ Header (รูปที่อัปโหลด
-  หรือ placeholder สีเทา), เลข BIB ใหญ่ (ใช้ <code>generateBibNumbers()</code> เดิมจาก <code>lib/bibNumbering.js</code>,
-  เป็นแค่ฟังก์ชันคำนวณเลข ไม่เกี่ยวกับ react-pdf อยู่แล้ว), แถวกล่อง Start/Check Point/Finish, แถบ Footer
-</p>
-<p>
-  กติกาป้าย Check Point (1 กล่อง = "Check Point", มากกว่า 1 = "CP1..CPn") ตอนนี้เขียนซ้ำอยู่ใน
-  <code>BibDocument.jsx</code> — ดึงออกมาเป็นฟังก์ชันกลางใน <code>lib/bibNumbering.js</code> ให้พรีวิวกับ PDF จริง
-  ใช้กฎเดียวกัน ไม่ต้องแก้ 2 ที่ถ้าเปลี่ยนกติกาในอนาคต
-</p>
-
-<h3>2. ย้าย react-pdf ไปโหลดตอนดาวน์โหลด</h3>
-<p><code>src/pages/BibGeneratorPage.jsx</code> — เอา import แบบ static ของ <code>PDFViewer</code>,
-  <code>PDFDownloadLink</code>, <code>BibDocument</code> ออกจากหัวไฟล์ทั้งหมด แทนที่ด้วย:</p>
-<pre><code>async function onDownload() {
-  setGenerating(true)
-  const [{ pdf }, { default: BibDocument }] = await Promise.all([
-    import('@react-pdf/renderer'),
-    import('../components/bib/BibDocument'),
-  ])
-  const blob = await pdf(&lt;BibDocument ... bibNumbers={bibNumbers} /&gt;).toBlob()
-  // blob → object URL → &lt;a download&gt; ชั่วคราว → click → revoke
-  // (แพทเทิร์นเดียวกับ downloadCSV() ใน src/lib/raceData.js:191-198 แค่เปลี่ยนเป็น PDF blob)
-  setGenerating(false)
-}</code></pre>
-<p>ปุ่มโชว์ "กำลังสร้าง PDF…" ระหว่างรอ เหมือนพฤติกรรมเดิมของ <code>PDFDownloadLink</code> ทุกอย่าง แค่เขียนเอง</p>
-
-<h2>ไฟล์ที่จะแตะ</h2>
+<h2>ขั้นตอน (ทำหลังมี 2 อย่างข้างบนแล้ว)</h2>
 <div class="wrap">
 <table>
-  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
+  <thead><tr><th>ขั้น</th><th>ทำอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">src/components/bib/BibTagPreview.jsx</td><td><span class="tag tag--new">new</span></td><td>พรีวิว 1 ใบ ด้วย HTML/CSS ล้วน ไม่มี react-pdf</td></tr>
-    <tr><td class="mono">src/lib/bibNumbering.js</td><td><span class="tag tag--edit">edit</span></td><td>เพิ่ม <code>checkpointLabels()</code> กลาง ให้พรีวิวกับ PDF จริงใช้ร่วมกัน</td></tr>
-    <tr><td class="mono">src/components/bib/BibDocument.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เรียกใช้ <code>checkpointLabels()</code> จากส่วนกลาง แทนโค้ดซ้ำเดิม (ไม่เปลี่ยนหน้าตา PDF)</td></tr>
-    <tr><td class="mono">src/pages/BibGeneratorPage.jsx</td><td><span class="tag tag--edit">edit</span></td><td>เอา import react-pdf แบบ static ออก, พรีวิวเปลี่ยนเป็น <code>BibTagPreview</code>, ปุ่มดาวน์โหลดสร้าง PDF ผ่าน dynamic import</td></tr>
-    <tr><td class="mono">src/styles/bib.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์การ์ดพรีวิวใหม่, ถอด <code>.bib-page__viewer</code> (iframe เดิม) ที่ไม่ใช้แล้ว</td></tr>
-    <tr><td class="mono">src/pages/App.jsx</td><td><span class="tag tag--none">ไม่แตะ</span></td><td><code>lazy(() =&gt; import('./pages/BibGeneratorPage'))</code> เดิมยังทำงานถูก — แค่ก้อนที่โหลดจะเล็กลงเยอะ เพราะไม่มี react-pdf ติดมาด้วยแล้ว</td></tr>
+    <tr><td><span class="step-num">1</span></td><td>เขียน <code>division-backend/.env</code> จาก <code>.env.example</code> + password จริง</td></tr>
+    <tr><td><span class="step-num">2</span></td><td>รัน <code>go run ./cmd/api</code> (background, port 8080) เช็คว่าขึ้นสะอาด ไม่ panic ตอนต่อ DB/JWKS</td></tr>
+    <tr><td><span class="step-num">3</span></td><td>หา user id จากอีเมลที่ Gong สร้าง (<code>select id from auth.users where email=...</code>) แล้ว insert เข้า <code>staff_users</code></td></tr>
+    <tr><td><span class="step-num">4</span></td><td>พลิก <code>division-frontend/.env</code>: <code>VITE_USE_MOCK_DATA=false</code></td></tr>
+    <tr><td><span class="step-num">5</span></td><td>รัน <code>npm run dev</code>, login ด้วย staff account จริง</td></tr>
+    <tr><td><span class="step-num">6</span></td><td>เช็ค Dashboard/Runners โชว์ข้อมูลจริงจาก Postgres (121 คนเดิม)</td></tr>
   </tbody>
 </table>
 </div>
 
-<h2>ความเสี่ยง</h2>
-<div class="risk"><b>1.</b> พรีวิว HTML จะไม่ตรงพิกเซลกับ PDF จริง 100% — แยกตามสาเหตุ:
-  <ul style="margin:.4rem 0 0">
-    <li><b>ระยะห่าง/ขนาดกล่อง</b> — เกือบ 0% เพราะทั้งคู่ใช้ตัวเลข pt/px ตายตัวชุดเดียวกัน (แถบสูง 70pt, กล่อง 76×52pt ฯลฯ) copy มาใช้ตรงๆ</li>
-    <li><b>ฟอนต์</b> — ของจริงที่ต่างแน่ๆ: react-pdf ใช้ Helvetica เป็นค่าเริ่มต้น ส่วนพรีวิวถ้าไม่ตั้งเองจะสืบทอด <code>system-ui</code> ของแอป
-      ต่างกันได้ <b>~5-15%</b> ในความกว้างตัวอักษร — แก้ด้วยการตั้ง <code>font-family: Helvetica, Arial, sans-serif</code> ให้พรีวิวโดยตรง
-      จะเหลือต่างแค่ <b>~1-3%</b> (แค่ anti-aliasing ของเบราว์เซอร์ vs PDF renderer เอง แก้ต่อไม่ได้แต่ตาเปล่าแทบไม่เห็น)</li>
-  </ul>
-  ยอมรับได้เพราะพรีวิวมีไว้ดูดีไซน์คร่าวๆ ไฟล์ PDF ตอนดาวน์โหลดคือของจริงที่เอาไปพิมพ์</div>
-<div class="risk"><b>2.</b> กดดาวน์โหลดครั้งแรกของเซสชันจะมีดีเลย์สั้นๆ (โหลด react-pdf ตอนนั้นแทน) — มีข้อความ
-  "กำลังสร้าง PDF…" กันงงว่าไม่ได้ค้าง หลังจากนั้นเบราว์เซอร์แคชไว้ กดซ้ำจะไว</div>
+<h2>ไฟล์ที่แตะ</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>อะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">division-backend/.env</td><td><span class="tag tag--new">new</span></td><td>secret จริง ไม่ commit</td></tr>
+    <tr><td class="mono">division-frontend/.env</td><td><span class="tag tag--edit">edit</span></td><td><code>VITE_USE_MOCK_DATA=false</code></td></tr>
+    <tr><td class="mono">ทุกไฟล์อื่น</td><td><span class="tag tag--none">ไม่แตะ</span></td><td>โค้ด real-mode path (<code>api.js</code>, <code>useRaceState.js</code>) ถูกต้องอยู่แล้ว ตรวจสอบแล้วรอบนี้ ไม่ต้องแก้</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>เลื่อนไปทำทีหลัง (ตามที่ Gong สั่ง)</h2>
+<ul>
+  <li>ลบ MKT33/MKT50 ออกจาก Supabase (<code>runners</code>/<code>checkpoints</code>/<code>race_categories</code>)</li>
+  <li>ลบ <code>runners.json</code> + จุด hardcode MKT33/MKT50 ในโค้ด frontend (แผนเดิมที่เขียนไว้รอบก่อน ยังใช้ได้ แค่ขยับมาทำหลังรอบนี้แทน)</li>
+</ul>
 
 <h2>การตรวจ</h2>
-<pre><code>cd division-frontend
-npm test && npm run lint && npm run build</code></pre>
 <ol>
-  <li>ดู build output: มี chunk react-pdf แยกออกมาต่างหาก ไม่ได้ติดไปกับ chunk ของหน้า BibGeneratorPage</li>
-  <li>เปิด DevTools → Network, เข้าหน้า "สร้าง BIB (PDF)" — หน้าขึ้นเร็ว ไม่มี request โหลดก้อน react-pdf (~480KB) จนกว่าจะกดดาวน์โหลด</li>
-  <li>พิมพ์แก้ Prefix / จำนวนหลักรวม / จำนวน Check Point — พรีวิวอัปเดตทันที ไม่มีดีเลย์</li>
-  <li>กด "ดาวน์โหลด PDF" — เห็น "กำลังสร้าง PDF…" ระหว่างรอ, ไฟล์ที่ได้ถูกต้องเหมือนที่ตรวจผ่านรอบก่อน (เช่น MKT33 Prefix "3" → 3001, 3002… CP1/CP2/CP3 ถูกต้อง, จัดหน้าคว่ำ 2 ใบต่อแผ่นเหมือนเดิม)</li>
+  <li>Go process ขึ้น port 8080 ไม่มี error ใน log</li>
+  <li>เปิด frontend เจอหน้า login จริง (ไม่ใช่ mock ข้าม login) → login ผ่าน</li>
+  <li>Dashboard/Runners โชว์ 121 คน MKT33/MKT50 (พิสูจน์ Go ↔ Postgres ทำงาน)</li>
+  <li>ทด scan 1 ครั้งที่ Check-in station → เห็นแถวใหม่ใน <code>scan_events</code> + <code>live_progress</code> อัปเดตแบบ Realtime (เปิด 2 แท็บเทียบ)</li>
+  <li><code>cd division-frontend && npm test && npm run lint && npm run build</code> ผ่านหมด (ไม่ได้แก้โค้ด แต่เช็คว่าไม่มีอะไรพัง)</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> — ไม่มีจุดไหนต้องให้ Gong ตัดสินใจเพิ่ม เป็นแค่การย้ายว่าไลบรารีหนักโหลดตอนไหน ไม่เปลี่ยนพฤติกรรมที่ใช้งานจริง</p>
+  <p style="margin:0"><b>รอ Gong ส่ง password + อีเมล staff ก่อน</b> — พร้อมเมื่อไหร่บอกได้เลย จะเริ่มขั้น 1 ทันที</p>
 </div>
 
 <footer>
-  Whale · Frontend/Dashboard UI (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+  Whale · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
 </footer>
 
 </main>
