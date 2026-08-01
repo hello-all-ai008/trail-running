@@ -5,7 +5,11 @@
 // logged, first valid scan always wins.
 package scan
 
-import "trailrunning/division-backend/internal/raceview"
+import (
+	"time"
+
+	"trailrunning/division-backend/internal/raceview"
+)
 
 // Checkpoint codes accepted by Apply. CHECKIN and FINISH are the two
 // fixed endpoints; A1-A3 are the on-course checkpoints seeded in
@@ -52,4 +56,5 @@ type Result struct {
 	Outcome Outcome          `json:"outcome"`
 	Station string           `json:"station"`
 	Runner  *raceview.Runner `json:"runner"`
+	Time    time.Time        `json:"time"`
 }

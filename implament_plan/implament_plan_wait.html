@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผน — สแกนซ้ำ ไม่ insert เข้า scan_events (คงข้อความหน้าเว็บเหมือนเดิม)</title>
+<style>
+  :root {
+    --bg: oklch(96% 0.015 120);
+    --surface: oklch(99% 0.005 100);
+    --forest: oklch(38% 0.08 155);
+    --soil: oklch(42% 0.05 55);
+    --accent: oklch(72% 0.16 55);
+    --text: oklch(22% 0.02 150);
+    --muted: oklch(45% 0.02 150);
+    --line: oklch(85% 0.02 150);
+    --danger: oklch(55% 0.19 25);
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: clamp(1.2rem, 0.8rem + 2vw, 3rem);
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.65 -apple-system, "Sukhumvit Set", "Noto Sans Thai", system-ui, sans-serif;
+  }
+  main { max-width: 60rem; margin: 0 auto; }
+  .eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: clamp(1.4rem, 1.1rem + 1.3vw, 2rem); color: var(--forest); margin: .2rem 0 .3rem; letter-spacing: -.01em; }
+  h2 { font-size: 1.05rem; color: var(--forest); margin: 2rem 0 .6rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
+  .lede { color: var(--muted); margin: 0 0 1.3rem; }
+  .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
+  .risk { border-left: 3px solid var(--danger); padding-left: .85rem; margin: .8rem 0; }
+  .risk b { color: var(--danger); }
+  .resolved { border-left: 3px solid var(--forest); padding-left: .85rem; margin: .8rem 0; }
+  .resolved b { color: var(--forest); }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  code, .mono { font-family: var(--mono); font-size: .86em; }
+  code { background: oklch(92% 0.02 150); padding: .1em .35em; border-radius: 4px; }
+  pre { background: oklch(24% 0.02 150); color: oklch(92% 0.02 120); padding: .85rem 1rem; border-radius: 10px; overflow-x: auto; font-size: .8rem; line-height: 1.5; }
+  pre code { background: none; padding: 0; color: inherit; }
+  ul, ol { padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+  .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
+  .tag--none { color: var(--muted); }
+  .wrap { overflow-x: auto; }
+  .diff { font-family: var(--mono); font-size: .8rem; background: oklch(24% 0.02 150); border-radius: 10px; padding: .85rem 1rem; overflow-x: auto; line-height: 1.6; }
+  .diff .add { color: oklch(78% 0.16 145); }
+  .diff .ctx { color: oklch(75% 0.02 150); }
+  footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+</style>
+</head>
+<body>
+<main>
+
+<span class="eyebrow">Backend (Korn) · Whale · 2026-08-01</span>
+<h1>สแกนซ้ำ (duplicate) — ไม่ insert เข้า scan_events แล้ว คงข้อความหน้าเว็บเหมือนเดิม</h1>
+<p class="lede">
+  Gong ทดสอบสแกน BIB จริงครั้งแรกวันนี้ — สแกนซ้ำ BIB เดิม หน้าเว็บขึ้นข้อความ "duplicate" ถูกต้อง แต่ใน Supabase
+  ยังเห็นแถวใหม่ insert เข้า <code>scan_events</code> (status = DUPLICATE) ทุกครั้งที่สแกนซ้ำ — Gong อยากให้หน้าเว็บ
+  ขึ้นข้อความเหมือนเดิม แต่ไม่ต้อง insert เข้า database
+</p>
+
+<h2>ตรวจโค้ดแล้ว — เจอว่าไม่ใช่บั๊ก เป็น design เดิมที่ตั้งใจ</h2>
+<div class="resolved">
+  <b>ระบบตรวจจับซ้ำถูกต้อง 100% อยู่แล้ว</b> — <code>decideOutcome()</code> เช็คว่ามี scan VALID ที่ checkpoint
+  เดียวกันมาก่อนไหม เจอก็ตอบ "duplicate" กลับไป ไม่เคยไปเปลี่ยนสถานะ runner ซ้ำ (<code>transitionRunner</code>
+  ทำงานเฉพาะตอนผล VALID เท่านั้น) — ไม่มีความเสี่ยงข้อมูลพังไม่ว่าจะแก้หรือไม่แก้เรื่องนี้
+</div>
+<p>
+  ที่มันยัง insert เข้า DB เพราะ <code>scan_events</code> ถูกออกแบบเป็น <b>append-only audit log</b> — log
+  "ทุกครั้งที่สแกน ไม่ว่าผลจะเป็นอะไร" (ตามที่เขียนไว้ใน <code>division-backend/CLAUDE.md</code>) ไว้เพื่อย้อนดูทีหลังได้
+  ว่าเครื่องสแกนพัง หรือมีใครสแกนซ้ำหลายรอบผิดปกติไหม
+</p>
+
+<div class="risk">
+  <b>Trade-off ที่คุยกับ Gong แล้ว:</b> ถ้าตัด insert ทิ้งตอน duplicate จะเสีย audit trail ตรงนี้ถาวร —
+  ย้อนดูไม่ได้อีกว่ามีการสแกนซ้ำกี่ครั้ง เมื่อไหร่ (เผื่อวันแข่งจริงต้องสืบปัญหาเครื่องสแกน/คนกดซ้ำ)
+  <b>Gong ยืนยันแล้วว่าตัดออกไปเลย</b> — ไม่ insert duplicate อีกต่อไป
+</div>
+
+<h2>จุดที่แก้ — เฉพาะ DUPLICATE เท่านั้น</h2>
+<p>
+  <code>division-backend/internal/scan/apply.go</code> ฟังก์ชัน <code>Apply()</code> — ครอบเงื่อนไขรอบการเรียก
+  <code>logScan()</code> ให้ข้ามเฉพาะตอนผลเป็น <code>OutcomeDuplicate</code> เท่านั้น
+</p>
+<div class="wrap">
+<div class="diff"><span class="ctx">  outcome, err := decideOutcome(ctx, pgxScanHistory{tx: tx}, runnerID, req.CheckpointCode)</span>
+<span class="ctx">  if err != nil { return Result{}, fmt.Errorf("decide outcome: %w", err) }</span>
+
+<span class="add">+ if outcome != OutcomeDuplicate {</span>
+<span class="ctx">    if err := logScan(ctx, tx, req.RawValue, &amp;runnerID, req.CheckpointCode, req.StationID, recordedBy, outcome, ""); err != nil {</span>
+<span class="ctx">      return Result{}, err</span>
+<span class="ctx">    }</span>
+<span class="add">+ }</span></div>
+</div>
+<p>
+  ส่วนที่เหลือ (อ่านข้อมูล runner ส่งกลับ, response ที่ frontend ได้รับ) ไม่แตะเลย — หน้าเว็บยังได้
+  <code>outcome: "duplicate"</code> เหมือนเดิมทุกอย่าง แค่ไม่มีแถวใหม่เขียนลง DB
+</p>
+<p>
+  <b>ขอบเขตแคบมาก:</b> เฉพาะผล DUPLICATE เท่านั้นที่ไม่ insert — ผล NOT_FOUND, NOT_CHECKED_IN, OK (VALID)
+  ยัง log เหมือนเดิมทุกอย่าง ไม่แตะ
+</p>
+
+<h2>ไฟล์ที่แตะ</h2>
+<div class="wrap">
+<table>
+  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="mono">division-backend/internal/scan/apply.go</td><td><span class="tag tag--edit">edit</span></td><td>ครอบ <code>logScan()</code> ด้วย <code>if outcome != OutcomeDuplicate</code> — บรรทัดเดียว</td></tr>
+    <tr><td class="mono">ไฟล์อื่นทั้งหมด</td><td><span class="tag tag--none">ไม่แตะ</span></td><td>frontend/UI ไม่ต้องแก้ — ข้อความ "duplicate" ที่เห็นอยู่แล้วมาจาก response เดิม ไม่เปลี่ยน</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>เจอเพิ่มระหว่างตรวจโค้ด (ไม่อยู่ในสโคปนี้ แจ้งไว้เฉยๆ)</h2>
+<ul>
+  <li>Race condition เล็กๆ: ถ้าสแกนพร้อมกัน 2 คำขอในเสี้ยววินาทีเดียวกัน (2 สถานีพร้อมกัน) มีโอกาสน้อยมากที่ทั้งคู่จะผ่านเป็น VALID พร้อมกัน (ไม่มี lock กันไว้) — ไม่เกี่ยวกับเรื่องนี้ แยกไปทำทีหลังถ้าจำเป็น</li>
+  <li><code>LedBoard.jsx</code> ตอนสแกนถูกต้อง (ไม่ใช่ duplicate) ในโหมดจริง เวลาที่โชว์บนจอ LED อาจว่างเป็นขีด — เพราะ field <code>result.time</code> ไม่มีในโหมดจริง — บั๊กเล็กๆ แยกไปทำทีหลัง</li>
+</ul>
+
+<h2>การตรวจ</h2>
+<ol>
+  <li><code>cd division-backend && go build ./... && go vet ./...</code> — compile ผ่านสะอาด</li>
+  <li><code>go test ./...</code> — เทสเดิมทั้งหมดทดสอบ <code>decideOutcome()</code> ตรงๆ (ไม่แตะ DB) ไม่กระทบจากการแก้นี้</li>
+  <li>รีสตาร์ท Go API ตัวที่รันอยู่ (local, port 8080) ให้ได้ binary ใหม่</li>
+  <li>ทดสอบจริงผ่านหน้าเว็บที่ต่อ live mode อยู่แล้ว: สแกน BIB ที่ Check-in ครั้งแรก (นับแถวใน <code>scan_events</code> +1, status VALID) → สแกน BIB เดิมซ้ำ (หน้าเว็บขึ้น "duplicate" เหมือนเดิม) → เช็ค Supabase ว่าจำนวนแถวไม่เพิ่มจากการสแกนครั้งที่สอง</li>
+</ol>
+
+<div class="ask">
+  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> — ยังไม่ได้แก้โค้ด รอ Gong ตรวจก่อน</p>
+</div>
+
+<footer>
+  Whale · Backend (Korn) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+</footer>
+
+</main>
+</body>
+</html>

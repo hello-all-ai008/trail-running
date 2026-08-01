@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -53,6 +54,7 @@ func Apply(ctx context.Context, pool *pgxpool.Pool, req Request, recordedBy stri
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
+	scannedAt := time.Now()
 	station := stationLabel(ctx, tx, req.CheckpointCode)
 	value := normalizeValue(req.RawValue)
 
@@ -61,13 +63,22 @@ func Apply(ctx context.Context, pool *pgxpool.Pool, req Request, recordedBy stri
 		return Result{}, fmt.Errorf("resolve runner: %w", err)
 	}
 	if !found {
-		if err := logScan(ctx, tx, req.RawValue, nil, req.CheckpointCode, req.StationID, recordedBy, OutcomeNotFound, "runner not found"); err != nil {
+		if err := logScan(ctx, tx, req.RawValue, nil, req.CheckpointCode, req.StationID, recordedBy, OutcomeNotFound, "runner not found", scannedAt); err != nil {
 			return Result{}, err
 		}
 		if err := tx.Commit(ctx); err != nil {
 			return Result{}, fmt.Errorf("commit: %w", err)
 		}
-		return Result{Outcome: OutcomeNotFound, Station: station, Runner: nil}, nil
+		return Result{Outcome: OutcomeNotFound, Station: station, Runner: nil, Time: scannedAt}, nil
+	}
+
+	// Lock the runner row for the rest of this transaction so two concurrent
+	// scans of the same runner (e.g. two stations scanning the same BIB in
+	// the same instant) can't both read decideOutcome's "not yet valid"
+	// before either commits. A second concurrent Apply() blocks here until
+	// the first transaction commits/rolls back, then correctly sees it.
+	if _, err := tx.Exec(ctx, `select 1 from runners where id = $1 for update`, runnerID); err != nil {
+		return Result{}, fmt.Errorf("lock runner: %w", err)
 	}
 
 	outcome, err := decideOutcome(ctx, pgxScanHistory{tx: tx}, runnerID, req.CheckpointCode)
@@ -75,7 +86,7 @@ func Apply(ctx context.Context, pool *pgxpool.Pool, req Request, recordedBy stri
 		return Result{}, fmt.Errorf("decide outcome: %w", err)
 	}
 
-	if err := logScan(ctx, tx, req.RawValue, &runnerID, req.CheckpointCode, req.StationID, recordedBy, outcome, ""); err != nil {
+	if err := logScan(ctx, tx, req.RawValue, &runnerID, req.CheckpointCode, req.StationID, recordedBy, outcome, "", scannedAt); err != nil {
 		return Result{}, err
 	}
 
@@ -94,7 +105,7 @@ func Apply(ctx context.Context, pool *pgxpool.Pool, req Request, recordedBy stri
 		return Result{}, fmt.Errorf("commit: %w", err)
 	}
 
-	return Result{Outcome: outcome, Station: station, Runner: &runner}, nil
+	return Result{Outcome: outcome, Station: station, Runner: &runner, Time: scannedAt}, nil
 }
 
 // normalizeValue mirrors raceData.js's findRunner: uppercase, trim, strip
@@ -167,11 +178,11 @@ func (h pgxScanHistory) hasValidScan(ctx context.Context, runnerID, checkpointCo
 	return exists, err
 }
 
-func logScan(ctx context.Context, tx pgx.Tx, rawValue string, runnerID *string, checkpointCode, stationID, recordedBy string, outcome Outcome, message string) error {
+func logScan(ctx context.Context, tx pgx.Tx, rawValue string, runnerID *string, checkpointCode, stationID, recordedBy string, outcome Outcome, message string, scannedAt time.Time) error {
 	_, err := tx.Exec(ctx, `
-		insert into scan_events (raw_value, runner_id, checkpoint_code, status, message, station_id, recorded_by)
-		values ($1, $2, $3, $4, nullif($5, ''), nullif($6, ''), nullif($7, '')::uuid)
-	`, rawValue, runnerID, checkpointCode, outcome.eventStatus(), message, stationID, recordedBy)
+		insert into scan_events (raw_value, runner_id, checkpoint_code, status, message, station_id, recorded_by, scanned_at)
+		values ($1, $2, $3, $4, nullif($5, ''), nullif($6, ''), nullif($7, '')::uuid, $8)
+	`, rawValue, runnerID, checkpointCode, outcome.eventStatus(), message, stationID, recordedBy, scannedAt)
 	return err
 }
 

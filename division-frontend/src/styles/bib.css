@@ -17,9 +17,15 @@
 
 .bib-page__layout {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-columns: minmax(260px, 320px) 1fr minmax(260px, 320px);
   gap: var(--space-md);
   align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .bib-page__layout {
+    grid-template-columns: minmax(260px, 320px) 1fr;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -39,38 +45,6 @@
   margin: 0.5rem 0 0;
   font-size: 1rem;
   color: var(--color-forest);
-}
-
-.bib-form__banner {
-  gap: 0.5rem;
-}
-
-.bib-form__banner-preview {
-  width: 100%;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--glass-border);
-}
-
-.bib-form__banner-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bib-form__banner-clear {
-  border: none;
-  background: none;
-  color: var(--color-status-red);
-  font-size: 0.85rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.bib-form__banner-hint {
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
 }
 
 .bib-form__categories {
@@ -220,71 +194,143 @@
   text-decoration: none;
 }
 
-/*
- * Plain-HTML approximation of BibDocument.jsx's PDF tag layout — kept in
- * sync by hand with the react-pdf styles (BAND_HEIGHT, box 76x52, etc).
- * The real PDF (download button) is the source of truth for print output.
- */
-.bib-tag-preview {
+.bib-page__canvas-toolbar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bib-page__hidden-input {
+  display: none;
+}
+
+/*
+ * Interactive freeform canvas — one BIB tag's print area, drawn to the
+ * same aspect ratio BibDocument.jsx prints at (TAG_WIDTH_PT / TAG_HEIGHT_PT,
+ * set inline from lib/bibTemplate.js) so on-screen and printed positions
+ * match. Every child is a `.bib-canvas__el` positioned via inline
+ * left/top/width/height percentages computed in BibCanvasEditor.jsx.
+ */
+.bib-canvas {
+  position: relative;
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  aspect-ratio: 210 / 148.5;
   border: 2px solid var(--color-text);
   border-radius: 12px;
   overflow: hidden;
   font-family: Helvetica, Arial, sans-serif;
   background: var(--color-surface);
+  touch-action: none;
+  user-select: none;
 }
 
-.bib-tag-preview__band-image {
-  height: var(--bib-tag-preview-band-height);
+.bib-canvas__el {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  outline: 1px dashed transparent;
+  transition: outline-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.bib-canvas__el:hover {
+  outline-color: color-mix(in oklch, var(--color-accent) 40%, transparent);
+}
+
+.bib-canvas__el.is-selected {
+  outline: 2px solid var(--color-accent);
+}
+
+.bib-canvas__image {
   width: 100%;
+  height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }
 
-.bib-tag-preview__band--placeholder {
-  height: var(--bib-tag-preview-band-height);
+.bib-canvas__text {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: oklch(94% 0 0);
-  color: var(--color-text-muted);
-  font-size: 0.7rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  pointer-events: none;
 }
 
-.bib-tag-preview__number-area {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-md) 0;
+.bib-canvas__bib-number {
+  font-size: 4rem;
 }
 
-.bib-tag-preview__number {
-  font-size: 6rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.bib-tag-preview__checkpoints {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding-bottom: 1rem;
-}
-
-.bib-tag-preview__checkpoint {
-  width: 76px;
-  height: 52px;
+.bib-canvas__checkpoint {
+  width: 100%;
+  height: 100%;
   border: 1px solid var(--color-text);
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-size: 0.7rem;
   color: var(--color-text);
+  pointer-events: none;
+}
+
+.bib-canvas__handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-surface);
+  cursor: nwse-resize;
+}
+
+.bib-canvas__handle--nw { top: -5px; left: -5px; }
+.bib-canvas__handle--ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.bib-canvas__handle--sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.bib-canvas__handle--se { bottom: -5px; right: -5px; }
+
+/* Right-hand properties panel for the element selected on .bib-canvas. */
+.bib-props {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.bib-props__title {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-forest);
+}
+
+.bib-props__empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.bib-props__textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.bib-props__color {
+  width: 100%;
+  height: 2.2rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 0.15rem;
+  background: var(--color-surface);
+}
+
+.bib-props__layer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bib-props__layer .btn {
+  flex: 1;
+}
+
+.bib-props__remove {
+  width: 100%;
 }

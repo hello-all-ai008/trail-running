@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useBibConfig } from '../hooks/useBibConfig'
 import { initialRunners } from '../lib/raceData'
 import { generateBibNumbers, distanceFromCategory } from '../lib/bibNumbering'
 import BibConfigForm from '../components/bib/BibConfigForm'
-import BibTagPreview from '../components/bib/BibTagPreview'
+import BibCanvasEditor from '../components/bib/BibCanvasEditor'
+import BibElementPropertiesPanel from '../components/bib/BibElementPropertiesPanel'
+import Button from '../components/ui/Button'
 
 /** @returns {Record<number, number>} distance (km) -> real seeded runner count */
 function countRunnersByDistance() {
@@ -16,21 +18,36 @@ function countRunnersByDistance() {
 }
 
 /**
- * Custom BIB PDF generator — Step 2 tooling. Admin uploads header/footer
- * banner images, sets numbering + checkpoint-count per category, and
- * downloads a print-ready PDF (two tags per A4 sheet, second rotated 180°).
+ * Custom BIB PDF generator — Step 2 tooling. Admin adds image/text elements
+ * and drags every element (including the bib number and each checkpoint
+ * box) freely on a Canva-style canvas, sets numbering + checkpoint-count
+ * per category, and downloads a print-ready PDF (two tags per A4 sheet,
+ * second rotated 180°).
  *
  * The heavy `@react-pdf/renderer` engine (~480KB gzip incl. fontkit) is
- * never statically imported here — the live preview is plain HTML/CSS
- * (`BibTagPreview`), and the PDF-generation code (`@react-pdf/renderer` +
- * `BibDocument`) is only pulled in via dynamic `import()` when the admin
- * actually clicks download.
+ * never statically imported here — the live preview is the interactive
+ * `BibCanvasEditor` (plain HTML/CSS + pointer events), and the
+ * PDF-generation code (`@react-pdf/renderer` + `BibDocument`) is only
+ * pulled in via dynamic `import()` when the admin actually clicks download.
  */
 function BibGeneratorPage() {
-  const { config, setHeaderImage, setFooterImage, updateCategory, addCategory, removeCategory } = useBibConfig()
+  const {
+    config,
+    updateCategory,
+    addCategory,
+    removeCategory,
+    addImageElement,
+    addTextElement,
+    updateElement,
+    removeElement,
+    reorderElement,
+    resetLayout,
+  } = useBibConfig()
   const runnerCounts = useMemo(countRunnersByDistance, [])
   const [selectedId, setSelectedId] = useState(config.categories[0]?.id ?? '')
+  const [selectedElementId, setSelectedElementId] = useState(null)
   const [generating, setGenerating] = useState(false)
+  const imageInputRef = useRef(null)
 
   const selectedCategory = config.categories.find((c) => c.id === selectedId) ?? config.categories[0]
   const runnerCount = selectedCategory ? runnerCounts[selectedCategory.distanceKm] ?? 0 : 0
@@ -46,6 +63,21 @@ function BibGeneratorPage() {
     return generateBibNumbers(selectedCategory, 1)
   }, [selectedCategory])
 
+  const selectedElement = config.elements.find((el) => el.id === selectedElementId) ?? null
+
+  /** @param {import('react').ChangeEvent<HTMLInputElement>} e */
+  async function onImageFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await addImageElement(file)
+    e.target.value = ''
+  }
+
+  function onRemoveSelectedElement(id) {
+    removeElement(id)
+    setSelectedElementId(null)
+  }
+
   /** Lazily loads the PDF engine + document, builds the blob, and triggers a download. */
   async function onDownload() {
     if (!selectedCategory) return
@@ -57,8 +89,7 @@ function BibGeneratorPage() {
       ])
       const blob = await pdf(
         <BibDocument
-          headerImage={config.headerImage}
-          footerImage={config.footerImage}
+          elements={config.elements}
           checkpointCount={selectedCategory.checkpointCount}
           bibNumbers={bibNumbers}
         />
@@ -79,7 +110,7 @@ function BibGeneratorPage() {
     <div className="bib-page">
       <header className="bib-page__header">
         <h1>สร้าง BIB (PDF)</h1>
-        <p>อัปโหลด Header/Footer, ตั้งค่าเลขนำหน้าและจำนวน Check Point ต่อประเภท แล้วดาวน์โหลด PDF พร้อมพิมพ์</p>
+        <p>เพิ่มรูปภาพ/ข้อความแล้วลากวางตำแหน่งได้อิสระบน canvas ตั้งค่าเลขนำหน้าและจำนวน Check Point ต่อประเภท แล้วดาวน์โหลด PDF พร้อมพิมพ์</p>
       </header>
 
       <div className="bib-page__layout">
@@ -88,8 +119,6 @@ function BibGeneratorPage() {
           runnerCountsByDistance={runnerCounts}
           selectedId={selectedCategory?.id ?? ''}
           onSelectCategory={setSelectedId}
-          onHeaderImageChange={setHeaderImage}
-          onFooterImageChange={setFooterImage}
           onUpdateCategory={updateCategory}
           onAddCategory={addCategory}
           onRemoveCategory={removeCategory}
@@ -102,22 +131,50 @@ function BibGeneratorPage() {
                 <span>
                   ตัวอย่าง {selectedCategory.distanceKm} กม. — {runnerCount} ใบ ({Math.ceil(runnerCount / 2)} หน้า)
                 </span>
-                <button type="button" className="btn btn-accent" onClick={onDownload} disabled={generating}>
+                <Button onClick={onDownload} disabled={generating}>
                   {generating ? 'กำลังสร้าง PDF…' : 'ดาวน์โหลด PDF'}
-                </button>
+                </Button>
               </div>
 
-              <BibTagPreview
-                headerImage={config.headerImage}
-                footerImage={config.footerImage}
+              <div className="bib-page__canvas-toolbar">
+                <Button variant="secondary" onClick={() => imageInputRef.current?.click()}>
+                  + เพิ่มรูปภาพ
+                </Button>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="bib-page__hidden-input"
+                  onChange={onImageFileChange}
+                />
+                <Button variant="secondary" onClick={addTextElement}>
+                  + เพิ่มข้อความ
+                </Button>
+                <Button variant="danger" onClick={resetLayout}>
+                  รีเซ็ตเป็นค่าเริ่มต้น
+                </Button>
+              </div>
+
+              <BibCanvasEditor
+                elements={config.elements}
                 checkpointCount={selectedCategory.checkpointCount}
-                bibNumber={previewBibNumbers[0]}
+                bibNumberText={previewBibNumbers[0]}
+                selectedId={selectedElementId}
+                onSelectElement={setSelectedElementId}
+                onUpdateElement={updateElement}
               />
             </>
           ) : (
             <p>ยังไม่มีประเภทการแข่งขัน</p>
           )}
         </div>
+
+        <BibElementPropertiesPanel
+          element={selectedElement}
+          onUpdate={updateElement}
+          onRemove={onRemoveSelectedElement}
+          onReorder={reorderElement}
+        />
       </div>
     </div>
   )

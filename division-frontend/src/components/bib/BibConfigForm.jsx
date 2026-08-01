@@ -1,55 +1,15 @@
 const CHECKPOINT_OPTIONS = [1, 2, 3, 4]
 
 /**
- * @param {File} file
- * @returns {Promise<string>}
- */
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  })
-}
-
-/**
- * @param {{ label: string, src: string|null, onChange: (dataUrl: string|null) => void }} props
- */
-function BannerUpload({ label, src, onChange }) {
-  const onFile = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    onChange(await readFileAsDataURL(file))
-  }
-
-  return (
-    <div className="field bib-form__banner">
-      <span>{label}</span>
-      {src && <img className="bib-form__banner-preview" src={src} alt={`${label} preview`} />}
-      <div className="bib-form__banner-actions">
-        <input className="search" type="file" accept="image/*" onChange={onFile} />
-        {src && (
-          <button type="button" className="bib-form__banner-clear" onClick={() => onChange(null)}>
-            ลบรูป
-          </button>
-        )}
-      </div>
-      <span className="bib-form__banner-hint">แนะนำ 1600×190px (แนวนอน ~8:1) — ภาพจะถูก crop ให้พอดีแถบสูง 70px เสมอ</span>
-    </div>
-  )
-}
-
-/**
- * Left-hand configuration panel: header/footer banner uploads + one row of
- * numbering/checkpoint settings per admin-managed distance (km).
+ * Left-hand configuration panel: one row of numbering/checkpoint settings
+ * per admin-managed distance (km). Header/footer banners and any other
+ * custom elements are no longer configured here — they're added and
+ * positioned directly on `BibCanvasEditor`'s freeform canvas.
  * @param {{
- *   config: { headerImage: string|null, footerImage: string|null, categories: object[] },
+ *   config: { categories: object[] },
  *   runnerCountsByDistance: Record<number, number>,
  *   selectedId: string,
  *   onSelectCategory: (id: string) => void,
- *   onHeaderImageChange: (dataUrl: string|null) => void,
- *   onFooterImageChange: (dataUrl: string|null) => void,
  *   onUpdateCategory: (id: string, patch: object) => void,
  *   onAddCategory: () => void,
  *   onRemoveCategory: (id: string) => void,
@@ -60,18 +20,12 @@ function BibConfigForm({
   runnerCountsByDistance,
   selectedId,
   onSelectCategory,
-  onHeaderImageChange,
-  onFooterImageChange,
   onUpdateCategory,
   onAddCategory,
   onRemoveCategory,
 }) {
   return (
     <div className="glass-panel bib-form">
-      <h2 className="bib-form__title">Header / Footer</h2>
-      <BannerUpload label="Header banner" src={config.headerImage} onChange={onHeaderImageChange} />
-      <BannerUpload label="Footer banner" src={config.footerImage} onChange={onFooterImageChange} />
-
       <h2 className="bib-form__title">ประเภทการแข่งขัน</h2>
       <div className="bib-form__categories">
         {config.categories.map((cat) => (

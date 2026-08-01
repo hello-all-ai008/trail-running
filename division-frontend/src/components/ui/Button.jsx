@@ -13,11 +13,16 @@ const VARIANT_CLASS = {
 }
 
 /**
- * @param {{ variant?: 'accent'|'secondary'|'danger', type?: 'button'|'submit', onClick?: () => void, className?: string, children: import('react').ReactNode }} props
+ * @param {{ variant?: 'accent'|'secondary'|'danger', type?: 'button'|'submit', onClick?: () => void, disabled?: boolean, className?: string, children: import('react').ReactNode }} props
  */
-function Button({ variant = 'accent', type = 'button', onClick, className = '', children }) {
+function Button({ variant = 'accent', type = 'button', onClick, disabled = false, className = '', children }) {
   return (
-    <button type={type} onClick={onClick} className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.accent} ${className}`}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.accent} ${className}`}
+    >
       {children}
     </button>
   )

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — จัดแถว "ประเภทการแข่งขัน" ให้ responsive สวยขึ้น + เปลี่ยนปุ่ม × เป็นไอคอน</title>
+<title>แผน — หน้า "สร้าง BIB (PDF)" แบบ Canva ลากวางองค์ประกอบได้อิสระ</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -32,6 +32,8 @@
   h3 { font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--soil); }
   .lede { color: var(--muted); margin: 0 0 1.3rem; }
   .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
+  .hold { border-left: 4px solid var(--soil); background: oklch(42% 0.05 55 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .8rem 0; }
+  .hold b { color: var(--soil); }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
@@ -42,86 +44,138 @@
   ul, ol { padding-left: 1.3rem; }
   li { margin: .3rem 0; }
   .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+  .tag--new { color: var(--forest); background: oklch(38% 0.08 155 / .1); }
   .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
-  .tag--none { color: var(--muted); }
+  .tag--del { color: var(--danger); background: oklch(55% 0.19 25 / .1); }
   .wrap { overflow-x: auto; }
-
-  /* mock row */
-  .mock { border: 1px solid var(--line); border-radius: 12px; padding: .7rem .85rem; background: var(--surface); max-width: 22rem; margin: .9rem 0; }
-  .mock__row { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; justify-content: space-between; }
-  .mock__main { display: flex; align-items: center; gap: .4rem; }
-  .mock__pill { display: flex; align-items: center; gap: .3rem; border: 1px solid var(--line); border-radius: 8px; padding: .25rem .5rem; font-family: var(--mono); font-size: .85rem; }
-  .mock__meta { display: flex; align-items: center; gap: .5rem; }
-  .mock__badge { background: oklch(45% 0.02 150 / .08); color: var(--muted); border-radius: 999px; padding: .15rem .55rem; font-size: .78rem; }
-  .mock__icon { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--danger); background: oklch(55% 0.19 25 / .1); }
-
+  .clarify { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .9rem 0; }
+  .clarify b { color: var(--soil); }
+  .risk-num { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--danger); color: white; font-size: .8rem; font-weight: 700; margin-right: .5rem; flex-shrink: 0; }
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-08-01</span>
-<h1>แถว "ประเภทการแข่งขัน" — responsive สวยขึ้น + ปุ่มลบเป็นไอคอน</h1>
+<span class="eyebrow">Frontend (Puttra) · Whale · 2026-08-01</span>
+<h1>หน้า "สร้าง BIB (PDF)" แบบ Canva — ลากวางองค์ประกอบได้อิสระ</h1>
 <p class="lede">
-  Gong ส่งภาพมาชี้ — แถว radio + ช่องกรอกระยะทาง + "กม." + จำนวนคน + ปุ่มลบ ถูกยัดรวมกันเป็นเส้นเดียวในพาเนลแคบ
-  (280-360px) ดูอัดแน่น แถมปุ่มลบยังเป็นตัวอักษร "×" สีแดงเฉยๆ ไม่ใช่ไอคอนที่ตั้งใจออกแบบ — งานนี้คือแก้ CSS/JSX
-  ล้วนๆ ไม่แตะ state หรือ logic ใดๆ
+  หน้า <code>สร้าง BIB (PDF)</code> มีอยู่แล้ว แต่ layout ตอนนี้ <b>fix ตายตัว</b>: แถบ header บน → เลข BIB กลาง →
+  กล่อง checkpoint เรียงแถวนอน → แถบ footer ล่าง (<code>BibTagPreview.jsx</code> + <code>BibDocument.jsx</code>
+  ต้อง mirror layout กันด้วยมือ 2 ไฟล์). Gong อยากได้ตัวสร้าง BIB ที่ custom เองได้แบบ Canva — อัปโหลดรูปมาวางเป็น
+  header/footer เอง ใส่ข้อความรายละเอียดเอง ลากวางตำแหน่งอิสระ
 </p>
 
-<h2>Mockup แถวใหม่</h2>
-<div class="mock">
-  <div class="mock__row">
-    <div class="mock__main">
-      <input type="radio" checked disabled>
-      <span class="mock__pill">33 กม.</span>
-    </div>
-    <div class="mock__meta">
-      <span class="mock__badge">86 คน</span>
-      <span class="mock__icon" title="ลบ">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-        </svg>
-      </span>
-    </div>
-  </div>
+<div class="clarify">
+  <p style="margin:0 0 .5rem"><b>ยืนยัน scope กับ Gong แล้ว:</b></p>
+  <p style="margin:0">
+    ลากได้ <b>ทุกอย่างรวมเลข BIB และกล่อง checkpoint แต่ละกล่องแยกกัน</b> ไม่ fix แถวเหมือนเดิม — freeform เต็มรูปแบบ
+    แลกกับความเสี่ยงลากพลาด จึงต้องมีปุ่ม "รีเซ็ตเป็นค่าเริ่มต้น" รองรับ
+  </p>
 </div>
-<p>
-  ระยะทาง+"กม." รวมเป็นกล่อง pill เดียวแทนที่จะเป็นสองก้อนหลวมๆ, จำนวนคนเป็น badge พื้นเทาอ่อน,
-  ปุ่มลบเป็นวงกลมพื้นแดงจางๆ + ไอคอนถังขยะ (สไตล์เดียวกับไอคอนใน <code>Sidebar.jsx</code>'s <code>ICONS</code> — feather-style,
-  <code>stroke="currentColor"</code>) แทนตัวอักษร ×
-</p>
-<p>
-  <b>Responsive:</b> กลุ่ม radio+ระยะทาง กับกลุ่มจำนวนคน+ปุ่มลบ แยกเป็นสอง flex group ในแถวเดียวกัน (`justify-content: space-between`)
-  ถ้าพาเนลแคบเกินจะรวมกันพอดี ตัว flex-wrap จะให้กลุ่มหลังตกไปบรรทัดใหม่เองอัตโนมัติ ไม่ต้องเขียน media query
-</p>
 
-<h2>ไฟล์ที่จะแตะ</h2>
+<h2>โครงสร้างข้อมูล — เปลี่ยนจาก headerImage/footerImage คงที่ → elements[]</h2>
+<p>Template เดียว ใช้ร่วมกันทุกระยะ (เหมือนพฤติกรรม header/footer เดิมที่เป็น global ไม่ใช่ per-category):</p>
+<pre><code>{
+  elements: [
+    { id, type: 'image',  xPct, yPct, wPct, hPct, zIndex, src },
+    { id, type: 'text',   xPct, yPct, wPct, hPct, zIndex, text, fontSize, fontWeight, color, align },
+    { id, type: 'bibNumber',     xPct, yPct, wPct, hPct, zIndex, fontSize, fontWeight, color, align },
+    { id, type: 'checkpointBox', role: 'start'|'cp1'|'cp2'|'cp3'|'cp4'|'finish', xPct, yPct, wPct, hPct, zIndex, fontSize },
+  ],
+  categories: [...]  // ไม่แตะ — prefix/totalDigits/startSeq/checkpointCount เดิม
+}</code></pre>
+<ul>
+  <li><b>6 checkpointBox slot คงที่เสมอ</b> (start, cp1-4, finish) — ลากตำแหน่งแต่ละอันแยกกันได้ล่วงหน้า
+    ตอน preview/PDF จะ render เฉพาะ role ที่ตรงกับ <code>checkpointCount</code> ของ category ที่เลือก
+    (checkpointCount=2 → โชว์ start, cp1, cp2, finish ซ่อน cp3/cp4) — เลี่ยงปัญหา reconcile ตำแหน่งใหม่ทุกครั้งที่เปลี่ยนจำนวน CP</li>
+  <li><b>bibNumber มีอันเดียว</b> — ตำแหน่ง/สไตล์ปรับได้ เนื้อหาเลขจริงมาจาก <code>generateBibNumbers</code> ต่อใบเหมือนเดิม</li>
+  <li><b>image/text เพิ่ม/ลบได้อิสระ</b> — ตอบโจทย์ "อัปโหลดรูปมาใส่เป็น header/footer" และ "ข้อความใส่รายละเอียด" โดยตรง</li>
+  <li>Layer order = ลำดับใน array (<code>zIndex</code>); ปุ่ม "เอาไว้หน้า/เอาไว้หลัง" ในแผงคุณสมบัติ</li>
+  <li>Migration: <code>useBibConfig.js</code> มี migration อยู่แล้ว (<code>migrateCategory</code>) — เพิ่ม migration ที่ 2:
+    config เก่าที่มี headerImage/footerImage ตรงๆ → แปลงเป็น image element ตำแหน่งบน/ล่างอัตโนมัติ +
+    default position ให้ bibNumber/checkpointBox ตาม layout fix เดิม (ภาพเหมือนเดิมเป๊ะจนกว่าจะลากเอง)
+    <b>ไม่ทำให้ draft เดิมของ Gong หาย</b></li>
+</ul>
+
+<h2>การลาก/ปรับขนาด — ไม่เพิ่ม dependency ใหม่</h2>
+<p>
+  พิจารณา react-rnd / react-moveable แล้ว — ตัดสินใจ <b>เขียนเองด้วย pointer events ธรรมดา</b> เพราะ scope แคบและชัดเจน
+  (translate + resize มุม 4 จุด บน container สัดส่วนคงที่ตัวเดียว ไม่มี rotate ไม่มี multi-container) สั้นกว่าและไม่เพิ่ม
+  bundle ให้หน้า admin ที่ไม่ค่อยมีใครเข้า
+</p>
+<ul>
+  <li>คลิก element → เลือก (โครงไฮไลต์ + handle มุมสำหรับ resize)</li>
+  <li>ลาก body → เปลี่ยน xPct/yPct; ลาก handle มุม → เปลี่ยน wPct/hPct</li>
+  <li>คำนวณ pct จาก <code>getBoundingClientRect()</code> ของ canvas (สัดส่วน A4 ครึ่งใบ 210:148.5 คงที่ ใช้ค่าเดียวกับ <code>.bib-tag-preview</code> เดิม)</li>
+  <li>Toolbar เหนือ canvas: <code>+ เพิ่มรูปภาพ</code>, <code>+ เพิ่มข้อความ</code>, <code>รีเซ็ตเป็นค่าเริ่มต้น</code></li>
+  <li>แผงคุณสมบัติ: image → เปลี่ยนรูป/ลบ; text/bibNumber/checkpointBox → font size, weight, สี, align
+    (text แก้เนื้อหาได้, bibNumber/checkpointBox แก้เนื้อหาไม่ได้เพราะเป็นข้อมูลจริง); ลบได้เฉพาะ image/text
+    (bibNumber/checkpointBox ห้ามลบ — โครงสร้าง BIB ต้องมีเลข/checkpoint ครบ)</li>
+</ul>
+
+<h2>PDF Generation — ใช้ template เดียวกัน ไม่ hand-sync 2 ที่แบบเดิม</h2>
+<p>
+  <code>BibDocument.jsx</code> เขียนใหม่: <code>TagContent</code> render จาก <code>elements[]</code> เดียวกับ preview
+  แทน layout fix เดิม — ตำแหน่ง pct แปลงผ่าน helper กลางตัวเดียว (<code>lib/bibTemplate.js</code>) ใช้ร่วมกันทั้ง
+  preview (HTML) และ PDF (react-pdf) แก้ปัญหาคอมเมนต์เดิมใน <code>bib.css</code> ที่บอกว่า hand-kept-in-sync กันเอง 2 ไฟล์
+</p>
+<div class="clarify">
+  <p style="margin:0"><b>ความเสี่ยงทางเทคนิคหลัก:</b> ต้องตรวจสอบตั้งแต่ต้นว่า react-pdf v4 รองรับ
+  <code>position: 'absolute'</code> + left/top/width/height เป็น <code>%</code> ตามที่คาด ถ้าไม่รองรับ fallback
+  คือแปลง pct → pt ตรงๆ (คำนวณจากขนาดพื้นที่ tag จริง) — ทำได้เหมือนกัน แค่ต้องมีขนาด canvas อ้างอิงคงที่</p>
+</div>
+<p>Layout สองใบต่อ A4 + หมุน 180° ใบล่าง (ของเดิม) <b>ไม่แตะ</b></p>
+
+<h2>ไฟล์ที่แตะ</h2>
 <div class="wrap">
 <table>
   <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">src/components/bib/BibConfigForm.jsx</td><td><span class="tag tag--edit">edit</span></td><td>จัดกลุ่ม markup แถว category-select ใหม่ (main/meta), เปลี่ยนปุ่ม × เป็น SVG ถังขยะ</td></tr>
-    <tr><td class="mono">src/styles/bib.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์ pill ระยะทาง, badge จำนวนคน, ปุ่มไอคอนวงกลม, เส้นแบ่งกลุ่มแบบ flex-wrap, พื้นหลังจางๆ ตอนเลือกแถว</td></tr>
-    <tr><td class="mono">useBibConfig.js / BibGeneratorPage.jsx</td><td><span class="tag tag--none">ไม่แตะ</span></td><td>ไม่มีการเปลี่ยน prop/state ใดๆ งานนี้เป็นแค่หน้าตา</td></tr>
+    <tr><td class="mono">src/lib/bibTemplate.js</td><td><span class="tag tag--new">ใหม่</span></td><td>default layout (6 checkpoint slot + bibNumber ตำแหน่งเดิม), pct↔pt helper ใช้ร่วม preview/PDF</td></tr>
+    <tr><td class="mono">src/hooks/useBibConfig.js</td><td><span class="tag tag--edit">แก้</span></td><td>state shape → elements[], migration จาก headerImage/footerImage เดิม, actions: addImageElement/addTextElement/updateElement/removeElement/reorderElement/resetLayout</td></tr>
+    <tr><td class="mono">src/components/bib/BibCanvasEditor.jsx</td><td><span class="tag tag--new">ใหม่</span></td><td>canvas โต้ตอบได้ — แทน BibTagPreview.jsx เดิม (ลาก/resize/เลือก/toolbar)</td></tr>
+    <tr><td class="mono">src/components/bib/BibElementPropertiesPanel.jsx</td><td><span class="tag tag--new">ใหม่</span></td><td>แผงคุณสมบัติ element ที่เลือก</td></tr>
+    <tr><td class="mono">src/components/bib/BibTagPreview.jsx</td><td><span class="tag tag--del">ลบ</span></td><td>ถูกแทนด้วย BibCanvasEditor.jsx</td></tr>
+    <tr><td class="mono">src/components/bib/BibDocument.jsx</td><td><span class="tag tag--edit">แก้</span></td><td>render จาก elements[] เดียวกับ preview แทน layout fix</td></tr>
+    <tr><td class="mono">src/components/bib/BibConfigForm.jsx</td><td><span class="tag tag--edit">แก้</span></td><td>ตัด BannerUpload header/footer เดิมออก (ย้ายไปเป็น image element บน canvas แทน)</td></tr>
+    <tr><td class="mono">src/pages/BibGeneratorPage.jsx</td><td><span class="tag tag--edit">แก้</span></td><td>ต่อ canvas editor ใหม่แทน preview เดิม, ส่ง elements เข้า BibDocument ตอน download</td></tr>
+    <tr><td class="mono">src/styles/bib.css</td><td><span class="tag tag--edit">แก้</span></td><td>เพิ่มสไตล์ canvas/handle/toolbar/properties panel, ลบสไตล์ band fix เดิมที่เลิกใช้</td></tr>
   </tbody>
 </table>
 </div>
+<p><b>ไม่เพิ่ม dependency ใหม่</b> — ใช้ react, @react-pdf/renderer เดิม + pointer events ธรรมดา</p>
 
-<h2>การตรวจ</h2>
+<h2>นอกขอบเขตรอบนี้</h2>
+<p>หมุน element, undo/redo, เลือกหลาย element พร้อมกัน, เส้น snap/จัดกึ่งกลางอัตโนมัติ, template แยกต่อ category
+  (ยังใช้ร่วมกันทุกระยะเหมือนเดิม) — บอกได้ถ้าอยากได้เพิ่มทีหลัง</p>
+
+<h2>ความเสี่ยง</h2>
+<p><span class="risk-num">1</span><b>react-pdf รองรับ % position หรือไม่</b> — ต้อง validate จริงตอน build มี fallback แปลง pct→pt เองไว้แล้ว</p>
+<p><span class="risk-num">2</span><b>ไม่มี component-level test infra</b> (ไม่มี @testing-library, มีแค่ vitest สำหรับ pure function) —
+  drag/resize ต้อง manual test ผ่าน dev server เท่านั้น ส่วน logic ล้วน (bibTemplate.js, migration) เขียน unit test ได้ตามแบบไฟล์เดิม</p>
+<p><span class="risk-num">3</span><b>Data migration</b> — ต้องทดสอบว่า config เก่าใน localStorage (headerImage/footerImage ตรงๆ)
+  แปลงเป็น elements ถูกต้อง ไม่ทำรูปที่ Gong อัปโหลดไว้แล้วหาย</p>
+
+<h2>การตรวจสอบ</h2>
 <ol>
-  <li>เปิดหน้า "สร้าง BIB (PDF)" เช็คแถวที่ความกว้างพาเนล ~280px และ ~360px (ตาม <code>minmax(280px, 360px)</code>) และตอนจอแคบ &lt;1024px ที่พาเนลเต็มความกว้าง — แถวไม่ล้น ไม่บีบข้อความจนอ่านไม่ออก</li>
-  <li>ปุ่มลบเป็นไอคอนถังขยะ มี hover state (วงกลมแดงจางเข้มขึ้น) กดแล้วยังลบแถวได้ถูกต้องเหมือนเดิม</li>
-  <li>แถวที่เลือกไว้ (radio checked) เห็นพื้นหลังจางๆ เพิ่มจากเดิม ไม่ใช่แค่กรอบสีเปลี่ยน</li>
+  <li><code>npm run dev</code> (ใน <code>division-frontend/</code>) เปิดหน้า <code>#/bib</code></li>
+  <li>เพิ่มรูปภาพ ลากไปวางบน/ล่าง (จำลอง header/footer), เพิ่มข้อความ ลากวางที่ว่าง</li>
+  <li>ลากเลข BIB และกล่อง checkpoint แต่ละกล่องไปคนละตำแหน่ง, resize ดูว่า handle ทำงานถูก</li>
+  <li>เปลี่ยน checkpointCount ของ category แล้วเช็คว่ากล่องที่ไม่เกี่ยวข้องซ่อนถูกต้อง</li>
+  <li>กด "รีเซ็ตเป็นค่าเริ่มต้น" เช็คว่ากลับไป layout fix เดิมได้</li>
+  <li>กด "ดาวน์โหลด PDF" เทียบภาพใน PDF กับที่เห็นบนจอ ต้องตรงกัน</li>
+  <li>Reload หน้าเว็บ เช็คว่า layout ที่จัดไว้ยังอยู่ (persist ผ่าน localStorage)</li>
+  <li>ทดสอบ migration: ยัด JSON แบบเก่า (headerImage/footerImage) ใส่ localStorage มือ เช็คว่า migrate ถูกต้อง ไม่หายรูป</li>
+  <li><code>npm run test</code> (vitest) ผ่านหมด รวม unit test ใหม่ของ bibTemplate.js</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> — ยังไม่ได้แตะโค้ด รอ Gong ตรวจก่อน</p>
+  <p style="margin:0"><b>รอ Gong ตรวจแผนนี้ก่อนเริ่มโค้ด</b> — ตาม scope ที่ยืนยันแล้ว (ลากได้ทุกอย่างรวมเลข BIB + checkpoint แยกกล่อง) ถ้าโอเคบอกได้เลยแล้วเริ่มทำ</p>
 </div>
 
 <footer>
-  Whale · Frontend/Dashboard UI (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+  Whale · Frontend (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
 </footer>
 
 </main>
