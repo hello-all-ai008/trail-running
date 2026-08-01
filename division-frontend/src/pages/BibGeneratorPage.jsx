@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { useBibConfig } from '../hooks/useBibConfig'
 import { initialRunners } from '../lib/raceData'
-import { generateBibNumbers } from '../lib/bibNumbering'
+import { generateBibNumbers, distanceFromCategory } from '../lib/bibNumbering'
 import BibConfigForm from '../components/bib/BibConfigForm'
 import BibTagPreview from '../components/bib/BibTagPreview'
 
-/** @returns {Record<string, number>} category code -> real seeded runner count */
-function countRunnersByCategory() {
+/** @returns {Record<number, number>} distance (km) -> real seeded runner count */
+function countRunnersByDistance() {
   return initialRunners.reduce((acc, r) => {
-    acc[r.category] = (acc[r.category] ?? 0) + 1
+    const d = distanceFromCategory(r.category)
+    if (d == null) return acc
+    acc[d] = (acc[d] ?? 0) + 1
     return acc
   }, {})
 }
@@ -25,13 +27,13 @@ function countRunnersByCategory() {
  * actually clicks download.
  */
 function BibGeneratorPage() {
-  const { config, setHeaderImage, setFooterImage, updateCategory } = useBibConfig()
-  const runnerCounts = useMemo(countRunnersByCategory, [])
-  const [selectedCode, setSelectedCode] = useState(config.categories[0]?.code ?? '')
+  const { config, setHeaderImage, setFooterImage, updateCategory, addCategory, removeCategory } = useBibConfig()
+  const runnerCounts = useMemo(countRunnersByDistance, [])
+  const [selectedId, setSelectedId] = useState(config.categories[0]?.id ?? '')
   const [generating, setGenerating] = useState(false)
 
-  const selectedCategory = config.categories.find((c) => c.code === selectedCode) ?? config.categories[0]
-  const runnerCount = selectedCategory ? runnerCounts[selectedCategory.code] ?? 0 : 0
+  const selectedCategory = config.categories.find((c) => c.id === selectedId) ?? config.categories[0]
+  const runnerCount = selectedCategory ? runnerCounts[selectedCategory.distanceKm] ?? 0 : 0
 
   const bibNumbers = useMemo(() => {
     if (!selectedCategory) return []
@@ -65,7 +67,7 @@ function BibGeneratorPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `bib-${selectedCategory.code}.pdf`
+      a.download = `bib-${selectedCategory.distanceKm}km.pdf`
       a.click()
       URL.revokeObjectURL(url)
     } finally {
@@ -83,12 +85,14 @@ function BibGeneratorPage() {
       <div className="bib-page__layout">
         <BibConfigForm
           config={config}
-          runnerCounts={runnerCounts}
-          selectedCode={selectedCategory?.code ?? ''}
-          onSelectCategory={setSelectedCode}
+          runnerCountsByDistance={runnerCounts}
+          selectedId={selectedCategory?.id ?? ''}
+          onSelectCategory={setSelectedId}
           onHeaderImageChange={setHeaderImage}
           onFooterImageChange={setFooterImage}
           onUpdateCategory={updateCategory}
+          onAddCategory={addCategory}
+          onRemoveCategory={removeCategory}
         />
 
         <div className="glass-panel bib-page__preview">
@@ -96,7 +100,7 @@ function BibGeneratorPage() {
             <>
               <div className="bib-page__preview-toolbar">
                 <span>
-                  ตัวอย่าง {selectedCategory.code} — {runnerCount} ใบ ({Math.ceil(runnerCount / 2)} หน้า)
+                  ตัวอย่าง {selectedCategory.distanceKm} กม. — {runnerCount} ใบ ({Math.ceil(runnerCount / 2)} หน้า)
                 </span>
                 <button type="button" className="btn btn-accent" onClick={onDownload} disabled={generating}>
                   {generating ? 'กำลังสร้าง PDF…' : 'ดาวน์โหลด PDF'}

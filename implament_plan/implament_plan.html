@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — ต่อ Frontend กับ Backend จริง ดึงข้อมูลจาก Supabase (เลื่อนลบ mockData ไปทีหลัง)</title>
+<title>แผน — จัดแถว "ประเภทการแข่งขัน" ให้ responsive สวยขึ้น + เปลี่ยนปุ่ม × เป็นไอคอน</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -32,8 +32,6 @@
   h3 { font-size: .92rem; margin: 1.2rem 0 .4rem; color: var(--soil); }
   .lede { color: var(--muted); margin: 0 0 1.3rem; }
   .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
-  .blocker { border-left: 4px solid var(--danger); background: oklch(55% 0.19 25 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .8rem 0; }
-  .blocker b { color: var(--danger); }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
@@ -44,111 +42,86 @@
   ul, ol { padding-left: 1.3rem; }
   li { margin: .3rem 0; }
   .tag { display: inline-block; font-family: var(--mono); font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
-  .tag--new { color: var(--forest); background: oklch(38% 0.08 155 / .1); }
   .tag--edit { color: var(--soil); background: oklch(42% 0.05 55 / .1); }
   .tag--none { color: var(--muted); }
   .wrap { overflow-x: auto; }
-  .flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: .9rem 0; font-size: .82rem; }
-  .flow__step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .5rem .75rem; }
-  .flow__step--wait { border-color: color-mix(in oklch, var(--danger) 45%, var(--line)); color: var(--danger); }
-  .flow__arrow { color: var(--muted); }
-  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--forest); color: white; font-size: .72rem; font-weight: 700; margin-right: .5rem; flex-shrink: 0; }
+
+  /* mock row */
+  .mock { border: 1px solid var(--line); border-radius: 12px; padding: .7rem .85rem; background: var(--surface); max-width: 22rem; margin: .9rem 0; }
+  .mock__row { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem .75rem; justify-content: space-between; }
+  .mock__main { display: flex; align-items: center; gap: .4rem; }
+  .mock__pill { display: flex; align-items: center; gap: .3rem; border: 1px solid var(--line); border-radius: 8px; padding: .25rem .5rem; font-family: var(--mono); font-size: .85rem; }
+  .mock__meta { display: flex; align-items: center; gap: .5rem; }
+  .mock__badge { background: oklch(45% 0.02 150 / .08); color: var(--muted); border-radius: 999px; padding: .15rem .55rem; font-size: .78rem; }
+  .mock__icon { width: 1.6rem; height: 1.6rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--danger); background: oklch(55% 0.19 25 / .1); }
+
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Backend (Korn) + Frontend (Puttra) · Whale · 2026-07-30</span>
-<h1>ต่อ Frontend ↔ Backend จริง ↔ Supabase ก่อน ลบ mockData ทีหลัง</h1>
+<span class="eyebrow">Frontend / Dashboard UI · Puttra · 2026-08-01</span>
+<h1>แถว "ประเภทการแข่งขัน" — responsive สวยขึ้น + ปุ่มลบเป็นไอคอน</h1>
 <p class="lede">
-  Gong เปลี่ยนลำดับจากแผนก่อนหน้า — ขอให้ <b>ต่อสายจริงและพิสูจน์ว่าข้อมูลไหลจาก Supabase มาโชว์ในแอปได้ก่อน</b>
-  ค่อยไปลบ MKT33/MKT50 + mockData เป็นงานถัดไปแยกต่างหาก แผนนี้ครอบคลุมแค่ขั้นตอนต่อสายเท่านั้น
+  Gong ส่งภาพมาชี้ — แถว radio + ช่องกรอกระยะทาง + "กม." + จำนวนคน + ปุ่มลบ ถูกยัดรวมกันเป็นเส้นเดียวในพาเนลแคบ
+  (280-360px) ดูอัดแน่น แถมปุ่มลบยังเป็นตัวอักษร "×" สีแดงเฉยๆ ไม่ใช่ไอคอนที่ตั้งใจออกแบบ — งานนี้คือแก้ CSS/JSX
+  ล้วนๆ ไม่แตะ state หรือ logic ใดๆ
 </p>
 
-<div class="blocker">
-  <b>ติดอยู่ 2 จุด ที่ script ทำแทนไม่ได้ ต้อง Gong ทำเอง:</b>
-  <ol style="margin:.5rem 0 0">
-    <li><code>division-backend/.env</code> ยังไม่มี — ต้องเอา <b>password จริงของ DATABASE_URL</b> จาก
-      Supabase Dashboard → Project Settings → Database → Connection string → <b>Session pooler</b></li>
-    <li><code>staff_users</code> มี <b>0 แถว</b> — ยังไม่มี staff account จริงเลย ต้องสร้างที่
-      Dashboard → Authentication → <b>Add user</b> (อีเมล+รหัสผ่านอะไรก็ได้ที่จะใช้ login) แล้วบอกอีเมลกลับมา
-      ให้ Whale ผูกเข้า <code>staff_users</code></li>
-  </ol>
-  <p style="margin:.6rem 0 0">ทั้งสองอย่างนี้เป็นความลับ/ต้องทำผ่าน Dashboard เอง — เขียนสคริปต์แทนไม่ได้ (ตามกติกาเดิมที่วางไว้ใน backend CLAUDE.md)</p>
+<h2>Mockup แถวใหม่</h2>
+<div class="mock">
+  <div class="mock__row">
+    <div class="mock__main">
+      <input type="radio" checked disabled>
+      <span class="mock__pill">33 กม.</span>
+    </div>
+    <div class="mock__meta">
+      <span class="mock__badge">86 คน</span>
+      <span class="mock__icon" title="ลบ">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+      </span>
+    </div>
+  </div>
 </div>
-
-<h2>Flow ที่จะเกิดขึ้นหลังมีของ 2 อย่างข้างบน</h2>
-<div class="flow">
-  <span class="flow__step">Gong ให้ password + อีเมล staff</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">เขียน division-backend/.env</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">รัน Go API (localhost:8080)</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">ผูก staff_users</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">พลิก VITE_USE_MOCK_DATA=false</span>
-  <span class="flow__arrow">→</span>
-  <span class="flow__step">login จริง + เห็นข้อมูลจริง</span>
-</div>
-
-<h2>ข้อควรรู้ก่อนเริ่ม</h2>
 <p>
-  ตอนนี้ยังไม่ได้ลบอะไรใน Supabase เลย — <code>runners</code> table ยังมี <b>MKT33/MKT50 เดิม 121 คน</b> อยู่
-  ส่วน Baanpong 2026 (1003 คน) ยังนอนอยู่ใน <code>registrations</code> (ยังไม่ผ่าน assign BIB) รอบทดสอบนี้เลยจะ
-  <b>เห็นข้อมูล MKT33/MKT50 เดิม ไม่ใช่ Baanpong</b> — ตรงตามที่ควรจะเป็น เพราะจุดประสงค์รอบนี้คือพิสูจน์ว่า
-  "สายไฟ" ทำงาน (Go ↔ Postgres ↔ Auth ↔ Realtime ↔ React) ไม่ใช่พิสูจน์ว่าข้อมูล Baanpong ครบ
+  ระยะทาง+"กม." รวมเป็นกล่อง pill เดียวแทนที่จะเป็นสองก้อนหลวมๆ, จำนวนคนเป็น badge พื้นเทาอ่อน,
+  ปุ่มลบเป็นวงกลมพื้นแดงจางๆ + ไอคอนถังขยะ (สไตล์เดียวกับไอคอนใน <code>Sidebar.jsx</code>'s <code>ICONS</code> — feather-style,
+  <code>stroke="currentColor"</code>) แทนตัวอักษร ×
+</p>
+<p>
+  <b>Responsive:</b> กลุ่ม radio+ระยะทาง กับกลุ่มจำนวนคน+ปุ่มลบ แยกเป็นสอง flex group ในแถวเดียวกัน (`justify-content: space-between`)
+  ถ้าพาเนลแคบเกินจะรวมกันพอดี ตัว flex-wrap จะให้กลุ่มหลังตกไปบรรทัดใหม่เองอัตโนมัติ ไม่ต้องเขียน media query
 </p>
 
-<h2>ขั้นตอน (ทำหลังมี 2 อย่างข้างบนแล้ว)</h2>
+<h2>ไฟล์ที่จะแตะ</h2>
 <div class="wrap">
 <table>
-  <thead><tr><th>ขั้น</th><th>ทำอะไร</th></tr></thead>
+  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td><span class="step-num">1</span></td><td>เขียน <code>division-backend/.env</code> จาก <code>.env.example</code> + password จริง</td></tr>
-    <tr><td><span class="step-num">2</span></td><td>รัน <code>go run ./cmd/api</code> (background, port 8080) เช็คว่าขึ้นสะอาด ไม่ panic ตอนต่อ DB/JWKS</td></tr>
-    <tr><td><span class="step-num">3</span></td><td>หา user id จากอีเมลที่ Gong สร้าง (<code>select id from auth.users where email=...</code>) แล้ว insert เข้า <code>staff_users</code></td></tr>
-    <tr><td><span class="step-num">4</span></td><td>พลิก <code>division-frontend/.env</code>: <code>VITE_USE_MOCK_DATA=false</code></td></tr>
-    <tr><td><span class="step-num">5</span></td><td>รัน <code>npm run dev</code>, login ด้วย staff account จริง</td></tr>
-    <tr><td><span class="step-num">6</span></td><td>เช็ค Dashboard/Runners โชว์ข้อมูลจริงจาก Postgres (121 คนเดิม)</td></tr>
+    <tr><td class="mono">src/components/bib/BibConfigForm.jsx</td><td><span class="tag tag--edit">edit</span></td><td>จัดกลุ่ม markup แถว category-select ใหม่ (main/meta), เปลี่ยนปุ่ม × เป็น SVG ถังขยะ</td></tr>
+    <tr><td class="mono">src/styles/bib.css</td><td><span class="tag tag--edit">edit</span></td><td>สไตล์ pill ระยะทาง, badge จำนวนคน, ปุ่มไอคอนวงกลม, เส้นแบ่งกลุ่มแบบ flex-wrap, พื้นหลังจางๆ ตอนเลือกแถว</td></tr>
+    <tr><td class="mono">useBibConfig.js / BibGeneratorPage.jsx</td><td><span class="tag tag--none">ไม่แตะ</span></td><td>ไม่มีการเปลี่ยน prop/state ใดๆ งานนี้เป็นแค่หน้าตา</td></tr>
   </tbody>
 </table>
 </div>
-
-<h2>ไฟล์ที่แตะ</h2>
-<div class="wrap">
-<table>
-  <thead><tr><th>ไฟล์</th><th>สถานะ</th><th>อะไร</th></tr></thead>
-  <tbody>
-    <tr><td class="mono">division-backend/.env</td><td><span class="tag tag--new">new</span></td><td>secret จริง ไม่ commit</td></tr>
-    <tr><td class="mono">division-frontend/.env</td><td><span class="tag tag--edit">edit</span></td><td><code>VITE_USE_MOCK_DATA=false</code></td></tr>
-    <tr><td class="mono">ทุกไฟล์อื่น</td><td><span class="tag tag--none">ไม่แตะ</span></td><td>โค้ด real-mode path (<code>api.js</code>, <code>useRaceState.js</code>) ถูกต้องอยู่แล้ว ตรวจสอบแล้วรอบนี้ ไม่ต้องแก้</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h2>เลื่อนไปทำทีหลัง (ตามที่ Gong สั่ง)</h2>
-<ul>
-  <li>ลบ MKT33/MKT50 ออกจาก Supabase (<code>runners</code>/<code>checkpoints</code>/<code>race_categories</code>)</li>
-  <li>ลบ <code>runners.json</code> + จุด hardcode MKT33/MKT50 ในโค้ด frontend (แผนเดิมที่เขียนไว้รอบก่อน ยังใช้ได้ แค่ขยับมาทำหลังรอบนี้แทน)</li>
-</ul>
 
 <h2>การตรวจ</h2>
 <ol>
-  <li>Go process ขึ้น port 8080 ไม่มี error ใน log</li>
-  <li>เปิด frontend เจอหน้า login จริง (ไม่ใช่ mock ข้าม login) → login ผ่าน</li>
-  <li>Dashboard/Runners โชว์ 121 คน MKT33/MKT50 (พิสูจน์ Go ↔ Postgres ทำงาน)</li>
-  <li>ทด scan 1 ครั้งที่ Check-in station → เห็นแถวใหม่ใน <code>scan_events</code> + <code>live_progress</code> อัปเดตแบบ Realtime (เปิด 2 แท็บเทียบ)</li>
-  <li><code>cd division-frontend && npm test && npm run lint && npm run build</code> ผ่านหมด (ไม่ได้แก้โค้ด แต่เช็คว่าไม่มีอะไรพัง)</li>
+  <li>เปิดหน้า "สร้าง BIB (PDF)" เช็คแถวที่ความกว้างพาเนล ~280px และ ~360px (ตาม <code>minmax(280px, 360px)</code>) และตอนจอแคบ &lt;1024px ที่พาเนลเต็มความกว้าง — แถวไม่ล้น ไม่บีบข้อความจนอ่านไม่ออก</li>
+  <li>ปุ่มลบเป็นไอคอนถังขยะ มี hover state (วงกลมแดงจางเข้มขึ้น) กดแล้วยังลบแถวได้ถูกต้องเหมือนเดิม</li>
+  <li>แถวที่เลือกไว้ (radio checked) เห็นพื้นหลังจางๆ เพิ่มจากเดิม ไม่ใช่แค่กรอบสีเปลี่ยน</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>รอ Gong ส่ง password + อีเมล staff ก่อน</b> — พร้อมเมื่อไหร่บอกได้เลย จะเริ่มขั้น 1 ทันที</p>
+  <p style="margin:0"><b>ดูแล้วโอเคบอก "ลุยได้"</b> — ยังไม่ได้แตะโค้ด รอ Gong ตรวจก่อน</p>
 </div>
 
 <footer>
-  Whale · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+  Whale · Frontend/Dashboard UI (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
 </footer>
 
 </main>
