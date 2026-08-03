@@ -173,6 +173,10 @@
   }
 }
 
+.bib-form__field--wide {
+  grid-column: 1 / -1;
+}
+
 .bib-form__category-grid .search {
   min-width: 0;
   flex: none;

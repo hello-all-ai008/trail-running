@@ -20,6 +20,22 @@ export const MAX_CHECKPOINTS = 4
 
 export const STRUCTURAL_TYPES = ['bibNumber', 'checkpointBox']
 
+/** Unlike cp1-4 (toggled on/off via checkpointCount, never individually
+ *  deleted) and bibNumber (must always exist), Start/Finish can be removed
+ *  and re-added — some races don't want them printed at all. */
+export const REMOVABLE_CHECKPOINT_ROLES = ['start', 'finish']
+
+/**
+ * Whether an element can be deleted from the template. Images/text are
+ * always removable; checkpointBox only for start/finish; bibNumber never.
+ * @param {{ type: string, role?: string }} element
+ * @returns {boolean}
+ */
+export function isRemovableElement(element) {
+  if (element.type === 'checkpointBox') return REMOVABLE_CHECKPOINT_ROLES.includes(element.role)
+  return !STRUCTURAL_TYPES.includes(element.type)
+}
+
 /** PDF tag content area, in points — half an A4 page minus the shared 24pt
  *  page padding (matches the two-tags-per-page layout in BibDocument.jsx). */
 export const TAG_WIDTH_PT = 547.28

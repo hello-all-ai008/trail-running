@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — รองรับจอใหญ่ 2K/4K/8K (Dashboard + Live Monitor)</title>
+<title>แผน — Deploy division-backend (Go) ขึ้น Fly.io</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -14,6 +14,7 @@
     --text: oklch(22% 0.02 150);
     --muted: oklch(45% 0.02 150);
     --line: oklch(85% 0.02 150);
+    --danger: oklch(55% 0.18 25);
     --mono: "SF Mono", ui-monospace, Menlo, monospace;
   }
   * { box-sizing: border-box; }
@@ -30,114 +31,89 @@
   h2 { font-size: 1.05rem; color: var(--forest); margin: 2rem 0 .6rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
   .lede { color: var(--muted); margin: 0 0 1.3rem; }
   .ask { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; }
-  .clarify { border-left: 4px solid var(--accent); background: oklch(72% 0.16 55 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .9rem 0; }
+  .status { border-left: 4px solid var(--forest); background: oklch(38% 0.08 155 / .06); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .9rem 0; }
+  .risk { border-left: 4px solid var(--danger); background: oklch(55% 0.18 25 / .07); border-radius: 0 12px 12px 0; padding: .9rem 1.1rem; margin: .9rem 0; }
   table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: .6rem 0; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
   code, .mono { font-family: var(--mono); font-size: .86em; }
   code { background: oklch(92% 0.02 150); padding: .1em .35em; border-radius: 4px; }
-  pre { background: oklch(24% 0.02 150); color: oklch(92% 0.02 120); padding: .85rem 1rem; border-radius: 10px; overflow-x: auto; font-size: .8rem; line-height: 1.5; }
-  pre code { background: none; padding: 0; color: inherit; }
   .wrap { overflow-x: auto; }
-  .scale-demo { display: flex; align-items: flex-end; gap: 1.2rem; margin: 1rem 0; padding: 1.2rem; border: 1px dashed var(--line); border-radius: 12px; background: var(--surface); }
-  .scale-demo__item { text-align: center; }
-  .scale-demo__num { font-weight: 800; color: var(--forest); line-height: 1; }
-  .scale-demo__label { font-family: var(--mono); font-size: .68rem; color: var(--muted); margin-top: .4rem; }
+  ol.steps { padding-left: 1.3rem; }
+  ol.steps li { margin: .5rem 0; }
+  ul { padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Frontend (Puttra) · Whale · 2026-08-01</span>
-<h1>รองรับจอใหญ่ 2K/4K/8K — ขยายตัวอักษร/องค์ประกอบจริงบน Dashboard + Live Monitor</h1>
+<span class="eyebrow">Backend (Korn) · Whale · 2026-08-03</span>
+<h1>Deploy <code>division-backend</code> (Go) ขึ้น Fly.io</h1>
 <p class="lede">
-  รอบก่อนแก้ <code>.app__main</code> ไม่ให้ cap ความกว้างแล้ว (ทุกหน้าใช้พื้นที่แนวนอนเต็มจอ) แต่นั่นแค่ทำให้ <b>layout กว้างขึ้น</b> —
-  ตัวอักษร/ตัวเลข/การ์ดยังคงขนาดเท่าเดิม เปิดจอ 4K/8K จริงจะเห็นตัวหนังสือเล็กจิ๋วกลางพื้นที่ว่างมหาศาล
-  อ่านจากระยะไกล (จอทีวี/projector ให้ครอบครัวนักวิ่งดู) ไม่ได้
+  Frontend ขึ้น Vercel แล้ว (<code>https://trail-running.vercel.app</code>) แต่ <code>VITE_API_BASE</code> ยังชี้ placeholder ที่ไม่มีจริง —
+  scan/checkpoint/realtime บน production ใช้จริงไม่ได้จนกว่า backend จะ deploy ขึ้น Fly.io เสร็จ
 </p>
 
-<div class="clarify">
-  <p style="margin:0 0 .5rem"><b>ยืนยัน scope กับ Gong แล้ว:</b></p>
-  <p style="margin:0">
-    เฉพาะ <b>Live Monitor + Dashboard</b> (หน้าที่ใช้โชว์จอใหญ่ให้คนดูเชียร์) — หน้าอื่น (BIB/Station/Runners/Results)
-    เป็นเครื่องมือของเจ้าหน้าที่ ไม่ optimize สำหรับจอใหญ่ และต้องการ <b>ขยายตัวอักษร/องค์ประกอบจริง</b> ไม่ใช่แค่ layout กว้างขึ้นเฉยๆ
-  </p>
+<div class="status">
+  <p style="margin:0 0 .5rem"><b>ตรวจโค้ดแล้ว — พร้อม deploy เกือบทั้งหมด:</b></p>
+  <ul style="margin:0">
+    <li><code>fly.toml</code> มีอยู่แล้ว ครบ (app <code>trail-running-api</code>, region <code>nrt</code>, port 8080, health check <code>/healthz</code>) ไม่ต้องแก้</li>
+    <li><code>Dockerfile</code> โครงสร้างถูก แต่ pin เวอร์ชัน Go หลวมไป (<code>golang:1.26</code> vs <code>go.mod</code> ขอ <code>1.26.2</code>) — จะ pin ให้ตรง</li>
+    <li>flyctl บนเครื่องนี้ตอนนี้ <b>ใช้งานไม่ได้จริง</b> (Homebrew โชว์ installed แต่ binary หาย) ต้อง reinstall ก่อน</li>
+  </ul>
 </div>
 
-<h2>วิธีทำ — <code>font-size: max(ขนาดเดิม, ตัวเลข vw)</code></h2>
-<p>
-  ใช้ <code>max()</code> ไม่ใช่ <code>clamp()</code> แบบ token เดิม เพราะต้องการให้ <b>โตต่อเนื่องไม่มีเพดาน</b> ตามความกว้างจอ
-  (2K → 4K → 8K → กว้างกว่านั้นในอนาคต) พร้อมไม่เล็กกว่าขนาดปัจจุบันบนจอทำงานปกติ (laptop ~1280-1440px)
-</p>
-<p>ตัวอย่าง: ตัวเลขสถิติใหญ่ ("121") จาก <code>max(1.875rem, 2.1vw)</code>:</p>
-<div class="scale-demo">
-  <div class="scale-demo__item"><div class="scale-demo__num" style="font-size:30px">121</div><div class="scale-demo__label">1440px</div></div>
-  <div class="scale-demo__item"><div class="scale-demo__num" style="font-size:40px">121</div><div class="scale-demo__label">1920px</div></div>
-  <div class="scale-demo__item"><div class="scale-demo__num" style="font-size:54px">121</div><div class="scale-demo__label">2K (2560)</div></div>
-  <div class="scale-demo__item"><div class="scale-demo__num" style="font-size:81px">121</div><div class="scale-demo__label">4K (3840)</div></div>
-  <div class="scale-demo__item"><div class="scale-demo__num" style="font-size:120px">121</div><div class="scale-demo__label">8K (7680, ย่อขนาดจริงลงให้พอดีหน้า)</div></div>
-</div>
-<p>โต proportional ตามความกว้างจอเป๊ะ — จอทีวีใหญ่มักดูจากระยะไกลกว่าด้วย ขนาดปรากฏต่อสายตาใกล้เคียงกัน</p>
-
-<h2>ขอบเขต — ไม่แตะ class ที่ใช้ร่วมกับหน้าอื่น</h2>
-<p>
-  <code>dashboard.css</code>/<code>monitor.css</code> มีหลาย class ใช้ร่วมข้ามหน้า (<code>.eyebrow</code>, <code>.glass-panel</code>,
-  <code>.btn</code>, <code>.page-head h1</code>) — แก้ตรงๆ จะกระทบทุกหน้าโดยไม่ตั้งใจ แก้ด้วยการห่อ wrapper class เฉพาะหน้า
-  (<code>.dashboard-page</code>, <code>.monitor-page</code>) แล้วเขียน CSS แบบ descendant selector สโคปเฉพาะ:
-</p>
-<pre><code>.dashboard-page .eyebrow { font-size: max(0.68rem, 0.76vw); }</code></pre>
-<p>override เฉพาะภายใน section นี้ ไม่กระทบ <code>.eyebrow</code> ที่หน้าอื่นใช้</p>
-
-<h2>องค์ประกอบที่จะขยาย</h2>
-<div class="wrap">
-<table>
-  <thead><tr><th>หน้า</th><th>องค์ประกอบ</th><th>เดิม</th><th>ใหม่</th></tr></thead>
-  <tbody>
-    <tr><td rowspan="6" class="mono">Dashboard</td><td>หัวข้อหน้า (h1)</td><td>clamp คงที่ 1.7rem</td><td class="mono">max(1.7rem, 1.8vw)</td></tr>
-    <tr><td>eyebrow/label</td><td>0.68rem</td><td class="mono">max(0.68rem, 0.76vw)</td></tr>
-    <tr><td>ตัวเลขสถิติใหญ่ (GlassCard value)</td><td>1.875rem</td><td class="mono">max(1.875rem, 2.1vw)</td></tr>
-    <tr><td>panel header (h2)</td><td>0.92rem</td><td class="mono">max(0.92rem, 1.05vw)</td></tr>
-    <tr><td>cp-node ตัวเลข</td><td>1.4rem</td><td class="mono">max(1.4rem, 1.6vw)</td></tr>
-    <tr><td>latest finishers list</td><td>0.84rem</td><td class="mono">max(0.84rem, 0.95vw)</td></tr>
-    <tr><td rowspan="4" class="mono">Live Monitor</td><td>หัวข้อหน้า (h1)</td><td>clamp คงที่ 1.7rem</td><td class="mono">max(1.7rem, 1.8vw)</td></tr>
-    <tr><td>การ์ดหัวข้อ (h3)</td><td>0.88rem</td><td class="mono">max(0.88rem, 1vw)</td></tr>
-    <tr><td>ตาราง (BIB/ชื่อ/เวลา)</td><td>0.82rem</td><td class="mono">max(0.82rem, 0.92vw)</td></tr>
-    <tr><td>ตัวเลขอันดับ (place)</td><td>ขนาดตาราง</td><td class="mono">max(0.82rem, 1vw)</td></tr>
-  </tbody>
-</table>
-</div>
-<p class="lede" style="margin-top:.4rem">padding/gap ของการ์ดจะขยายตามสัดส่วนเดียวกัน ไม่ใช่แค่ตัวอักษร กันดูอึดอัด</p>
+<h2>ขั้นตอน</h2>
+<ol class="steps">
+  <li><b>Pin เวอร์ชัน Go ใน Dockerfile</b> — <code>FROM golang:1.26</code> → <code>FROM golang:1.26.2</code> ให้ตรง <code>go.mod</code> กันบิลด์พังกลางทาง</li>
+  <li><b>Reinstall flyctl</b> — <code>brew reinstall flyctl</code></li>
+  <li><b>Login</b> — <code>fly auth login</code> (เปิด browser ให้ Gong กดยืนยันเอง เหมือนตอน Vercel)</li>
+  <li><b>Adopt fly.toml เดิม</b> — <code>fly launch --copy-config --no-deploy</code> ใน <code>division-backend/</code> สร้าง app record บน Fly โดยไม่ deploy ทันที (ปฏิเสธ Fly Postgres เพราะใช้ Supabase อยู่แล้ว)</li>
+  <li><b>ตั้ง secrets</b> — <code>fly secrets set DATABASE_URL=... SUPABASE_URL=...</code> ใช้ค่าจริงจาก <code>division-backend/.env</code> (Supabase project เดียวกับ frontend: <code>emuojzwieluldwvbskxp</code>, ap-northeast-1)</li>
+  <li><b>Deploy</b> — <code>fly deploy</code></li>
+  <li><b>ตรวจสุขภาพ</b> — <code>fly status</code>, <code>curl https://trail-running-api.fly.dev/healthz</code> ต้องได้ 200</li>
+  <li><b>ปิด loop กับ frontend</b> — อัพเดท Vercel env <code>VITE_API_BASE</code> เป็น URL จริง แล้ว <code>vercel --prod</code> redeploy อีกครั้ง</li>
+</ol>
 
 <h2>ไฟล์ที่แตะ</h2>
 <div class="wrap">
 <table>
   <thead><tr><th>ไฟล์</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">src/pages/DashboardPage.jsx</td><td>ห่อ &lt;section&gt; ด้วย <code>className="dashboard-page"</code></td></tr>
-    <tr><td class="mono">src/pages/MonitorPage.jsx</td><td>ห่อ &lt;section&gt; ด้วย <code>className="monitor-page"</code></td></tr>
-    <tr><td class="mono">src/components/ui/GlassCard.jsx</td><td>เปลี่ยน Tailwind fixed classes เป็น class เฉพาะให้ dashboard.css คุมขนาดแทน</td></tr>
-    <tr><td class="mono">src/styles/dashboard.css</td><td>เพิ่ม block ใหม่ท้ายไฟล์: <code>.dashboard-page</code> scoped rules</td></tr>
-    <tr><td class="mono">src/styles/monitor.css</td><td>เพิ่ม block ใหม่ท้ายไฟล์: <code>.monitor-page</code> scoped rules</td></tr>
+    <tr><td class="mono">division-backend/Dockerfile</td><td>pin เวอร์ชัน Go บรรทัดเดียว</td></tr>
   </tbody>
 </table>
 </div>
-<p><b>ไม่แตะ:</b> หน้าอื่นทั้งหมด, logic คำนวณสถิติ/อันดับ, <code>.app</code>/<code>.app__main</code> (แก้ไปแล้วรอบก่อน)</p>
+<p><b>ไม่แตะ:</b> <code>fly.toml</code>, โค้ด Go อื่นทั้งหมด — เป็น deploy config ล้วนๆ ไม่ใช่ feature work</p>
+
+<h2>ยังไม่ทำรอบนี้</h2>
+<ul>
+  <li>แก้ doc เก่าใน <code>division-backend/CLAUDE.md</code> (region เขียนผิดเป็น <code>sin</code>/ap-southeast-1 ทั้งที่ของจริงคือ <code>nrt</code>/ap-northeast-1) — ไม่ใช่ blocker แจ้ง Korn แก้แยกทีหลังได้</li>
+  <li>ยืนยัน scan จริงแบบ end-to-end — รอ Gong สร้าง staff Supabase Auth account เอง ไม่เกี่ยวกับ deploy รอบนี้</li>
+</ul>
+
+<h2>ความเสี่ยง</h2>
+<ul>
+  <li><code>fly auth login</code> ต้อง interactive ผ่าน Gong เอง</li>
+  <li>ถ้า <code>DATABASE_URL</code>/<code>SUPABASE_URL</code> ผิด แอปจะ fail health check ค้าง (fail-fast ตาม <code>config.Load()</code>) — เช็ค <code>fly logs</code> ถ้า deploy ไม่ผ่าน</li>
+  <li>Fly.io อาจขอ payment method ตอน launch ครั้งแรก — ให้ Gong ทำเอง</li>
+</ul>
 
 <h2>การตรวจสอบ</h2>
 <ol>
-  <li>เช็คที่จอปกติ (1440px) ก่อน — ต้องเหมือนเดิมเป๊ะ</li>
-  <li>จำลองจอ 2560/3840/7680px ผ่าน iframe บังคับ viewport (จอเครื่องจริงกว้างสุด 1440px) เช็คว่าโตตามสัดส่วน อ่านง่ายขึ้น ไม่ overflow</li>
-  <li>เช็คหน้าอื่น (BIB, Station, Runners, Results) ที่ 3840px ว่า <b>ไม่เปลี่ยนเลย</b></li>
-  <li><code>npm run test && npm run build</code> ผ่าน</li>
+  <li><code>fly status -a trail-running-api</code> — machine running, health check ผ่าน</li>
+  <li><code>curl -i https://trail-running-api.fly.dev/healthz</code> → 200</li>
+  <li>เปิด <code>https://trail-running.vercel.app</code> หลัง redeploy frontend เช็ค network reachable (auth เต็มระบบรอ staff account)</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>รอ Gong ตรวจก่อนเริ่มโค้ด</b> — งานนี้มีตัวเลข scale หลายจุดที่เลือกเอง (2.1vw, 1.6vw ฯลฯ) ถ้าอยากให้โตเร็ว/ช้ากว่านี้บอกได้ก่อนเริ่ม</p>
+  <p style="margin:0"><b>รอ Gong พิมพ์ "ลุยได้" ก่อนเริ่ม execute</b> — ตามที่ Gong ขอไว้ จะไม่เริ่มรัน command ใดๆ จนกว่าจะได้รับคำสั่งชัดเจนอีกที แม้ตรวจแผนผ่านหน้าจอ plan mode ไปแล้วก็ตาม</p>
 </div>
 
 <footer>
-  Whale · Frontend (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+  Whale · Backend (Korn) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
 </footer>
 
 </main>

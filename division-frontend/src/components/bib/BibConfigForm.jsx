@@ -1,4 +1,4 @@
-const CHECKPOINT_OPTIONS = [1, 2, 3, 4]
+const CHECKPOINT_OPTIONS = [0, 1, 2, 3, 4]
 
 /**
  * Left-hand configuration panel: one row of numbering/checkpoint settings
@@ -44,9 +44,13 @@ function BibConfigForm({
                     min={1}
                     className="bib-form__distance-input"
                     value={cat.distanceKm ?? ''}
-                    onChange={(e) =>
-                      onUpdateCategory(cat.id, { distanceKm: e.target.value === '' ? null : Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const distanceKm = e.target.value === '' ? null : Number(e.target.value)
+                      const patch = { distanceKm }
+                      // Only suggest a prefix while the admin hasn't set one — never overwrite a value they typed.
+                      if (!cat.prefix && distanceKm != null) patch.prefix = String(distanceKm)[0]
+                      onUpdateCategory(cat.id, patch)
+                    }}
                   />
                   <span>กม.</span>
                 </span>
@@ -98,7 +102,7 @@ function BibConfigForm({
                   onChange={(e) => onUpdateCategory(cat.id, { startSeq: Number(e.target.value) })}
                 />
               </label>
-              <label className="field">
+              <label className="field bib-form__field--wide">
                 <span>จำนวน Check Point</span>
                 <select
                   className="search"
@@ -106,7 +110,7 @@ function BibConfigForm({
                   onChange={(e) => onUpdateCategory(cat.id, { checkpointCount: Number(e.target.value) })}
                 >
                   {CHECKPOINT_OPTIONS.map((n) => (
-                    <option key={n} value={n}>{n}</option>
+                    <option key={n} value={n}>{n === 0 ? '0 (ไม่มี)' : n}</option>
                   ))}
                 </select>
               </label>

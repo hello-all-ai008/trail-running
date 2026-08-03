@@ -40,6 +40,7 @@ function BibGeneratorPage() {
     addTextElement,
     updateElement,
     removeElement,
+    addCheckpointBox,
     reorderElement,
     resetLayout,
   } = useBibConfig()
@@ -64,6 +65,8 @@ function BibGeneratorPage() {
   }, [selectedCategory])
 
   const selectedElement = config.elements.find((el) => el.id === selectedElementId) ?? null
+  const hasStart = config.elements.some((el) => el.role === 'start')
+  const hasFinish = config.elements.some((el) => el.role === 'finish')
 
   /** @param {import('react').ChangeEvent<HTMLInputElement>} e */
   async function onImageFileChange(e) {
@@ -159,6 +162,16 @@ function BibGeneratorPage() {
                 <Button variant="secondary" onClick={addTextElement}>
                   + เพิ่มข้อความ
                 </Button>
+                {!hasStart && (
+                  <Button variant="secondary" onClick={() => addCheckpointBox('start')}>
+                    + เพิ่มกล่อง Start
+                  </Button>
+                )}
+                {!hasFinish && (
+                  <Button variant="secondary" onClick={() => addCheckpointBox('finish')}>
+                    + เพิ่มกล่อง Finish
+                  </Button>
+                )}
                 <Button variant="danger" onClick={resetLayout}>
                   รีเซ็ตเป็นค่าเริ่มต้น
                 </Button>

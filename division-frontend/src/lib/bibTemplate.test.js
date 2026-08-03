@@ -6,6 +6,7 @@ import {
   checkpointBoxLabel,
   visibleElements,
   defaultStructuralElements,
+  isRemovableElement,
   CHECKPOINT_ROLES,
   TAG_WIDTH_PT,
   TAG_HEIGHT_PT,
@@ -86,6 +87,32 @@ describe('visibleElements', () => {
     const withExtra = [...elements, { id: 'img1', type: 'image' }]
     const visible = visibleElements(withExtra, 1)
     expect(visible.some((el) => el.id === 'img1')).toBe(true)
+  })
+
+  it('shows only start and finish when checkpointCount is 0', () => {
+    const visible = visibleElements(elements, 0)
+    const cpRoles = visible.filter((el) => el.type === 'checkpointBox' && el.role.startsWith('cp'))
+    expect(cpRoles).toHaveLength(0)
+    expect(visible.some((el) => el.role === 'start')).toBe(true)
+    expect(visible.some((el) => el.role === 'finish')).toBe(true)
+  })
+})
+
+describe('isRemovableElement', () => {
+  it('allows removing image and text elements', () => {
+    expect(isRemovableElement({ type: 'image' })).toBe(true)
+    expect(isRemovableElement({ type: 'text' })).toBe(true)
+  })
+
+  it('allows removing start and finish checkpoint boxes only', () => {
+    expect(isRemovableElement({ type: 'checkpointBox', role: 'start' })).toBe(true)
+    expect(isRemovableElement({ type: 'checkpointBox', role: 'finish' })).toBe(true)
+    expect(isRemovableElement({ type: 'checkpointBox', role: 'cp1' })).toBe(false)
+    expect(isRemovableElement({ type: 'checkpointBox', role: 'cp4' })).toBe(false)
+  })
+
+  it('never allows removing the bib number', () => {
+    expect(isRemovableElement({ type: 'bibNumber' })).toBe(false)
   })
 })
 

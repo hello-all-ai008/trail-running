@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { migrateElements } from './useBibConfig'
+import { migrateElements, defaultConfig } from './useBibConfig'
 
 describe('migrateElements', () => {
   it('passes through a config that already has elements unchanged', () => {
@@ -37,5 +37,22 @@ describe('migrateElements', () => {
     })
     const images = elements.filter((el) => el.type === 'image')
     expect(images).toHaveLength(2)
+  })
+})
+
+describe('defaultConfig', () => {
+  it('seeds each category prefix as the first digit of its distance', () => {
+    const { categories } = defaultConfig()
+    for (const cat of categories) {
+      expect(cat.prefix).toBe(String(cat.distanceKm)[0])
+    }
+  })
+
+  it('matches the 50km/33km reference examples', () => {
+    const { categories } = defaultConfig()
+    const km50 = categories.find((cat) => cat.distanceKm === 50)
+    const km33 = categories.find((cat) => cat.distanceKm === 33)
+    if (km50) expect(km50.prefix).toBe('5')
+    if (km33) expect(km33.prefix).toBe('3')
   })
 })

@@ -1,6 +1,6 @@
 import Button from '../ui/Button'
 import { readFileAsDataURL } from '../../hooks/useBibConfig'
-import { STRUCTURAL_TYPES } from '../../lib/bibTemplate'
+import { isRemovableElement } from '../../lib/bibTemplate'
 
 const ALIGN_OPTIONS = [
   { value: 'left', label: 'ซ้าย' },
@@ -13,7 +13,8 @@ const ALIGN_OPTIONS = [
  * Field set depends on element type: image gets a file-replace input, text
  * gets an editable content box, text/bibNumber share font styling, and
  * checkpointBox only exposes font size (its label is derived, not editable).
- * bibNumber/checkpointBox are structural — no delete button for them.
+ * bibNumber and cp1-4 are structural — no delete button for them. Start/
+ * Finish checkpointBoxes are the exception and can be removed/re-added.
  *
  * @param {{
  *   element: import('../../hooks/useBibConfig').BibElement|null,
@@ -31,7 +32,7 @@ function BibElementPropertiesPanel({ element, onUpdate, onRemove, onReorder }) {
     )
   }
 
-  const isStructural = STRUCTURAL_TYPES.includes(element.type)
+  const isRemovable = isRemovableElement(element)
   const showsFontStyle = element.type === 'text' || element.type === 'bibNumber'
 
   async function onReplaceImage(e) {
@@ -135,7 +136,7 @@ function BibElementPropertiesPanel({ element, onUpdate, onRemove, onReorder }) {
         </Button>
       </div>
 
-      {!isStructural && (
+      {isRemovable && (
         <Button variant="danger" className="bib-props__remove" onClick={() => onRemove(element.id)}>
           ลบองค์ประกอบนี้
         </Button>

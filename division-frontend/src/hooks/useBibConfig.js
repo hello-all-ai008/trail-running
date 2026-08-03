@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { CATEGORIES } from '../lib/raceData'
 import { distanceFromCategory } from '../lib/bibNumbering'
-import { defaultStructuralElements, HEADER_BAND_PCT, FOOTER_BAND_PCT, STRUCTURAL_TYPES } from '../lib/bibTemplate'
+import {
+  defaultStructuralElements,
+  HEADER_BAND_PCT,
+  FOOTER_BAND_PCT,
+  STRUCTURAL_TYPES,
+  isRemovableElement,
+} from '../lib/bibTemplate'
 
 const STORAGE_KEY = 'tt:v1:bibConfig'
 
@@ -36,17 +42,20 @@ const STORAGE_KEY = 'tt:v1:bibConfig'
 /**
  * @returns {{ elements: BibElement[], categories: BibCategoryConfig[] }}
  */
-function defaultConfig() {
+export function defaultConfig() {
   return {
     elements: defaultStructuralElements(),
-    categories: CATEGORIES.map((code) => ({
-      id: crypto.randomUUID(),
-      distanceKm: distanceFromCategory(code),
-      checkpointCount: 1,
-      prefix: '',
-      totalDigits: 4,
-      startSeq: 1,
-    })),
+    categories: CATEGORIES.map((code) => {
+      const distanceKm = distanceFromCategory(code)
+      return {
+        id: crypto.randomUUID(),
+        distanceKm,
+        checkpointCount: 1,
+        prefix: distanceKm != null ? String(distanceKm)[0] : '',
+        totalDigits: 4,
+        startSeq: 1,
+      }
+    }),
   }
 }
 
@@ -238,12 +247,24 @@ export function useBibConfig() {
   const updateElement = (id, patch) =>
     setConfig((c) => ({ ...c, elements: c.elements.map((el) => (el.id === id ? { ...el, ...patch } : el)) }))
 
-  /** Removes an element — no-op for bibNumber/checkpointBox, which are structural. */
+  /** Removes an element — no-op for bibNumber/cp1-4, which aren't removable. */
   const removeElement = (id) =>
     setConfig((c) => ({
       ...c,
-      elements: c.elements.filter((el) => el.id !== id || STRUCTURAL_TYPES.includes(el.type)),
+      elements: c.elements.filter((el) => el.id !== id || !isRemovableElement(el)),
     }))
+
+  /** Re-adds a previously removed Start/Finish checkpoint box at its default
+   *  position (the position it had before removal isn't remembered — same
+   *  as addImageElement/addTextElement always starting fresh). No-op if
+   *  already present.
+   *  @param {'start'|'finish'} role */
+  const addCheckpointBox = (role) =>
+    setConfig((c) => {
+      if (c.elements.some((el) => el.role === role)) return c
+      const fresh = defaultStructuralElements().find((el) => el.role === role)
+      return { ...c, elements: [...c.elements, { ...fresh, zIndex: nextZIndex(c.elements) }] }
+    })
 
   /** @param {string} id @param {'front'|'back'} direction */
   const reorderElement = (id, direction) =>
@@ -270,6 +291,7 @@ export function useBibConfig() {
     addTextElement,
     updateElement,
     removeElement,
+    addCheckpointBox,
     reorderElement,
     resetLayout,
   }
