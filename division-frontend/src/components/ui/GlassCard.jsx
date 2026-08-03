@@ -16,15 +16,15 @@ function GlassCard({ label, value, accent = 'forest', hint, className = '', chil
   const color = PALETTE.includes(accent) ? `var(--color-${accent})` : accent
 
   return (
-    <div className={`glass-panel p-5 min-w-40 ${className}`}>
-      <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+    <div className={`glass-panel stat-card min-w-40 ${className}`}>
+      <p className="stat-card__label font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
         {label}
       </p>
-      <p className="mt-2 text-3xl font-extrabold leading-none" style={{ color }}>
+      <p className="stat-card__value mt-2 font-extrabold leading-none" style={{ color }}>
         {value}
       </p>
       {hint && (
-        <p className="mt-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="stat-card__hint mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
           {hint}
         </p>
       )}

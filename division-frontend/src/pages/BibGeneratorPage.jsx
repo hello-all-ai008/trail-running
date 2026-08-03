@@ -114,15 +114,24 @@ function BibGeneratorPage() {
       </header>
 
       <div className="bib-page__layout">
-        <BibConfigForm
-          config={config}
-          runnerCountsByDistance={runnerCounts}
-          selectedId={selectedCategory?.id ?? ''}
-          onSelectCategory={setSelectedId}
-          onUpdateCategory={updateCategory}
-          onAddCategory={addCategory}
-          onRemoveCategory={removeCategory}
-        />
+        <div className="bib-page__sidebar">
+          <BibConfigForm
+            config={config}
+            runnerCountsByDistance={runnerCounts}
+            selectedId={selectedCategory?.id ?? ''}
+            onSelectCategory={setSelectedId}
+            onUpdateCategory={updateCategory}
+            onAddCategory={addCategory}
+            onRemoveCategory={removeCategory}
+          />
+
+          <BibElementPropertiesPanel
+            element={selectedElement}
+            onUpdate={updateElement}
+            onRemove={onRemoveSelectedElement}
+            onReorder={reorderElement}
+          />
+        </div>
 
         <div className="glass-panel bib-page__preview">
           {selectedCategory ? (
@@ -168,13 +177,6 @@ function BibGeneratorPage() {
             <p>ยังไม่มีประเภทการแข่งขัน</p>
           )}
         </div>
-
-        <BibElementPropertiesPanel
-          element={selectedElement}
-          onUpdate={updateElement}
-          onRemove={onRemoveSelectedElement}
-          onReorder={reorderElement}
-        />
       </div>
     </div>
   )

@@ -21,7 +21,14 @@
 .app__main {
   flex: 1;
   min-width: 0;
-  max-width: 1120px;
+  max-width: none;
+}
+/* Dashboard + Live Monitor only — their big-screen type scaling below
+   (.dashboard-page/.monitor-page) grows with the true viewport width, so the
+   shell itself must be free to grow past the normal 1600px cap too, or text
+   outgrows an unchanged container and wraps/overflows on 4K/8K. */
+.app--wide {
+  max-width: none;
 }
 
 /* ---- Sidebar ---- */
@@ -831,4 +838,69 @@
 .login-submit {
   margin-top: 0.4rem;
   width: 100%;
+}
+
+/* ---- Stat tile (GlassCard) base sizing — kept here since GlassCard.jsx is
+   Dashboard-exclusive today. Base rule applies with or without the
+   big-screen scope below, so the component still looks right if reused
+   elsewhere later. ---- */
+.stat-card {
+  padding: 1.25rem;
+}
+.stat-card__label {
+  font-size: 0.75rem;
+}
+.stat-card__value {
+  font-size: 1.875rem;
+}
+.stat-card__hint {
+  font-size: 0.75rem;
+}
+
+/* ---- Big-screen scaling (Dashboard only) — Dashboard + Live Monitor are the
+   two pages meant to run on a large venue TV/projector for spectating
+   families, so their type/cards keep growing with viewport width instead of
+   capping out like every other (staff-tool) page does. `max()`, not
+   `clamp()`: growth is intentionally unbounded past 4K/8K, only floored at
+   today's normal-desktop size so nothing shrinks below it. Scoped under
+   `.dashboard-page` (set on DashboardPage.jsx's root section) so shared
+   classes like `.eyebrow`/`.page-head h1` don't grow on every other page. ---- */
+.dashboard-page .page-head h1 {
+  font-size: max(1.7rem, 1.8vw);
+}
+.dashboard-page .eyebrow {
+  font-size: max(0.68rem, 0.76vw);
+}
+.dashboard-page .stat-card {
+  padding: max(1.25rem, 1.4vw);
+}
+.dashboard-page .stat-card__label,
+.dashboard-page .stat-card__hint {
+  font-size: max(0.75rem, 0.85vw);
+}
+.dashboard-page .stat-card__value {
+  font-size: max(1.875rem, 2.1vw);
+}
+.dashboard-page .panel__head h2 {
+  font-size: max(0.92rem, 1.05vw);
+}
+.dashboard-page .bar-row {
+  /* label/count columns are fixed px in the base rule — must grow too, or
+     bigger category-code/count text clips against the old narrow columns. */
+  grid-template-columns: max(84px, 5.8vw) 1fr max(78px, 5.4vw);
+  font-size: max(0.85rem, 0.95vw);
+}
+.dashboard-page .bar-row__count {
+  /* has its own explicit font-size in the base rule, so it doesn't inherit
+     .bar-row's scaled size above — needs its own override too. */
+  font-size: max(0.75rem, 0.85vw);
+}
+.dashboard-page .cp-node {
+  padding: max(0.8rem, 0.9vw) max(0.5rem, 0.6vw);
+}
+.dashboard-page .cp-node__num {
+  font-size: max(1.4rem, 1.6vw);
+}
+.dashboard-page .latest-list {
+  font-size: max(0.84rem, 0.95vw);
 }

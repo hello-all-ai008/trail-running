@@ -4,6 +4,21 @@ import { visibleElements, checkpointBoxLabel, TAG_WIDTH_PT, TAG_HEIGHT_PT } from
 const HANDLES = ['nw', 'ne', 'sw', 'se']
 const MIN_SIZE_PCT = 3
 
+/**
+ * `fontSize` values on elements are chosen as design px against this
+ * reference canvas width (matches `.bib-canvas`'s `max-width` in
+ * `bib.css`). Converting to `cqw` (percent of `.bib-canvas`'s own inline
+ * size, via its `container-type: inline-size`) makes text scale down with
+ * the canvas on narrow screens instead of staying a fixed px size and
+ * overflowing/overlapping neighboring elements.
+ */
+const CANVAS_REFERENCE_WIDTH_PX = 640
+
+/** @param {number} px design font size at CANVAS_REFERENCE_WIDTH_PX @returns {string} */
+function fontSizeToCqw(px) {
+  return `${(px / CANVAS_REFERENCE_WIDTH_PX) * 100}cqw`
+}
+
 /** @param {number} v @returns {number} */
 function clampPct(v) {
   return Math.min(100, Math.max(0, v))
@@ -13,7 +28,12 @@ function clampPct(v) {
  * @param {{ el: import('../../hooks/useBibConfig').BibElement, bibNumberText: string, checkpointCount: number }} props
  */
 function BibElementContent({ el, bibNumberText, checkpointCount }) {
-  const textStyle = { fontSize: el.fontSize, fontWeight: el.fontWeight, color: el.color, textAlign: el.align }
+  const textStyle = {
+    fontSize: fontSizeToCqw(el.fontSize),
+    fontWeight: el.fontWeight,
+    color: el.color,
+    textAlign: el.align,
+  }
 
   if (el.type === 'image') {
     return <img className="bib-canvas__image" src={el.src} alt="" draggable={false} />
@@ -33,7 +53,7 @@ function BibElementContent({ el, bibNumberText, checkpointCount }) {
     )
   }
   return (
-    <div className="bib-canvas__checkpoint" style={{ fontSize: el.fontSize }}>
+    <div className="bib-canvas__checkpoint" style={{ fontSize: fontSizeToCqw(el.fontSize) }}>
       {checkpointBoxLabel(el.role, checkpointCount)}
     </div>
   )

@@ -65,7 +65,7 @@ function MonitorPage({ runners, finishers, ranks, scanLog, onOpenSlip }) {
     viewMode === 'podium' ? podiumView.totalFinishers === 0 : !feedView.isFiltered && feedView.cards.length === 0
 
   return (
-    <section aria-labelledby="monitor-heading">
+    <section className="monitor-page" aria-labelledby="monitor-heading">
       <header className="page-head">
         <span className="eyebrow">Live</span>
         <h1 id="monitor-heading">Live Monitor</h1>

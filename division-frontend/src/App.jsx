@@ -89,7 +89,7 @@ function App() {
   if (!USE_MOCK && !session) return <LoginPage onSignedIn={() => {}} />
 
   return (
-    <div className="app">
+    <div className={page === 'dashboard' || page === 'monitor' ? 'app app--wide' : 'app'}>
       <Sidebar page={page} onNavigate={navigate} />
 
       <main className="app__main">

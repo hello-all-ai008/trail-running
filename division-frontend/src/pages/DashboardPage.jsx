@@ -34,7 +34,7 @@ function DashboardPage({ runners, stats, finishers }) {
     .slice(0, 5)
 
   return (
-    <section aria-labelledby="dashboard-heading">
+    <section className="dashboard-page" aria-labelledby="dashboard-heading">
       <header className="page-head">
         <span className="eyebrow">Live Overview</span>
         <h1 id="dashboard-heading">แดชบอร์ด</h1>

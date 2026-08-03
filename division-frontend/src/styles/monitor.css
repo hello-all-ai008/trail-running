@@ -159,3 +159,45 @@
   font-size: 0.72rem;
   color: var(--color-status-red);
 }
+
+/* ---- Big-screen scaling (Live Monitor only) — see dashboard.css's matching
+   block for the venue-display rationale. `max()`, not `clamp()`: growth is
+   intentionally unbounded past 4K/8K, floored at today's normal-desktop
+   size. Scoped under `.monitor-page` (set on MonitorPage.jsx's root section)
+   so shared classes like `.eyebrow`/`.page-head h1` don't grow on every
+   other page. ---- */
+.monitor-page .page-head h1 {
+  font-size: max(1.7rem, 1.8vw);
+}
+.monitor-page .eyebrow {
+  font-size: max(0.68rem, 0.76vw);
+}
+.monitor-page .monitor-card__head {
+  padding: max(0.85rem, 0.95vw) max(1rem, 1.1vw) max(0.7rem, 0.8vw);
+}
+.monitor-page .monitor-card__head h3 {
+  font-size: max(0.88rem, 1vw);
+}
+.monitor-page .monitor-card__badge {
+  font-size: max(0.68rem, 0.76vw);
+}
+.monitor-page .monitor-table {
+  font-size: max(0.82rem, 0.92vw);
+}
+.monitor-page .monitor-table th,
+.monitor-page .monitor-table td {
+  padding: max(0.5rem, 0.6vw) max(0.7rem, 0.8vw);
+}
+.monitor-page .monitor-table thead th {
+  font-size: max(0.64rem, 0.75vw);
+}
+.monitor-page .monitor-row__place {
+  font-size: max(0.82rem, 1vw);
+}
+.monitor-page .monitor-grid,
+.monitor-page .monitor-overall-grid {
+  /* Card min-width must grow with the table text above, or a name/BIB that
+     fit a 310px card at normal size clips against an unchanged card edge
+     once its font has grown 2-5x on a 4K/8K screen. */
+  grid-template-columns: repeat(auto-fill, minmax(max(310px, 21.5vw), 1fr));
+}

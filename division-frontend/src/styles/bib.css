@@ -17,21 +17,21 @@
 
 .bib-page__layout {
   display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr minmax(260px, 320px);
+  grid-template-columns: minmax(260px, 320px) 1fr;
   gap: var(--space-md);
   align-items: start;
-}
-
-@media (max-width: 1280px) {
-  .bib-page__layout {
-    grid-template-columns: minmax(260px, 320px) 1fr;
-  }
 }
 
 @media (max-width: 1024px) {
   .bib-page__layout {
     grid-template-columns: 1fr;
   }
+}
+
+.bib-page__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .bib-form {
@@ -167,6 +167,12 @@
   margin-top: 0.6rem;
 }
 
+@media (max-width: 400px) {
+  .bib-form__category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .bib-form__category-grid .search {
   min-width: 0;
   flex: none;
@@ -214,7 +220,7 @@
 .bib-canvas {
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: 900px;
   margin: 0 auto;
   border: 2px solid var(--color-text);
   border-radius: 12px;
@@ -223,6 +229,10 @@
   background: var(--color-surface);
   touch-action: none;
   user-select: none;
+  /* Element font sizes are converted to cqw against this container in
+     BibCanvasEditor.jsx (CANVAS_REFERENCE_WIDTH_PX = 640, matching the
+     max-width above) so text scales down with the canvas on narrow screens. */
+  container-type: inline-size;
 }
 
 .bib-canvas__el {
@@ -255,10 +265,6 @@
   white-space: pre-wrap;
   word-break: break-word;
   pointer-events: none;
-}
-
-.bib-canvas__bib-number {
-  font-size: 4rem;
 }
 
 .bib-canvas__checkpoint {
