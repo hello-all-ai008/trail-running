@@ -3,7 +3,7 @@
 # base that already contains CA certificates (needed for TLS to Supabase
 # Postgres and for fetching the Auth JWKS over HTTPS).
 
-FROM golang:1.26 AS build
+FROM golang:1.26.2 AS build
 WORKDIR /src
 
 # Download deps first so this layer caches unless go.mod/go.sum change.

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: trail-running-api
+    runtime: docker
+    dockerfilePath: division-backend/Dockerfile
+    dockerContext: division-backend
+    region: singapore
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false

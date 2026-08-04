@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — Deploy division-backend (Go) ขึ้น Fly.io</title>
+<title>แผน — Deploy division-backend (Go) ขึ้น Render (free tier)</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -50,31 +50,37 @@
 <main>
 
 <span class="eyebrow">Backend (Korn) · Whale · 2026-08-03</span>
-<h1>Deploy <code>division-backend</code> (Go) ขึ้น Fly.io</h1>
+<h1>Deploy <code>division-backend</code> (Go) ขึ้น Render — free tier, ไม่ต้องผูกบัตร</h1>
 <p class="lede">
-  Frontend ขึ้น Vercel แล้ว (<code>https://trail-running.vercel.app</code>) แต่ <code>VITE_API_BASE</code> ยังชี้ placeholder ที่ไม่มีจริง —
-  scan/checkpoint/realtime บน production ใช้จริงไม่ได้จนกว่า backend จะ deploy ขึ้น Fly.io เสร็จ
+  ลอง Fly.io แล้วชน "machine count exceeds organization limit" — org <code>personal</code> มี 0 apps/0 machines อยู่แล้วแต่ยังโดนบล็อก
+  ยืนยันว่าเป็น <b>billing จริง</b> (Fly.io เลิก free-tier แล้ว) ไม่ใช่ชน quota เดิม
 </p>
 
 <div class="status">
-  <p style="margin:0 0 .5rem"><b>ตรวจโค้ดแล้ว — พร้อม deploy เกือบทั้งหมด:</b></p>
-  <ul style="margin:0">
-    <li><code>fly.toml</code> มีอยู่แล้ว ครบ (app <code>trail-running-api</code>, region <code>nrt</code>, port 8080, health check <code>/healthz</code>) ไม่ต้องแก้</li>
-    <li><code>Dockerfile</code> โครงสร้างถูก แต่ pin เวอร์ชัน Go หลวมไป (<code>golang:1.26</code> vs <code>go.mod</code> ขอ <code>1.26.2</code>) — จะ pin ให้ตรง</li>
-    <li>flyctl บนเครื่องนี้ตอนนี้ <b>ใช้งานไม่ได้จริง</b> (Homebrew โชว์ installed แต่ binary หาย) ต้อง reinstall ก่อน</li>
-  </ul>
+  <p style="margin:0 0 .5rem"><b>ทางเลือก "เขียนตรง Supabase, ตัด Go ออก" — ไม่แนะนำ:</b></p>
+  <p style="margin:0">
+    ขัด <code>division-backend/CLAUDE.md</code> โดยตรง ("All writes go through the Go API... Frontend never writes to Supabase directly")
+    validation จริง (duplicate-scan, status transition) อยู่ใน <code>internal/scan</code> เป็น transaction logic ไม่ใช่ DB constraint,
+    RLS ตอนนี้ default-deny ทุกตารางยกเว้น <code>live_progress</code> — ย้ายไป Postgres function/RLS ทั้งชุดคืองาน rework ใหญ่ ไม่ใช่ deploy step
+  </p>
 </div>
+
+<p><b>Gong เลือกแล้ว:</b> Render free tier + Go backend เดิม ไม่แก้ logic ใดๆ</p>
 
 <h2>ขั้นตอน</h2>
 <ol class="steps">
-  <li><b>Pin เวอร์ชัน Go ใน Dockerfile</b> — <code>FROM golang:1.26</code> → <code>FROM golang:1.26.2</code> ให้ตรง <code>go.mod</code> กันบิลด์พังกลางทาง</li>
-  <li><b>Reinstall flyctl</b> — <code>brew reinstall flyctl</code></li>
-  <li><b>Login</b> — <code>fly auth login</code> (เปิด browser ให้ Gong กดยืนยันเอง เหมือนตอน Vercel)</li>
-  <li><b>Adopt fly.toml เดิม</b> — <code>fly launch --copy-config --no-deploy</code> ใน <code>division-backend/</code> สร้าง app record บน Fly โดยไม่ deploy ทันที (ปฏิเสธ Fly Postgres เพราะใช้ Supabase อยู่แล้ว)</li>
-  <li><b>ตั้ง secrets</b> — <code>fly secrets set DATABASE_URL=... SUPABASE_URL=...</code> ใช้ค่าจริงจาก <code>division-backend/.env</code> (Supabase project เดียวกับ frontend: <code>emuojzwieluldwvbskxp</code>, ap-northeast-1)</li>
-  <li><b>Deploy</b> — <code>fly deploy</code></li>
-  <li><b>ตรวจสุขภาพ</b> — <code>fly status</code>, <code>curl https://trail-running-api.fly.dev/healthz</code> ต้องได้ 200</li>
-  <li><b>ปิด loop กับ frontend</b> — อัพเดท Vercel env <code>VITE_API_BASE</code> เป็น URL จริง แล้ว <code>vercel --prod</code> redeploy อีกครั้ง</li>
+  <li><b>สร้าง <code>render.yaml</code></b> ที่ root repo — Blueprint: web service <code>trail-running-api</code>, <code>env: docker</code>, <code>dockerfilePath: division-backend/Dockerfile</code>, <code>dockerContext: division-backend</code>, region Singapore, plan <code>free</code>, <code>healthCheckPath: /healthz</code>, <code>DATABASE_URL</code>/<code>SUPABASE_URL</code> ตั้ง <code>sync: false</code> (ไม่เก็บ secret ในไฟล์)</li>
+  <li><b>Commit + push <code>render.yaml</code> ขึ้น GitHub</b> — จำเป็นเพราะ Render Blueprint อ่านจาก repo โดยตรง (จะขอ confirm แยกก่อน push จริง เพราะกระทบ remote repo)</li>
+  <li><b>Gong ทำเองใน browser</b> (ไม่มี Render API key ให้ผมทำแทน):
+    <ul>
+      <li>Render → New → Blueprint → เชื่อม GitHub repo <code>hello-all-ai008/trail-running</code></li>
+      <li>กรอก <code>DATABASE_URL</code>, <code>SUPABASE_URL</code> ในฟอร์ม</li>
+      <li>กด Apply — Render build + deploy จาก Dockerfile</li>
+    </ul>
+  </li>
+  <li><b>Gong ส่ง URL ที่ได้กลับมา</b> (รูปแบบ <code>https://trail-running-api.onrender.com</code>)</li>
+  <li><b>ตรวจสุขภาพ</b> — <code>curl -i &lt;render-url&gt;/healthz</code> ต้องได้ 200 (รอบแรกอาจช้าเพราะ cold start)</li>
+  <li><b>ปิด loop กับ frontend</b> — อัพเดท Vercel env <code>VITE_API_BASE</code> เป็น URL จริง แล้ว <code>vercel --prod</code> redeploy</li>
 </ol>
 
 <h2>ไฟล์ที่แตะ</h2>
@@ -82,34 +88,34 @@
 <table>
   <thead><tr><th>ไฟล์</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">division-backend/Dockerfile</td><td>pin เวอร์ชัน Go บรรทัดเดียว</td></tr>
+    <tr><td class="mono">render.yaml</td><td>ใหม่ (root repo)</td></tr>
   </tbody>
 </table>
 </div>
-<p><b>ไม่แตะ:</b> <code>fly.toml</code>, โค้ด Go อื่นทั้งหมด — เป็น deploy config ล้วนๆ ไม่ใช่ feature work</p>
+<p><b>ไม่แตะ:</b> โค้ด Go, <code>fly.toml</code>/<code>Dockerfile</code> เพิ่มเติม (พร้อมอยู่แล้ว เก็บไว้เผื่อย้ายกลับ Fly.io วันแข่งจริง)</p>
 
 <h2>ยังไม่ทำรอบนี้</h2>
 <ul>
-  <li>แก้ doc เก่าใน <code>division-backend/CLAUDE.md</code> (region เขียนผิดเป็น <code>sin</code>/ap-southeast-1 ทั้งที่ของจริงคือ <code>nrt</code>/ap-northeast-1) — ไม่ใช่ blocker แจ้ง Korn แก้แยกทีหลังได้</li>
-  <li>ยืนยัน scan จริงแบบ end-to-end — รอ Gong สร้าง staff Supabase Auth account เอง ไม่เกี่ยวกับ deploy รอบนี้</li>
+  <li>Fly.io deploy จริง (รอ Gong ผูกบัตรทีหลัง ถ้าต้องการ always-on วันแข่งจริง)</li>
+  <li>แก้ doc เก่าใน <code>division-backend/CLAUDE.md</code> (region ผิด) — ไม่ใช่ blocker</li>
+  <li>ยืนยัน scan จริงแบบ end-to-end — รอ Gong สร้าง staff Supabase Auth account เอง</li>
 </ul>
 
 <h2>ความเสี่ยง</h2>
 <ul>
-  <li><code>fly auth login</code> ต้อง interactive ผ่าน Gong เอง</li>
-  <li>ถ้า <code>DATABASE_URL</code>/<code>SUPABASE_URL</code> ผิด แอปจะ fail health check ค้าง (fail-fast ตาม <code>config.Load()</code>) — เช็ค <code>fly logs</code> ถ้า deploy ไม่ผ่าน</li>
-  <li>Fly.io อาจขอ payment method ตอน launch ครั้งแรก — ให้ Gong ทำเอง</li>
+  <li>Cold start 20-50 วิหลัง idle 15 นาที — ไม่ใช่บั๊ก เป็นข้อจำกัด free tier (Gong รับทราบแล้ว)</li>
+  <li>ขั้นตอน 3 ต้อง Gong ทำเองผ่าน browser ทั้งหมด</li>
+  <li>push <code>render.yaml</code> ขึ้น GitHub — ขอ confirm แยกก่อนรัน <code>git push</code></li>
 </ul>
 
 <h2>การตรวจสอบ</h2>
 <ol>
-  <li><code>fly status -a trail-running-api</code> — machine running, health check ผ่าน</li>
-  <li><code>curl -i https://trail-running-api.fly.dev/healthz</code> → 200</li>
-  <li>เปิด <code>https://trail-running.vercel.app</code> หลัง redeploy frontend เช็ค network reachable (auth เต็มระบบรอ staff account)</li>
+  <li><code>curl -i &lt;render-url&gt;/healthz</code> → 200</li>
+  <li>เปิด <code>https://trail-running.vercel.app</code> หลัง redeploy frontend เช็ค network reachable</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>รอ Gong พิมพ์ "ลุยได้" ก่อนเริ่ม execute</b> — ตามที่ Gong ขอไว้ จะไม่เริ่มรัน command ใดๆ จนกว่าจะได้รับคำสั่งชัดเจนอีกที แม้ตรวจแผนผ่านหน้าจอ plan mode ไปแล้วก็ตาม</p>
+  <p style="margin:0"><b>รอ Gong พิมพ์ "ลุยได้" ก่อนเริ่ม execute</b> — จะไม่เริ่มสร้างไฟล์/commit/push จนกว่าจะได้รับคำสั่งชัดเจนอีกที</p>
 </div>
 
 <footer>
