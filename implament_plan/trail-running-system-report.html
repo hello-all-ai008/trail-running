@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trail Running System — Full Project Report</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg-panel: #12151d;
+    --bg-panel-2: #171b26;
+    --border: #262b38;
+    --text: #e6e9f0;
+    --text-dim: #9aa3b5;
+    --text-dimmer: #676f82;
+    --accent: #5eead4;
+    --accent-2: #a78bfa;
+    --live: #34d399;
+    --partial: #fbbf24;
+    --missing: #f87171;
+    --danger-bg: #2a1414;
+    --danger-border: #7f1d1d;
+    --danger-text: #fca5a5;
+    --code-bg: #0e1015;
+    --mono: "SF Mono", "Cascadia Code", Consolas, Monaco, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { color: var(--accent); }
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    width: 240px;
+    flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 28px 18px;
+    border-right: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  nav.toc h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dimmer);
+    margin: 0 0 14px 4px;
+  }
+  nav.toc a {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.5px;
+    margin-bottom: 2px;
+    border-left: 2px solid transparent;
+  }
+  nav.toc a:hover {
+    background: var(--bg-panel-2);
+    color: var(--text);
+  }
+  nav.toc a.warn { color: var(--danger-text); }
+  main {
+    flex: 1;
+    min-width: 0;
+    padding: 48px clamp(20px, 5vw, 64px) 100px;
+    max-width: 980px;
+  }
+  header.hero {
+    margin-bottom: 40px;
+  }
+  header.hero .kicker {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header.hero h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    margin: 10px 0 8px;
+    letter-spacing: -0.02em;
+  }
+  header.hero p.sub {
+    color: var(--text-dim);
+    font-size: 15px;
+    max-width: 640px;
+  }
+  header.hero .meta {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    font-size: 12.5px;
+    color: var(--text-dimmer);
+    font-family: var(--mono);
+  }
+  section {
+    margin-bottom: 56px;
+    scroll-margin-top: 24px;
+  }
+  section > h2 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section > h2 .num {
+    color: var(--text-dimmer);
+    font-family: var(--mono);
+    font-size: 15px;
+  }
+  section > .section-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin: 6px 0 22px;
+    max-width: 720px;
+  }
+  h3 {
+    font-size: 16px;
+    margin: 28px 0 10px;
+    color: var(--text);
+  }
+  h3 .badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .badge.live { background: rgba(52,211,153,0.12); color: var(--live); border: 1px solid rgba(52,211,153,0.3); }
+  .badge.partial { background: rgba(251,191,36,0.12); color: var(--partial); border: 1px solid rgba(251,191,36,0.3); }
+  .badge.missing { background: rgba(248,113,113,0.12); color: var(--missing); border: 1px solid rgba(248,113,113,0.3); }
+  p { color: var(--text-dim); font-size: 14.5px; }
+  ul, ol { color: var(--text-dim); font-size: 14.5px; padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--text-dimmer); }
+  strong { color: var(--text); }
+  code {
+    font-family: var(--mono);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.8px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.8px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    max-width: 100%;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+    white-space: pre;
+  }
+  .card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) {
+    .grid2 { grid-template-columns: 1fr; }
+    nav.toc { display: none; }
+    main { padding: 32px 18px 80px; }
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 14px 0;
+  }
+  th, td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  th {
+    color: var(--text-dimmer);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  td strong, td code { color: var(--text); }
+  .callout {
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 18px 0;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel-2);
+  }
+  .callout.danger {
+    background: var(--danger-bg);
+    border-color: var(--danger-border);
+    color: #f3d0d0;
+  }
+  .callout.danger .title {
+    color: var(--danger-text);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .callout p { color: inherit; margin: 6px 0; font-size: 13.8px; }
+  .callout code { color: #fca5a5; border-color: rgba(248,113,113,0.3); background: rgba(0,0,0,0.3); }
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0;
+  }
+  .flow .step {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .flow .step .n {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+  .flow .arrow { align-self: center; color: var(--text-dimmer); }
+  .priority-list {
+    list-style: none;
+    padding: 0;
+    counter-reset: pri;
+  }
+  .priority-list li {
+    counter-increment: pri;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--missing);
+    border-radius: 8px;
+    padding: 12px 16px 12px 44px;
+    margin-bottom: 10px;
+    position: relative;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .priority-list li:nth-child(3) ~ li { border-left-color: var(--partial); }
+  .priority-list li::before {
+    content: counter(pri);
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    color: var(--text-dimmer);
+    font-weight: 700;
+  }
+  .roadmap-list { list-style: none; padding: 0; }
+  .roadmap-list li {
+    padding: 10px 0 10px 26px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .roadmap-list li:last-child { border-bottom: none; }
+  .roadmap-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent-2);
+  }
+  footer {
+    color: var(--text-dimmer);
+    font-size: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="toc">
+    <h3>Report</h3>
+    <a href="#overview">1. Overview</a>
+    <a href="#frontend">2. Frontend</a>
+    <a href="#backend">3. Backend</a>
+    <a href="#deploy" class="warn">4. Deploy ⚠</a>
+    <a href="#capacity">5. Capacity</a>
+    <a href="#improve">6. ต้องแก้</a>
+    <a href="#roadmap">7. Roadmap</a>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="kicker">Whale · Internal Status Report</div>
+      <h1>Trail Running Timing System</h1>
+      <p class="sub">สรุปทั้ง project แบบละเอียด — ตรวจจากโค้ดจริง ไม่ใช่จาก assumption. Frontend stack, Backend stack, Deploy config, ประเมิน capacity, จุดต้องแก้, roadmap ต่อไป.</p>
+      <div class="meta">
+        <span>REPO: trail-running</span>
+        <span>BRANCH: main</span>
+        <span>LATEST COMMIT: 800a55a</span>
+        <span>DATE: 2026-08-04</span>
+      </div>
+    </header>
+
+    <!-- 1. OVERVIEW -->
+    <section id="overview">
+      <h2><span class="num">01</span> Overview</h2>
+      <p class="section-desc">Product: web-based RFID timing + management system สำหรับ trail race. Workflow หลัก 6 ขั้นตอน (hardcoded ใน mockup เดิม, ยังใช้เป็น anchor):</p>
+      <div class="flow">
+        <div class="step"><span class="n">1</span> Data Base</div><div class="arrow">→</div>
+        <div class="step"><span class="n">2</span> Assign BIB</div><div class="arrow">→</div>
+        <div class="step"><span class="n">3</span> Create RFID</div><div class="arrow">→</div>
+        <div class="step"><span class="n">4</span> Pre-Start Check-in</div><div class="arrow">→</div>
+        <div class="step"><span class="n">5</span> Checkpoint</div><div class="arrow">→</div>
+        <div class="step"><span class="n">6</span> Finish + Result</div>
+      </div>
+      <table>
+        <thead><tr><th>Department</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend / Dashboard</td><td>Puttra</td><td><span class="badge live">Live</span> multi-page app, 121-runner dataset จริง</td></tr>
+          <tr><td>Backend / API</td><td>Korn</td><td><span class="badge partial">Partial</span> live สำหรับ Step 4-6, ยังขาด Step 1-3</td></tr>
+          <tr><td>RFID / Hardware</td><td>—</td><td><span class="badge missing">Missing</span> mock EPC/BIB string เท่านั้น</td></tr>
+          <tr><td>QA / Testing</td><td>—</td><td><span class="badge missing">Missing</span> เกือบไม่มี integration/component test</td></tr>
+          <tr><td>Race Day Ops</td><td>—</td><td><span class="badge missing">Missing</span> ยังไม่มีแผนวันจริง</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 2. FRONTEND -->
+    <section id="frontend">
+      <h2><span class="num">02</span> Frontend — <code>division-frontend/</code></h2>
+      <p class="section-desc">เขียนด้วย <strong>React 19.2.7 + Vite 8.1.1 + Tailwind CSS 4.3.2</strong> (ผ่าน <code>@tailwindcss/vite</code>, ไม่มี PostCSS config แยก). ไม่มี state library (Redux/Zustand) — ใช้ hooks ล้วนๆ ผ่าน <code>useRaceState</code>. Routing เป็น custom hash router (<code>useHashRoute</code>) ไม่ใช้ react-router.</p>
+
+      <h3>Structure <span class="badge live">Live</span></h3>
+      <div class="grid2">
+        <div class="card">
+          <strong>Pages</strong> (<code>src/pages/</code>)
+          <ul>
+            <li>LoginPage, DashboardPage, RunnersPage, RegisterPage</li>
+            <li>StationPage, ResultsPage, MonitorPage, ScanLogPage</li>
+            <li>BibGeneratorPage — lazy-loaded (โหลด <code>@react-pdf/renderer</code> เฉพาะหน้านี้)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <strong>Lib / Hooks</strong>
+          <ul>
+            <li><code>src/lib/api.js</code> — real backend client</li>
+            <li><code>src/hooks/useRaceState.js</code> — core state</li>
+            <li><code>src/lib/raceEngine.js</code>, <code>results.js</code>, <code>monitor.js</code></li>
+            <li>Scan: <code>@zxing/browser</code> (barcode/QR)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Data mode — dual switch</h3>
+      <p>Toggle ผ่าน <code>VITE_USE_MOCK_DATA</code> (default = mock/true):</p>
+      <pre><code>USE_MOCK = import.meta.env.VITE_USE_MOCK_DATA !== 'false'</code></pre>
+      <ul>
+        <li><strong>Mock mode:</strong> state อยู่ใน React + persist ลง <code>localStorage</code> (<code>tt:v2:runners</code>, <code>tt:v2:scanLog</code>)</li>
+        <li><strong>Real mode:</strong> Supabase Auth (staff login) + Realtime subscribe (<code>live_progress</code> table) + <code>fetch</code> ไปที่ Go API (<code>/runners</code>, <code>/scan</code>) พร้อม JWT bearer</li>
+      </ul>
+
+      <h3>Testing <span class="badge partial">Partial — logic only</span></h3>
+      <p><strong>8 test files</strong>, ทั้งหมดเป็น logic-level (Vitest, ไม่มี testing-library): <code>bibNumbering.test.js</code>, <code>bibTemplate.test.js</code>, <code>monitor.test.js</code>, <code>raceEngine.test.js</code>, <code>registration.test.js</code>, <code>results.test.js</code>, <code>useBibConfig.test.js</code>, <code>monitor.feed.test.js</code>. <strong>ไม่มี test สักตัวสำหรับ page/component จริง</strong>, ไม่มี test ของ <code>api.js</code> หรือ <code>useRaceState.js</code>.</p>
+
+      <div class="callout">
+        <strong>Known gap ยืนยันจากโค้ดจริง</strong> (<code>useRaceState.js</code> comment): scan log ใน real mode เป็นแบบ per-device เท่านั้น — เครื่อง checkpoint แต่ละจุดเห็นแค่ scan ของตัวเอง ยังไม่ sync ข้ามสถานี เพราะ backend ยังไม่มี scan-log read endpoint.
+      </div>
+    </section>
+
+    <!-- 3. BACKEND -->
+    <section id="backend">
+      <h2><span class="num">03</span> Backend — <code>division-backend/</code> + <code>supabase/</code></h2>
+      <p class="section-desc"><strong>Go 1.26.2</strong>, routing ด้วย stdlib <code>net/http.ServeMux</code> (ไม่ใช้ router library), DB ผ่าน <code>pgx/v5</code> + pgxpool ตรงไปที่ Postgres (Supabase). Auth ผ่าน JWT + JWKS (<code>golang-jwt/v5</code>, <code>MicahParks/keyfunc</code>).</p>
+
+      <h3>Endpoints ที่มีจริง <span class="badge live">Live</span></h3>
+      <pre><code>GET  /healthz                    (no auth)
+POST /scan                       (staff auth)
+GET  /runners                    (staff auth)
+GET  /runners/{bib}/report       (staff auth)
+GET  /checkpoints                (staff auth)
+GET  /stats                      (staff auth)
+GET  /results                    (staff auth)
+GET  /results/export.csv         (staff auth)</code></pre>
+
+      <h3>Schema (<code>supabase/migrations/0001-0005</code>)</h3>
+      <ul>
+        <li><code>race_categories</code>, <code>checkpoints</code>, <code>runners</code>, <code>rfid_tags</code> (ยังไม่ใช้จริง)</li>
+        <li><code>scan_events</code> — append-only log, source of truth ของทุก scan</li>
+        <li><code>live_progress</code> — PII-light, key ด้วย bib, ใช้ยิง Realtime</li>
+        <li><code>staff_users</code>, <code>registrations</code> (self-serve staging แยกต่างหาก ยังไม่ link กับ <code>runners</code>)</li>
+      </ul>
+
+      <h3>Auth model</h3>
+      <p>Go verify JWT ผ่าน JWKS ของ Supabase → lookup <code>staff_users</code> เอา role. <strong>Go เชื่อมต่อ DB ด้วย <code>postgres</code> role → RLS ไม่มีผลกับ Go เลย</strong> — RLS เป็นแค่ defense-in-depth, authorization จริงอยู่ที่โค้ด Go (<code>internal/scan</code>).</p>
+
+      <h3>Testing <span class="badge missing">Minimal</span></h3>
+      <p><strong>1 test file</strong>: <code>internal/scan/apply_test.go</code> (10 table-driven test, pure function, ไม่แตะ DB จริง). <strong>ไม่มี HTTP-level, integration, หรือ DB-backed test เลย</strong> — handlers, auth, raceview, results ไม่มี test คุ้มครองเลย</p>
+
+      <h3>ยังไม่ทำ (ยืนยันจากโค้ด ตรงกับที่ CLAUDE.md บอก)</h3>
+      <ul>
+        <li>BIB/RFID admin endpoints (Step 2-3) — ไม่มี package <code>bib/</code> หรือ <code>rfid/</code></li>
+        <li>Excel import (Step 1) ใน Go — ไม่มี route</li>
+        <li>Scan-log read-back endpoint — มีแค่ <code>POST /scan</code>, ไม่มี endpoint อ่านคืน</li>
+      </ul>
+
+      <h3>Scalability flags ที่เจอในโค้ด</h3>
+      <ul>
+        <li>pgxpool ไม่ได้ set <code>MaxConns</code>/<code>MinConns</code> — ใช้ default ล้วนๆ</li>
+        <li>ไม่มี rate limiting เลย (<code>golang.org/x/time</code> อยู่ใน go.mod แต่ไม่มีไฟล์ไหน import ใช้จริง)</li>
+        <li><strong>ไม่มี pagination บน list query ไหนเลย</strong> (<code>ListAll</code>, <code>runner.List</code>, <code>results.List</code>) — โค้ด comment ระบุ assumption ไว้ที่ ~2000 runner ต่อ race</li>
+        <li>CORS เปิดกว้าง <code>Access-Control-Allow-Origin: *</code> — comment ในโค้ดเองบอก "tighten once frontend domain fixed"</li>
+      </ul>
+    </section>
+
+    <!-- 4. DEPLOY -->
+    <section id="deploy">
+      <h2><span class="num">04</span> Deploy / Infra</h2>
+
+      <div class="callout danger">
+        <div class="title">⚠ Conflict — deploy target ชนกันเองใน repo ตอนนี้</div>
+        <p><code>render.yaml</code> (commit ล่าสุด <code>800a55a</code>) ตั้ง backend ไปที่ <strong>Render free tier</strong>, Docker runtime, region Singapore.</p>
+        <p>แต่ <code>division-backend/CLAUDE.md</code> เขียนไว้ชัดเจนว่า <em>"Render free tier rejected — idle spin-down conflicts with always-on Realtime requirement."</em></p>
+        <p><code>fly.toml</code> (region Tokyo/nrt, <code>min_machines_running=1</code>, always-on) ก็ยังอยู่ในโค้ด ตั้งค่าตรงกับ requirement ที่บอกไว้จริง</p>
+        <p><strong>สรุป: มี 2 deploy target ที่ขัดแย้งกันเองอยู่ใน repo ตอนนี้ ต้องตัดสินใจว่าจะใช้ตัวไหน แล้วลบอีกตัวทิ้ง — ไม่ควรปล่อยไว้แบบนี้</strong></p>
+      </div>
+
+      <table>
+        <thead><tr><th>Config</th><th>Target</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td><code>render.yaml</code></td><td>Render</td><td>free plan, Docker, Singapore, healthcheck <code>/healthz</code></td></tr>
+          <tr><td><code>fly.toml</code></td><td>Fly.io</td><td>Tokyo (nrt), always-on (<code>min_machines_running=1</code>), healthcheck 15s</td></tr>
+          <tr><td><code>Dockerfile</code></td><td>—</td><td>multi-stage, <code>golang:1.26.2</code> → <code>distroless/static:nonroot</code>, static binary</td></tr>
+          <tr><td>CI/CD</td><td>—</td><td><span class="badge missing">ไม่มี</span> — ไม่มี <code>.github/workflows/</code> เลย</td></tr>
+          <tr><td>Supabase project</td><td>backend-trail-running</td><td>ap-northeast-1, ไม่มี tier ระบุใน repo</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. CAPACITY -->
+    <section id="capacity">
+      <h2><span class="num">05</span> Capacity / จำนวน user สูงสุด</h2>
+      <p class="section-desc">ไม่มี hardcode limit ในโค้ดที่ไหนเลย — ตัวเลขข้างล่างเป็นการประเมินจาก infra config จริง ไม่ใช่ load-test</p>
+
+      <div class="grid2">
+        <div class="card">
+          <strong>Staff scan stations (concurrent)</strong>
+          <p style="margin-top:6px">Fly.io VM เดี่ยว + Supabase session pooler (ไม่ได้ tune pool size) → รองรับ staff scan station หลักสิบ connection พร้อมกันแบบสบายๆ</p>
+        </div>
+        <div class="card">
+          <strong>ถ้าใช้ Render free</strong>
+          <p style="margin-top:6px">Idle spin-down = <strong>ใช้งานแบบ always-on ไม่ได้เลย</strong> ไม่ว่าจำนวน user จะเท่าไหร่ — บล็อกทั้งวันแข่งจริง</p>
+        </div>
+        <div class="card">
+          <strong>Public/spectator viewer (live_progress)</strong>
+          <p style="margin-top:6px">จำกัดโดย Supabase Realtime connection limit ของ plan (free ~200 concurrent connection โดยทั่วไป) — เป็น limit ฝั่ง Supabase ไม่ใช่โค้ดใน repo นี้</p>
+        </div>
+        <div class="card">
+          <strong>จำนวน runner ต่อ race</strong>
+          <p style="margin-top:6px">ไม่มี pagination → assumption ในโค้ดอยู่ที่ ~2000 runner ก่อน list endpoint เริ่มหนัก</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>สรุปรวม:</strong> ระบบตอนนี้ fit กับ <strong>race ขนาดเล็ก-กลาง งานเดียว</strong> — staff scan station ไม่กี่จุด, runner หลักร้อย, ไม่มี public dashboard ที่ concurrency สูง ยังไม่ถูกออกแบบมาสำหรับ scale ใหญ่หรือแข่งพร้อมกันหลายงาน
+      </div>
+    </section>
+
+    <!-- 6. IMPROVE -->
+    <section id="improve">
+      <h2><span class="num">06</span> จุดที่ควรแก้ (เรียงตามความสำคัญ)</h2>
+      <ol class="priority-list">
+        <li>แก้ conflict Render vs Fly.io — เลือกตัวเดียว ลบอีกตัว อัปเดต CLAUDE.md ให้ตรงความจริง</li>
+        <li>ไม่มี integration test ฝั่ง backend, ไม่มี component test ฝั่ง frontend เลย — เสี่ยงสุดเพราะ "wrong runner data = real dispute วันแข่งจริง" ตามที่ CLAUDE.md ระบุเอง</li>
+        <li>ไม่มี pagination บน list endpoint — ต้องเพิ่มก่อน scale เกิน ~2000 runner</li>
+        <li>CORS เปิดกว้างทุก origin — ต้อง lock ก่อนขึ้นจริง</li>
+        <li>ไม่มี rate limiting บน <code>/scan</code> หรือ endpoint ไหนเลย — scanner client ค้าง/ลูปอาจถล่ม API</li>
+        <li>ไม่มี endpoint อ่านคืน <code>scan_events</code> — scan log ฝั่ง frontend เป็น per-device คุยกันข้ามสถานีไม่ได้</li>
+        <li>ไม่มี CI/CD — ไม่มี automated check ก่อน deploy เลย</li>
+      </ol>
+    </section>
+
+    <!-- 7. ROADMAP -->
+    <section id="roadmap">
+      <h2><span class="num">07</span> Roadmap ถัดไป</h2>
+      <ul class="roadmap-list">
+        <li>Verify end-to-end ด้วย staff Supabase Auth account จริง 1 ตัว (รอ Gong สร้างผ่าน dashboard)</li>
+        <li>BIB/RFID admin endpoints (Step 2-3) ใน Go</li>
+        <li>Excel import (Step 1) ใน Go</li>
+        <li>Scan-log server read endpoint</li>
+        <li>ตัดสินใจ + finalize deploy target เดียว</li>
+        <li>เพิ่ม integration test สำหรับ flow <code>/scan</code>, เพิ่ม component test สำหรับ scan/checkpoint UI</li>
+        <li>Driver เชื่อม RFID reader จริง (ตอนนี้ mock EPC/BIB string)</li>
+        <li>วางแผน Race Day Ops — จำนวนสถานี, ใครประจำจุดไหน, fallback เมื่อ network ล่ม</li>
+      </ul>
+    </section>
+
+    <footer>
+      Generated by Whale · facts verified against source (3 explore agents: frontend, backend, deploy/infra) · not a load-tested capacity figure
+    </footer>
+  </main>
+</div>
+</body>
+</html>
