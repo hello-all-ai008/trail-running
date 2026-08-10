@@ -1,5 +1,5 @@
 import GlassCard from '../components/ui/GlassCard'
-import { CATEGORIES, CHECKPOINTS, fmtTotal } from '../lib/raceData'
+import { CHECKPOINTS, categoriesFromRunners, fmtTotal } from '../lib/raceData'
 
 /**
  * Live overview: stat tiles, per-category progress bars, runner-flow nodes,
@@ -11,6 +11,8 @@ import { CATEGORIES, CHECKPOINTS, fmtTotal } from '../lib/raceData'
  * }} props
  */
 function DashboardPage({ runners, stats, finishers }) {
+  const categories = categoriesFromRunners(runners)
+
   const tiles = [
     { label: 'ผู้สมัครทั้งหมด', value: stats.total, hint: 'Registered runners', accent: 'forest' },
     { label: 'Check-in แล้ว', value: stats.checkedIn, hint: `${stats.checkedInPct}% ของผู้สมัคร`, accent: 'var(--station-start)' },
@@ -51,7 +53,7 @@ function DashboardPage({ runners, stats, finishers }) {
         <div className="glass-panel panel">
           <div className="panel__head"><h2>Progress by Category</h2></div>
           <div className="panel__body">
-            {CATEGORIES.map((cat) => {
+            {categories.map((cat) => {
               const group = runners.filter((r) => r.category === cat)
               const done = group.filter((r) => r.finish).length
               const pct = group.length ? Math.round((done / group.length) * 100) : 0

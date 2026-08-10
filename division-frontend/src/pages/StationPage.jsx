@@ -61,7 +61,7 @@ function stationFilter(stationKey, cpId) {
 function StationPage({ stationKey, scanLog, lastScan, onScan }) {
   const config = STATION_CONFIG[stationKey]
   const [value, setValue] = useState('')
-  const [cpId, setCpId] = useState(CHECKPOINTS[0].id)
+  const [cpId, setCpId] = useState(CHECKPOINTS[0]?.id ?? '')
   const [mode, setMode] = useState(defaultScanMode)
   const inputRef = useRef(null)
 
@@ -84,6 +84,7 @@ function StationPage({ stationKey, scanLog, lastScan, onScan }) {
   }
 
   const recent = scanLog.filter(stationFilter(stationKey, cpId)).slice(0, 8)
+  const noCheckpointsConfigured = config.hasCpSelect && CHECKPOINTS.length === 0
 
   return (
     <section aria-labelledby={`station-${stationKey}-heading`}>
@@ -98,65 +99,71 @@ function StationPage({ stationKey, scanLog, lastScan, onScan }) {
 
       <div className="station">
         <div className="station__scan">
-          <div className="toolbar">
-            {config.hasCpSelect && (
-              <select className="search search--select" value={cpId} onChange={(e) => setCpId(e.target.value)} aria-label="Select checkpoint">
-                {CHECKPOINTS.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            )}
-            <div className="scan-mode-toggle" role="group" aria-label="วิธีสแกน">
-              <button
-                type="button"
-                className={`btn btn-sm ${mode === 'camera' ? 'btn-accent' : 'btn-secondary'}`}
-                aria-pressed={mode === 'camera'}
-                onClick={() => setMode('camera')}
-              >
-                📷 สแกนด้วยกล้อง
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm ${mode === 'keyboard' ? 'btn-accent' : 'btn-secondary'}`}
-                aria-pressed={mode === 'keyboard'}
-                onClick={() => setMode('keyboard')}
-              >
-                ⌨️ พิมพ์ BIB
-              </button>
-            </div>
-          </div>
-
-          {mode === 'camera' ? (
-            <BarcodeCameraScanner
-              active={mode === 'camera'}
-              onDetect={(text) => submit(text)}
-              onFallback={() => setMode('keyboard')}
-            />
+          {noCheckpointsConfigured ? (
+            <p className="empty">ยังไม่มีการตั้งค่า Check Point สำหรับ event นี้ — รอเจ้าหน้าที่กำหนดจุดก่อนเริ่มสแกน</p>
           ) : (
-            <div className="scan-input-wrap">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M3 7V5a2 2 0 0 1 2-2h2" />
-                <path d="M17 3h2a2 2 0 0 1 2 2v2" />
-                <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
-                <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
-                <path d="M7 8v8M11 8v8M15 8v6M18 8v8" strokeWidth="1.6" />
-              </svg>
-              <input
-                ref={inputRef}
-                className="scan-input"
-                placeholder="สแกน BIB Barcode…"
-                autoComplete="off"
-                inputMode="numeric"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') submit()
-                }}
-                aria-label="Scan BIB"
-              />
-            </div>
+            <>
+              <div className="toolbar">
+                {config.hasCpSelect && (
+                  <select className="search search--select" value={cpId} onChange={(e) => setCpId(e.target.value)} aria-label="Select checkpoint">
+                    {CHECKPOINTS.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                )}
+                <div className="scan-mode-toggle" role="group" aria-label="วิธีสแกน">
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${mode === 'camera' ? 'btn-accent' : 'btn-secondary'}`}
+                    aria-pressed={mode === 'camera'}
+                    onClick={() => setMode('camera')}
+                  >
+                    📷 สแกนด้วยกล้อง
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${mode === 'keyboard' ? 'btn-accent' : 'btn-secondary'}`}
+                    aria-pressed={mode === 'keyboard'}
+                    onClick={() => setMode('keyboard')}
+                  >
+                    ⌨️ พิมพ์ BIB
+                  </button>
+                </div>
+              </div>
+
+              {mode === 'camera' ? (
+                <BarcodeCameraScanner
+                  active={mode === 'camera'}
+                  onDetect={(text) => submit(text)}
+                  onFallback={() => setMode('keyboard')}
+                />
+              ) : (
+                <div className="scan-input-wrap">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                    <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                    <path d="M7 8v8M11 8v8M15 8v6M18 8v8" strokeWidth="1.6" />
+                  </svg>
+                  <input
+                    ref={inputRef}
+                    className="scan-input"
+                    placeholder="สแกน BIB Barcode…"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') submit()
+                    }}
+                    aria-label="Scan BIB"
+                  />
+                </div>
+              )}
+              <p className="scan-hint">{mode === 'camera' ? 'เล็งกล้องไปที่บาร์โค้ดบน BIB ให้อยู่ในกรอบ' : config.hint}</p>
+            </>
           )}
-          <p className="scan-hint">{mode === 'camera' ? 'เล็งกล้องไปที่บาร์โค้ดบน BIB ให้อยู่ในกรอบ' : config.hint}</p>
         </div>
 
         <LedBoard className="station__led" result={lastScan} />

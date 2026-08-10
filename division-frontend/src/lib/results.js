@@ -9,7 +9,7 @@
 
 import {
   AGE_GROUPS,
-  CATEGORIES,
+  REGISTRATION_CATEGORIES,
   GENDERS,
   UNSPECIFIED,
   UNSPECIFIED_LABEL,
@@ -107,16 +107,16 @@ function byTime(a, b) {
  * Placings for every finisher, always computed over the *whole* field — never
  * over a filtered subset, or filtering by gender would renumber everyone to 1.
  *
- * Categories come from the data rather than the CATEGORIES constant so a
- * backend category outside that list still gets ranked. Keys stay
- * `overall`/`gender`/`age` because ESlipModal reads them.
+ * Categories come from the data rather than the REGISTRATION_CATEGORIES
+ * constant so a backend category outside that list still gets ranked. Keys
+ * stay `overall`/`gender`/`age` because ESlipModal reads them.
  * @param {ReadonlyArray<import('./raceData').Runner>} runners
  * @returns {Record<string, { overall: number, gender: number, age: number }>}
  */
 export function computeRanks(runners) {
   const finished = runners.filter((r) => r.finish)
   const categories = [...new Set(finished.map((r) => r.category))].sort(
-    (a, b) => orderIndex(CATEGORIES, a) - orderIndex(CATEGORIES, b) || a.localeCompare(b),
+    (a, b) => orderIndex(REGISTRATION_CATEGORIES, a) - orderIndex(REGISTRATION_CATEGORIES, b) || a.localeCompare(b),
   )
 
   const map = {}
@@ -267,7 +267,7 @@ export function groupFinishers(runners, ranks, mode) {
 /** Category order, then gender order, then age-bracket order; blank last. */
 function compareGroups(a, b) {
   return (
-    orderIndex(CATEGORIES, a.category) - orderIndex(CATEGORIES, b.category) ||
+    orderIndex(REGISTRATION_CATEGORIES, a.category) - orderIndex(REGISTRATION_CATEGORIES, b.category) ||
     a.category.localeCompare(b.category) ||
     orderIndex(GENDERS, a.gender ?? '') - orderIndex(GENDERS, b.gender ?? '') ||
     (a.gender ?? '').localeCompare(b.gender ?? '') ||

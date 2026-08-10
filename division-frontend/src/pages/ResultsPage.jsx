@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import ResultsFilterBar from '../components/results/ResultsFilterBar'
 import ResultsTable from '../components/results/ResultsTable'
-import { downloadCSV } from '../lib/raceData'
+import { categoriesFromRunners, downloadCSV } from '../lib/raceData'
 import {
   DEFAULT_GROUP_MODE,
   EMPTY_FILTER,
@@ -25,6 +25,7 @@ import {
 function ResultsPage({ finishers, ranks, onOpenSlip }) {
   const [filter, setFilter] = useState(EMPTY_FILTER)
   const [groupBy, setGroupBy] = useState(DEFAULT_GROUP_MODE)
+  const categories = useMemo(() => categoriesFromRunners(finishers), [finishers])
 
   const view = useMemo(
     () => buildResultsView({ finishers, ranks, filter, groupBy }),
@@ -58,6 +59,7 @@ function ResultsPage({ finishers, ranks, onOpenSlip }) {
         filter={filter}
         groupBy={groupBy}
         view={view}
+        categories={categories}
         onFilter={handleFilter}
         onGroupBy={setGroupBy}
         onClear={clearFilter}

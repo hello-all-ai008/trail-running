@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Button from '../ui/Button'
-import { CATEGORIES, GENDERS, genderLabel } from '../../lib/raceData'
+import { REGISTRATION_CATEGORIES, GENDERS, genderLabel } from '../../lib/raceData'
 import { buildRegistration, saveRegistration, toRegistrationRow } from '../../lib/registration'
 import { insertRegistration } from '../../lib/api'
 
@@ -107,7 +107,7 @@ function RegisterForm({ onSuccess }) {
           <span>ประเภทการแข่งขัน</span>
           <select className="search" value={values.category} onChange={update('category')} required>
             <option value="" disabled>เลือกระยะ</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {REGISTRATION_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
 

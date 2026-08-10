@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CATEGORIES } from '../lib/raceData'
+import { REGISTRATION_CATEGORIES } from '../lib/raceData'
 import { distanceFromCategory } from '../lib/bibNumbering'
 import {
   defaultStructuralElements,
@@ -45,7 +45,7 @@ const STORAGE_KEY = 'tt:v1:bibConfig'
 export function defaultConfig() {
   return {
     elements: defaultStructuralElements(),
-    categories: CATEGORIES.map((code) => {
+    categories: REGISTRATION_CATEGORIES.map((code) => {
       const distanceKm = distanceFromCategory(code)
       return {
         id: crypto.randomUUID(),

@@ -1,6 +1,6 @@
 import Button from '../ui/Button'
 import ChipGroup from '../ui/ChipGroup'
-import { AGE_GROUPS, CATEGORIES, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
+import { AGE_GROUPS, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
 import { FILTER_UNSPECIFIED, GROUP_MODES } from '../../lib/results'
 
 const GROUP_MODE_TH = {
@@ -22,13 +22,14 @@ const AGE_OPTIONS = [
  *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   groupBy: string,
  *   view: import('../../lib/results').ResultsView,
+ *   categories: string[],
  *   onFilter: (key: string, value: unknown) => void,
  *   onGroupBy: (mode: string) => void,
  *   onClear: () => void,
  *   onExport: () => void
  * }} props
  */
-function ResultsFilterBar({ filter, groupBy, view, onFilter, onGroupBy, onClear, onExport }) {
+function ResultsFilterBar({ filter, groupBy, view, categories, onFilter, onGroupBy, onClear, onExport }) {
   return (
     <>
       <div className="filter-bar">
@@ -45,7 +46,7 @@ function ResultsFilterBar({ filter, groupBy, view, onFilter, onGroupBy, onClear,
           id="filter-category-legend"
           legend="ระยะ"
           allLabel="ทุกระยะ"
-          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          options={categories.map((c) => ({ value: c, label: c }))}
           value={filter.category}
           onSelect={(v) => onFilter('category', v)}
         />

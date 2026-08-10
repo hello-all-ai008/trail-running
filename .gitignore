@@ -11,6 +11,11 @@ dist-ssr
 *.local
 npm-debug.log*
 
+# Vercel CLI project link (also gitignored inside division-frontend/;
+# root-level link added so `vercel --prod` can run from repo root and
+# resolve the Root Directory=division-frontend project setting)
+.vercel
+
 # Go
 division-backend/tmp
 division-backend/bin

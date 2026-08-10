@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
 import StatusBadge from '../components/ui/StatusBadge'
-import { CATEGORIES, ageGroupLabel, csvCell, fmtTime, genderLabel, statusOf, downloadCSV } from '../lib/raceData'
+import { categoriesFromRunners, ageGroupLabel, csvCell, fmtTime, genderLabel, statusOf, downloadCSV } from '../lib/raceData'
 
 /**
  * Runner database — real entrants imported from Timing System.xlsx.
@@ -11,6 +11,7 @@ import { CATEGORIES, ageGroupLabel, csvCell, fmtTime, genderLabel, statusOf, dow
 function RunnersPage({ runners }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
+  const categories = useMemo(() => categoriesFromRunners(runners), [runners])
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -51,7 +52,7 @@ function RunnersPage({ runners }) {
         />
         <select className="search search--select" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter category">
           <option value="">ทุกระยะ</option>
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c}>{c}</option>
           ))}
         </select>

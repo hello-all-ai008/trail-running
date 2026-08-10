@@ -67,7 +67,10 @@ describe('applyCheckpoint', () => {
     const { state: next, result } = applyCheckpoint(seed(), '3381', 'A1', T)
     expect(result.outcome).toBe('not-checked-in')
     expect(next.runners[0].cps).toEqual({})
-    expect(next.scanLog[0]).toMatchObject({ ok: false, msg: 'ยังไม่เช็คอิน', station: 'A1 Mae Kha Nin' })
+    // cpName() falls back to the raw id when CHECKPOINTS has no matching
+    // entry — expected, since CHECKPOINTS is empty until real event
+    // checkpoints are configured (see raceData.js).
+    expect(next.scanLog[0]).toMatchObject({ ok: false, msg: 'ยังไม่เช็คอิน', station: 'A1' })
   })
 
   it('stamps checkpoint after check-in; duplicate per CP rejected', () => {

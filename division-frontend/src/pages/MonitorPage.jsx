@@ -4,6 +4,7 @@ import MonitorCard from '../components/monitor/MonitorCard'
 import MonitorFilterBar from '../components/monitor/MonitorFilterBar'
 import { useRecentArrivals } from '../hooks/useRecentArrivals'
 import { buildMonitorFeed, buildMonitorOverall, buildMonitorPodium } from '../lib/monitor'
+import { categoriesFromRunners } from '../lib/raceData'
 import { EMPTY_FILTER } from '../lib/results'
 
 /**
@@ -22,6 +23,7 @@ import { EMPTY_FILTER } from '../lib/results'
 function MonitorPage({ runners, finishers, ranks, scanLog, onOpenSlip }) {
   const [filter, setFilter] = useState(EMPTY_FILTER)
   const [viewMode, setViewMode] = useState('podium')
+  const categories = useMemo(() => categoriesFromRunners(runners), [runners])
 
   const podiumView = useMemo(
     () => buildMonitorPodium({ finishers, ranks, filter }),
@@ -76,6 +78,7 @@ function MonitorPage({ runners, finishers, ranks, scanLog, onOpenSlip }) {
         filter={filter}
         viewMode={viewMode}
         view={activeView}
+        categories={categories}
         onFilter={handleFilter}
         onViewMode={setViewMode}
         onClear={clearFilter}

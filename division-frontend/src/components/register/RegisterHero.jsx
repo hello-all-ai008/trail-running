@@ -1,8 +1,11 @@
-import { CATEGORIES } from '../../lib/raceData'
+import { REGISTRATION_CATEGORIES } from '../../lib/raceData'
 
+// Distance/tag from the real race_categories rows ('10 KM : Hard Rock' /
+// '5 KM : Soft Rock'). No elevation-gain figure exists for this event in any
+// data source available — omit rather than guess.
 const CATEGORY_META = {
-  MKT33: { distance: '33 กม.', gain: '+1,900 ม.', tag: 'ระยะกลาง' },
-  MKT50: { distance: '50 กม.', gain: '+3,200 ม.', tag: 'ระยะไกล' },
+  BP10: { distance: '10 กม.', tag: 'Hard Rock' },
+  BP5: { distance: '5 กม.', tag: 'Soft Rock' },
 }
 
 /**
@@ -33,14 +36,13 @@ function RegisterHero() {
       </div>
 
       <ul className="reg-hero__cards">
-        {CATEGORIES.map((cat, i) => {
+        {REGISTRATION_CATEGORIES.map((cat, i) => {
           const meta = CATEGORY_META[cat]
           return (
             <li key={cat} className="glass-panel reg-cat" data-index={i}>
               <span className="reg-cat__tag">{meta.tag}</span>
               <span className="reg-cat__code">{cat}</span>
               <span className="reg-cat__distance">{meta.distance}</span>
-              <span className="reg-cat__gain">ระยะสะสมความสูง {meta.gain}</span>
             </li>
           )
         })}

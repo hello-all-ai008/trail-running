@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — Deploy division-backend (Go) ขึ้น Render (free tier)</title>
+<title>แผน — แก้ category/checkpoint เก่าที่ hardcode ไว้ในโค้ด frontend</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -43,83 +43,102 @@
   ol.steps li { margin: .5rem 0; }
   ul { padding-left: 1.3rem; }
   li { margin: .3rem 0; }
+  pre { background: oklch(20% 0.01 150); color: oklch(90% 0.01 150); padding: .8rem 1rem; border-radius: 8px; overflow-x: auto; font-size: .8rem; }
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
 <body>
 <main>
 
-<span class="eyebrow">Backend (Korn) · Whale · 2026-08-03</span>
-<h1>Deploy <code>division-backend</code> (Go) ขึ้น Render — free tier, ไม่ต้องผูกบัตร</h1>
+<span class="eyebrow">Frontend (Puttra) · Whale · 2026-08-10</span>
+<h1>แก้ category/checkpoint เก่า (MKT33/MKT50, A1/A2/A3) ที่ hardcode ไว้ในโค้ด</h1>
 <p class="lede">
-  ลอง Fly.io แล้วชน "machine count exceeds organization limit" — org <code>personal</code> มี 0 apps/0 machines อยู่แล้วแต่ยังโดนบล็อก
-  ยืนยันว่าเป็น <b>billing จริง</b> (Fly.io เลิก free-tier แล้ว) ไม่ใช่ชน quota เดิม
+  Deploy Vercel รอบก่อนสำเร็จแล้ว — เช็คผ่าน browser พบว่า Dashboard ขึ้น "ผู้สมัครทั้งหมด 1003" ถูกแล้ว (live data จริง)
+  แต่ <b>"Progress by Category" ยังขึ้น MKT33/MKT50</b> และ <b>"Runner Flow" ยังขึ้น A1/A2/A3</b> — ของ event เก่า
 </p>
 
 <div class="status">
-  <p style="margin:0 0 .5rem"><b>ทางเลือก "เขียนตรง Supabase, ตัด Go ออก" — ไม่แนะนำ:</b></p>
+  <p style="margin:0 0 .5rem"><b>สาเหตุ</b></p>
   <p style="margin:0">
-    ขัด <code>division-backend/CLAUDE.md</code> โดยตรง ("All writes go through the Go API... Frontend never writes to Supabase directly")
-    validation จริง (duplicate-scan, status transition) อยู่ใน <code>internal/scan</code> เป็น transaction logic ไม่ใช่ DB constraint,
-    RLS ตอนนี้ default-deny ทุกตารางยกเว้น <code>live_progress</code> — ย้ายไป Postgres function/RLS ทั้งชุดคืองาน rework ใหญ่ ไม่ใช่ deploy step
+    <code>division-frontend/src/lib/raceData.js</code> hardcode ค่า 2 ตัว ไว้ตั้งแต่ยุค mock เดี่ยว event เก่า:
+  </p>
+  <pre>export const CATEGORIES = ['MKT33', 'MKT50']
+export const CHECKPOINTS = [
+  { id: 'A1', name: 'A1 Mae Kha Nin' },
+  { id: 'A2', name: 'A2 Doi Pha Daeng' },
+  { id: 'A3', name: 'A3 Huai Nam Sai' },
+]</pre>
+  <p style="margin:0">
+    ถูก import ตรงๆ (ไม่ derive จากข้อมูลจริง) ใน 9 ไฟล์ — จำนวน runner รวมดึงจาก <code>runners</code> จริงถูกแล้ว
+    แต่ตัวกรอง/กลุ่ม/ป้าย category กับ checkpoint ยังอ่านค่า static เดิมอยู่
+  </p>
+  <p style="margin:.5rem 0 0">
+    <b>ข่าวดี — มี pattern แก้ถูกอยู่แล้วในโค้ด</b>: <code>lib/results.js:110-119</code> (<code>computeRanks</code>) derive category จากข้อมูลจริงถูกวิธีอยู่แล้ว
+    (<code>[...new Set(finished.map(r =&gt; r.category))]</code>) ใช้ <code>CATEGORIES</code> แค่เป็น sort hint เท่านั้น — แผนนี้เอา pattern เดียวกันไปใช้ที่เหลือ
   </p>
 </div>
 
-<p><b>Gong เลือกแล้ว:</b> Render free tier + Go backend เดิม ไม่แก้ logic ใดๆ</p>
+<p><b>Gong confirm แล้ว:</b></p>
+<ul>
+  <li>Checkpoint: Baanpong 2026 ยังไม่มีข้อมูลจริงใน DB เลย (flag ไว้ตั้งแต่รอบก่อน) และยังไม่มีรายชื่อพร้อม → <b>รอก่อน</b> — Runner Flow โชว์แค่ START/FINISH ไปก่อน ไม่โชว์ A1/A2/A3 ปลอมๆ</li>
+  <li><code>/register</code> ยังเปิดรับสมัครจริงอยู่ → อัพเดทเป็น BP10/BP5 ด้วย</li>
+</ul>
 
-<h2>ขั้นตอน</h2>
+<h2>สิ่งที่แก้</h2>
 <ol class="steps">
-  <li><b>สร้าง <code>render.yaml</code></b> ที่ root repo — Blueprint: web service <code>trail-running-api</code>, <code>env: docker</code>, <code>dockerfilePath: division-backend/Dockerfile</code>, <code>dockerContext: division-backend</code>, region Singapore, plan <code>free</code>, <code>healthCheckPath: /healthz</code>, <code>DATABASE_URL</code>/<code>SUPABASE_URL</code> ตั้ง <code>sync: false</code> (ไม่เก็บ secret ในไฟล์)</li>
-  <li><b>Commit + push <code>render.yaml</code> ขึ้น GitHub</b> — จำเป็นเพราะ Render Blueprint อ่านจาก repo โดยตรง (จะขอ confirm แยกก่อน push จริง เพราะกระทบ remote repo)</li>
-  <li><b>Gong ทำเองใน browser</b> (ไม่มี Render API key ให้ผมทำแทน):
-    <ul>
-      <li>Render → New → Blueprint → เชื่อม GitHub repo <code>hello-all-ai008/trail-running</code></li>
-      <li>กรอก <code>DATABASE_URL</code>, <code>SUPABASE_URL</code> ในฟอร์ม</li>
-      <li>กด Apply — Render build + deploy จาก Dockerfile</li>
-    </ul>
-  </li>
-  <li><b>Gong ส่ง URL ที่ได้กลับมา</b> (รูปแบบ <code>https://trail-running-api.onrender.com</code>)</li>
-  <li><b>ตรวจสุขภาพ</b> — <code>curl -i &lt;render-url&gt;/healthz</code> ต้องได้ 200 (รอบแรกอาจช้าเพราะ cold start)</li>
-  <li><b>ปิด loop กับ frontend</b> — อัพเดท Vercel env <code>VITE_API_BASE</code> เป็น URL จริง แล้ว <code>vercel --prod</code> redeploy</li>
+  <li><b><code>raceData.js</code></b> — เพิ่ม <code>categoriesFromRunners(runners)</code> (pattern เดียวกับ <code>results.js</code>), เปลี่ยนชื่อ <code>CATEGORIES</code> → <code>REGISTRATION_CATEGORIES</code> ค่าเป็น <code>['BP10','BP5']</code> (ใช้เฉพาะหน้า /register ที่ไม่มี live data ให้ derive เพราะ <code>race_categories</code> ไม่มี RLS anon-read), <code>CHECKPOINTS</code> → <code>[]</code></li>
+  <li><b>หน้า staff</b> (Dashboard/Runners/Monitor/Results filter) — เปลี่ยนจาก <code>CATEGORIES.map()</code> เป็น <code>categoriesFromRunners(runners).map()</code> ทุกจุด (มี <code>runners</code> เป็น prop อยู่แล้วทุกที่)</li>
+  <li><b><code>StationPage.jsx</code></b> — กัน crash: <code>CHECKPOINTS[0].id</code> → <code>CHECKPOINTS[0]?.id ?? ''</code>, เพิ่ม empty state "ยังไม่มีการตั้งค่า Check Point" ตอนไม่มี checkpoint</li>
+  <li><b>Runner Flow / ESlipModal / raceEngine (mock)</b> — ไม่ต้องแก้ ของเดิม guard ด้วย <code>.map/.filter/.some</code> ทำงานถูกอยู่แล้วกับ array ว่าง (Runner Flow จะเหลือแค่ START/FINISH เอง)</li>
+  <li><b><code>RegisterHero.jsx</code></b> — เปลี่ยน category card เป็น BP10 (10 กม. · Hard Rock) / BP5 (5 กม. · Soft Rock) จากข้อมูลจริงใน <code>race_categories</code>, ตัด "ระยะสะสมความสูง" ออกเพราะไม่มีตัวเลขจริง (ไม่ใส่เลขมั่ว)</li>
+  <li><b><code>RegisterForm.jsx</code></b> — เปลี่ยน import ตามชื่อใหม่ ที่เหลือ logic เดิม</li>
 </ol>
+
+<div class="risk">
+  <p style="margin:0 0 .5rem"><b>Flag ไว้ ไม่แก้รอบนี้ — ต้องรอ copy จริงจาก Gong</b></p>
+  <p style="margin:0">
+    <code>RegisterHero.jsx</code> ข้อความรอบๆ card (หัวข้อ "Baan Pong Cross Country / Mae Kha Nin", วันที่ "15 กันยายน 2567",
+    สถานที่ "บ้านโป่ง เชียงใหม่", literature เกี่ยวกับ "แม่ขะนิน") เป็น copy ของ event 2024 ทั้งหมด ไม่ใช่แค่ category code.
+    รู้วันที่จริงจาก DB (<code>race_categories.mass_start_at</code> = 2026-07-28) แต่ไม่มีชื่องาน/สถานที่/ข้อความจริงของ Baanpong 2026 ที่ไหนเลย
+    — ขอ copy จริงจาก Gong เป็น follow-up แยก ไม่ block รอบนี้
+  </p>
+</div>
+
+<h2>ไม่แตะ (flag ไว้)</h2>
+<p style="margin:0"><code>useBibConfig.js</code> default category seed (ยังเป็น MKT33/MKT50) — เป็นแค่ค่าเริ่มต้นตอนโหลดครั้งแรกของหน้าสร้าง BIB PDF, Gong แก้/เพิ่ม/ลบ category เองในหน้านั้นได้อยู่แล้ว ไม่ใช่บั๊ก data จริงแบบหน้าอื่น เก็บไว้นอก scope รอบนี้</p>
 
 <h2>ไฟล์ที่แตะ</h2>
 <div class="wrap">
 <table>
   <thead><tr><th>ไฟล์</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">render.yaml</td><td>ใหม่ (root repo)</td></tr>
+    <tr><td class="mono">lib/raceData.js</td><td>เพิ่ม categoriesFromRunners, เปลี่ยนชื่อ+ค่า CATEGORIES, CHECKPOINTS=[]</td></tr>
+    <tr><td class="mono">pages/DashboardPage.jsx</td><td>ใช้ categoriesFromRunners(runners)</td></tr>
+    <tr><td class="mono">pages/RunnersPage.jsx</td><td>ใช้ categoriesFromRunners(runners)</td></tr>
+    <tr><td class="mono">components/monitor/MonitorFilterBar.jsx</td><td>ใช้ categoriesFromRunners(runners)</td></tr>
+    <tr><td class="mono">components/results/ResultsFilterBar.jsx</td><td>ใช้ categoriesFromRunners(runners)</td></tr>
+    <tr><td class="mono">pages/StationPage.jsx</td><td>กัน crash + empty state</td></tr>
+    <tr><td class="mono">components/register/RegisterHero.jsx</td><td>BP10/BP5 card, ตัด gain</td></tr>
+    <tr><td class="mono">components/register/RegisterForm.jsx</td><td>เปลี่ยนชื่อ import</td></tr>
   </tbody>
 </table>
 </div>
-<p><b>ไม่แตะ:</b> โค้ด Go, <code>fly.toml</code>/<code>Dockerfile</code> เพิ่มเติม (พร้อมอยู่แล้ว เก็บไว้เผื่อย้ายกลับ Fly.io วันแข่งจริง)</p>
-
-<h2>ยังไม่ทำรอบนี้</h2>
-<ul>
-  <li>Fly.io deploy จริง (รอ Gong ผูกบัตรทีหลัง ถ้าต้องการ always-on วันแข่งจริง)</li>
-  <li>แก้ doc เก่าใน <code>division-backend/CLAUDE.md</code> (region ผิด) — ไม่ใช่ blocker</li>
-  <li>ยืนยัน scan จริงแบบ end-to-end — รอ Gong สร้าง staff Supabase Auth account เอง</li>
-</ul>
-
-<h2>ความเสี่ยง</h2>
-<ul>
-  <li>Cold start 20-50 วิหลัง idle 15 นาที — ไม่ใช่บั๊ก เป็นข้อจำกัด free tier (Gong รับทราบแล้ว)</li>
-  <li>ขั้นตอน 3 ต้อง Gong ทำเองผ่าน browser ทั้งหมด</li>
-  <li>push <code>render.yaml</code> ขึ้น GitHub — ขอ confirm แยกก่อนรัน <code>git push</code></li>
-</ul>
+<p style="margin:0"><b>ไม่แตะ:</b> backend/DB, <code>runners.json</code> (mock only), BIB migration รอบก่อน</p>
 
 <h2>การตรวจสอบ</h2>
 <ol>
-  <li><code>curl -i &lt;render-url&gt;/healthz</code> → 200</li>
-  <li>เปิด <code>https://trail-running.vercel.app</code> หลัง redeploy frontend เช็ค network reachable</li>
+  <li><code>npm test</code> ใน division-frontend/ ผ่านหมด</li>
+  <li><code>npm run build</code> ผ่าน (เช็คว่า rename import ไม่พังตรงไหน)</li>
+  <li>Redeploy แล้วเช็คเว็บจริง: Dashboard ขึ้น BP10/BP5, Runner Flow เหลือ START/FINISH, /register ขึ้น BP10/BP5 การ์ดถูก, Check Point ขึ้น empty state ไม่ crash, filter dropdown ทุกหน้าขึ้น BP10/BP5</li>
+  <li>เช็คหน้าสร้าง BIB PDF ยังโหลดปกติ (ไม่ได้แก้แต่ import จาก raceData.js เหมือนกัน เช็คกันพลาด)</li>
 </ol>
 
 <div class="ask">
-  <p style="margin:0"><b>รอ Gong พิมพ์ "ลุยได้" ก่อนเริ่ม execute</b> — จะไม่เริ่มสร้างไฟล์/commit/push จนกว่าจะได้รับคำสั่งชัดเจนอีกที</p>
+  <p style="margin:0"><b>รอ Gong พิมพ์ "ลุยได้" ก่อนเริ่มแก้โค้ด</b></p>
 </div>
 
 <footer>
-  Whale · Backend (Korn) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
+  Whale · Frontend (Puttra) · ไฟล์แผนหมุนเวียนไฟล์เดียว เขียนทับทุกครั้ง ไม่ใช่คลัง
 </footer>
 
 </main>

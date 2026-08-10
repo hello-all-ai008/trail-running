@@ -16,7 +16,7 @@ import runnersJson from '../data/runners.json'
  * @property {string} gender    'Male' | 'Female' | 'LGBTIQAN+'
  * @property {string} ageGroup
  * @property {string} nationality
- * @property {string} category  'MKT33' | 'MKT50'
+ * @property {string} category  real category code, e.g. 'BP10' | 'BP5'
  * @property {string|null} startTime  ISO — mass-start gun time for the category
  * @property {string|null} checkin
  * @property {Record<string, string>} cps  checkpoint id -> ISO time
@@ -26,7 +26,25 @@ import runnersJson from '../data/runners.json'
 /** @type {ReadonlyArray<Runner>} */
 export const initialRunners = runnersJson
 
-export const CATEGORIES = ['MKT33', 'MKT50']
+/**
+ * Real category codes derived from whatever runners are actually loaded —
+ * the correct source of truth for staff pages (Dashboard, Runners, Monitor,
+ * Results), which always have a live `runners` array to read from. See
+ * results.js's computeRanks for the pattern this mirrors.
+ * @param {ReadonlyArray<{ category: string }>} runners
+ * @returns {string[]}
+ */
+export function categoriesFromRunners(runners) {
+  return [...new Set(runners.map((r) => r.category))].sort()
+}
+
+/**
+ * Static fallback category list — used only where there is no live data to
+ * derive from, i.e. the public /register page (unauthenticated, and
+ * `race_categories` has no anon-read RLS policy). Keep in sync with the
+ * active event's real category codes by hand.
+ */
+export const REGISTRATION_CATEGORIES = ['BP10', 'BP5']
 
 /**
  * Demographic vocabulary shared by the public registration form and the
@@ -80,11 +98,13 @@ export function ageGroupLabel(value) {
   return value || UNSPECIFIED_LABEL
 }
 
-export const CHECKPOINTS = [
-  { id: 'A1', name: 'A1 Mae Kha Nin' },
-  { id: 'A2', name: 'A2 Doi Pha Daeng' },
-  { id: 'A3', name: 'A3 Huai Nam Sai' },
-]
+/**
+ * Real checkpoints for the active event — empty until Baanpong 2026's course
+ * checkpoints are defined (no rows in the `checkpoints` table yet). Do not
+ * hardcode placeholder checkpoints here; Runner Flow / Check Point station
+ * degrade gracefully to a start/finish-only view when this is empty.
+ */
+export const CHECKPOINTS = []
 
 export const STATIONS = {
   CHECKIN: 'Check-in',

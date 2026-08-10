@@ -1,6 +1,6 @@
 import Button from '../ui/Button'
 import ChipGroup from '../ui/ChipGroup'
-import { AGE_GROUPS, CATEGORIES, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
+import { AGE_GROUPS, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
 import { FILTER_UNSPECIFIED } from '../../lib/results'
 
 const VIEW_MODES = [
@@ -46,12 +46,13 @@ function summaryText(viewMode, view) {
  *   filter: { category: string, gender: string, ageGroups: string[], query: string },
  *   viewMode: 'podium'|'feed',
  *   view: import('../../lib/monitor').MonitorCardData|import('../../lib/monitor').MonitorFeedCard,
+ *   categories: string[],
  *   onFilter: (key: string, value: unknown) => void,
  *   onViewMode: (mode: 'podium'|'feed') => void,
  *   onClear: () => void
  * }} props
  */
-function MonitorFilterBar({ filter, viewMode, view, onFilter, onViewMode, onClear }) {
+function MonitorFilterBar({ filter, viewMode, view, categories, onFilter, onViewMode, onClear }) {
   return (
     <>
       <div className="monitor-view-toggle scan-mode-toggle" role="group" aria-label="มุมมอง">
@@ -82,7 +83,7 @@ function MonitorFilterBar({ filter, viewMode, view, onFilter, onViewMode, onClea
           id="monitor-filter-category-legend"
           legend="ระยะ"
           allLabel="ทุกระยะ"
-          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          options={categories.map((c) => ({ value: c, label: c }))}
           value={filter.category}
           onSelect={(v) => onFilter('category', v)}
         />
