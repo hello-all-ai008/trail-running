@@ -332,16 +332,6 @@
   background: linear-gradient(135deg, var(--color-status-red), oklch(70% 0.18 25));
 }
 .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
-/* Pill-shaped toggle button for filter strips — pair with btn-accent (pressed)
-   / btn-secondary (idle) and aria-pressed, like .scan-mode-toggle does. */
-.filter-chip {
-  border-radius: 999px;
-  padding: 0.34rem 0.85rem;
-  font-size: 0.78rem;
-}
-.filter-chip[aria-pressed='true'] {
-  box-shadow: 0 4px 14px color-mix(in oklch, var(--color-accent) 26%, transparent);
-}
 
 /* ---- Station pages ---- */
 .station {
@@ -594,6 +584,31 @@
 }
 .scan-ok { color: var(--color-forest); font-weight: 700; font-size: 0.82rem; }
 .scan-bad { color: var(--color-status-red); font-weight: 700; font-size: 0.82rem; }
+
+/* ---- Pagination ---- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+.pagination__arrow {
+  min-width: 2.1rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+.pagination .btn {
+  min-width: 2.1rem;
+  padding: 0.35rem 0.6rem;
+  text-align: center;
+}
+.pagination__ellipsis {
+  padding: 0 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
 
 /* ---- Status badge ---- */
 .status-badge {
