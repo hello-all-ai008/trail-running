@@ -1,7 +1,7 @@
 import Button from '../ui/Button'
-import ChipGroup from '../ui/ChipGroup'
+import MultiSelectDropdown from '../ui/MultiSelectDropdown'
 import { AGE_GROUPS, GENDERS, UNSPECIFIED_LABEL, ageGroupLabel, genderLabel } from '../../lib/raceData'
-import { FILTER_UNSPECIFIED } from '../../lib/results'
+import { ANY, FILTER_UNSPECIFIED } from '../../lib/results'
 
 const VIEW_MODES = [
   { value: 'podium', label: 'อันดับ 1-5' },
@@ -79,26 +79,37 @@ function MonitorFilterBar({ filter, viewMode, view, categories, onFilter, onView
           aria-label="ค้นหานักวิ่ง"
         />
 
-        <ChipGroup
-          id="monitor-filter-category-legend"
-          legend="ระยะ"
-          allLabel="ทุกระยะ"
-          options={categories.map((c) => ({ value: c, label: c }))}
-          value={filter.category}
-          onSelect={(v) => onFilter('category', v)}
-        />
+        <div className="filter-bar__group">
+          <span className="filter-bar__legend" id="monitor-filter-category-legend">ระยะ</span>
+          <select
+            className="search search--select"
+            value={filter.category}
+            onChange={(e) => onFilter('category', e.target.value)}
+            aria-labelledby="monitor-filter-category-legend"
+          >
+            <option value={ANY}>ทุกระยะ</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
 
-        <ChipGroup
-          id="monitor-filter-gender-legend"
-          legend="เพศ"
-          allLabel="ทุกเพศ"
-          options={GENDERS.map((g) => ({ value: g, label: genderLabel(g) }))}
-          value={filter.gender}
-          onSelect={(v) => onFilter('gender', v)}
-        />
+        <div className="filter-bar__group">
+          <span className="filter-bar__legend" id="monitor-filter-gender-legend">เพศ</span>
+          <select
+            className="search search--select"
+            value={filter.gender}
+            onChange={(e) => onFilter('gender', e.target.value)}
+            aria-labelledby="monitor-filter-gender-legend"
+          >
+            <option value={ANY}>ทุกเพศ</option>
+            {GENDERS.map((g) => (
+              <option key={g} value={g}>{genderLabel(g)}</option>
+            ))}
+          </select>
+        </div>
 
-        <ChipGroup
-          multiSelect
+        <MultiSelectDropdown
           id="monitor-filter-age-legend"
           legend="รุ่นอายุ"
           allLabel="ทุกรุ่น"

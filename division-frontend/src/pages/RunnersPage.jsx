@@ -1,16 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
+import Pagination from '../components/ui/Pagination'
 import StatusBadge from '../components/ui/StatusBadge'
 import { categoriesFromRunners, ageGroupLabel, csvCell, fmtTime, genderLabel, statusOf, downloadCSV } from '../lib/raceData'
 
+const PAGE_SIZE = 20
+
 /**
  * Runner database — real entrants imported from Timing System.xlsx.
- * Search by BIB/name, filter by category, export CSV.
+ * Search by BIB/name, filter by category, export CSV, 20 rows/page.
  * @param {{ runners: Array<import('../lib/raceData').Runner> }} props
  */
 function RunnersPage({ runners }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
+  const [page, setPage] = useState(1)
   const categories = useMemo(() => categoriesFromRunners(runners), [runners])
 
   const rows = useMemo(() => {
@@ -21,6 +25,17 @@ function RunnersPage({ runners }) {
         (!q || r.bib.includes(q) || r.name.toLowerCase().includes(q)),
     )
   }, [runners, query, category])
+
+  // Filtered set changed — page 1 is the only page guaranteed to have rows.
+  useEffect(() => {
+    setPage(1)
+  }, [query, category])
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const pagedRows = useMemo(
+    () => rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [rows, page],
+  )
 
   function exportCSV() {
     const head = 'BIB,Name,Gender,AgeGroup,Category,Checkin,Finish,Status\n'
@@ -77,7 +92,7 @@ function RunnersPage({ runners }) {
             {rows.length === 0 ? (
               <tr><td colSpan={8} className="empty">ไม่พบข้อมูล</td></tr>
             ) : (
-              rows.map((r) => {
+              pagedRows.map((r) => {
                 const s = statusOf(r)
                 return (
                   <tr key={r.bib}>
@@ -96,6 +111,8 @@ function RunnersPage({ runners }) {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && <Pagination page={page} totalPages={totalPages} onChange={setPage} />}
     </section>
   )
 }
