@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แผน — Filter dropdown (Monitor/ผลการแข่งขัน) + Pagination (รายชื่อนักวิ่ง)</title>
+<title>แผน — Pagination: เลขติด prev + เรียงลำดับ 1 2 3 4 … N</title>
 <style>
   :root {
     --bg: oklch(96% 0.015 120);
@@ -44,6 +44,10 @@
   ul { padding-left: 1.3rem; }
   li { margin: .3rem 0; }
   pre { background: oklch(20% 0.01 150); color: oklch(90% 0.01 150); padding: .8rem 1rem; border-radius: 8px; overflow-x: auto; font-size: .8rem; }
+  .diagram { display: flex; align-items: center; gap: .4rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-family: var(--mono); font-size: .8rem; flex-wrap: wrap; }
+  .diagram .chip { padding: .3rem .6rem; border-radius: 999px; border: 1px solid var(--line); background: oklch(98% 0.005 100); }
+  .diagram .chip.active { background: var(--accent); color: oklch(99% 0 0); border-color: var(--accent); }
+  .diagram .gap { flex: 1; min-width: 1rem; border-bottom: 1px dashed var(--line); height: 1px; align-self: center; }
   footer { margin-top: 2.2rem; color: var(--muted); font-size: .8rem; border-top: 1px solid var(--line); padding-top: .8rem; }
 </style>
 </head>
@@ -51,85 +55,98 @@
 <main>
 
 <span class="eyebrow">Frontend (Puttra) · Whale · 2026-08-10</span>
-<h1>Filter chip → dropdown (Live Monitor / ผลการแข่งขัน) + Pagination (รายชื่อนักวิ่ง)</h1>
+<h1>Pagination — เลขติด prev + เรียงลำดับคงที่ 1 2 3 4 … N</h1>
 <p class="lede">
-  Gong สั่งผ่าน remote-control: form "Live Monitor" กับ "ผลการแข่งขัน" เปลี่ยน check ระยะ/เพศ/รุ่นอายุ จาก chip-button
-  เป็น select dropdown, form "รายชื่อนักวิ่ง" เพิ่ม pagination
+  ต่อจาก pagination 2 รอบก่อน (เพิ่ม pagination → เต็มความกว้าง + prev/next ชิดขอบ, commit <code>14b8715</code>) —
+  รอบนี้ Gong ขอเพิ่ม 2 อย่างพร้อมกัน (ยังไม่ได้ลงโค้ดสักอันเลย รวมเป็นแผนเดียว):
 </p>
+<ol>
+  <li>เลขหน้าเริ่มติด prev ไล่ซ้าย→ขวาไปจนถึง next (ไม่ลอยกลาง)</li>
+  <li>เลิกใช้ windowing แบบ "sibling รอบหน้าปัจจุบัน" (เดิม 1…3 4 5…7 ขยับตามหน้า) เปลี่ยนเป็นเรียงคงที่ 1 2 3 4 … N เสมอ ไม่ขึ้นกับหน้าปัจจุบัน</li>
+</ol>
 
 <div class="status">
-  <p style="margin:0 0 .5rem"><b>สภาพโค้ดปัจจุบัน</b></p>
-  <p style="margin:0">
-    <code>ChipGroup.jsx</code> เป็น pill-button toggle ใช้ร่วมกันใน <code>MonitorFilterBar.jsx</code> +
-    <code>ResultsFilterBar.jsx</code> ทั้ง 3 field (ระยะ/เพศ = single-select, รุ่นอายุ = multi-select ผ่าน prop <code>multiSelect</code>)
-    ไม่มีที่อื่นใช้แล้ว
+  <p style="margin:0 0 .5rem"><b>ปัจจุบัน (หลัง commit 14b8715, ยังไม่ได้แก้ 2 ข้อนี้)</b></p>
+  <p style="margin:0 0 .5rem"><span class="mono">page 1/7</span></p>
+  <div class="diagram">
+    <span class="chip">‹</span><span class="gap"></span>
+    <span class="chip active">1</span><span class="chip">2</span><span class="chip">…</span><span class="chip">7</span>
+    <span class="gap"></span><span class="chip">›</span>
+  </div>
+  <p style="margin:.6rem 0 .5rem"><span class="mono">page 4/7 — set เลขขยับตามหน้า</span></p>
+  <div class="diagram">
+    <span class="chip">‹</span><span class="gap"></span>
+    <span class="chip">1</span><span class="chip">…</span><span class="chip">3</span><span class="chip active">4</span><span class="chip">5</span><span class="chip">…</span><span class="chip">7</span>
+    <span class="gap"></span><span class="chip">›</span>
+  </div>
+  <p style="margin:.6rem 0 0">
+    สาเหตุ 2 เรื่อง: (1) <code>.pagination</code> ตั้ง <code>justify-content: space-between</code> ทำให้ช่องเลขหน้าลอยกลาง
+    (2) <code>pageList(page, totalPages)</code> เป็น sibling-window algorithm — โชว์หน้า 1, totalPages เสมอ บวก page±1 — เซ็ตเลขเลยขยับตามหน้าปัจจุบัน
   </p>
-  <p style="margin:.5rem 0 0">
-    Filter state shape เดิม <code>{ category, gender, ageGroups: string[], query }</code> ใน <code>lib/results.js</code>
-    (<code>matchesAgeGroups</code>, <code>resultsCsvFilename</code>, <code>activeFilters</code>) — รอบนี้ไม่แตะ model,
-    เปลี่ยนแค่ widget input
-  </p>
-  <p style="margin:.5rem 0 0">
-    <code>groupBy</code> (Results) กับ category filter ใน <code>RunnersPage.jsx</code> ใช้ native
-    <code>&lt;select class="search search--select"&gt;</code> อยู่แล้ว — เอา pattern นี้ไปใช้กับ ระยะ/เพศ
-  </p>
-  <p style="margin:.5rem 0 0">ไม่มี pagination component ในระบบเลย, ไม่มี component test (มีแต่ lib/hook test) — filter model ไม่เปลี่ยน test เดิมไม่พัง</p>
 </div>
 
-<p><b>Gong confirm แล้ว:</b></p>
-<ul>
-  <li>รุ่นอายุ ยังเลือกได้หลายรุ่นเหมือนเดิม (multi-select) แค่เปลี่ยน UI เป็น dropdown (checkbox list) ไม่ตัดเหลือ single-select</li>
-  <li>Pagination: 20 แถว/หน้า, แสดงเลขหน้า</li>
-</ul>
+<h2>เป้าหมาย (ทุกหน้า set เดียวกัน ไม่ขยับ)</h2>
+<div class="diagram">
+  <span class="chip">‹</span>
+  <span class="chip active">1</span><span class="chip">2</span><span class="chip">3</span><span class="chip">4</span><span class="chip">…</span><span class="chip">7</span>
+  <span class="gap"></span><span class="chip">›</span>
+</div>
 
 <h2>สิ่งที่แก้</h2>
 <ol class="steps">
-  <li><b>ระยะ/เพศ → native <code>&lt;select&gt;</code></b> — ใน <code>MonitorFilterBar.jsx</code> + <code>ResultsFilterBar.jsx</code>
-    แทน <code>ChipGroup</code> ด้วย <code>&lt;select className="search search--select"&gt;</code> เหมือน <code>groupBy</code> เดิม
-    (<code>&lt;option value={ANY}&gt;ทุกระยะ/ทุกเพศ&lt;/option&gt;</code> + map ตัวเลือก)</li>
-  <li><b>รุ่นอายุ → <code>MultiSelectDropdown.jsx</code> (ใหม่)</b> — trigger button style เดียวกับ <code>.search--select</code>
-    โชว์ label สรุป (ทุกรุ่น / N รุ่น), คลิกเปิด glass-panel menu เป็น checkbox list ของ <code>AGE_OPTIONS</code>,
-    ปิดเมื่อคลิกนอกกล่อง/กด Escape, ไม่มี dependency ใหม่ — props <code>{ id, legend, allLabel, options, value, onSelect }</code>
-    รับ/คืนค่าเป็น <code>string[]</code> เหมือน <code>ChipGroup multiSelect</code> เดิม (drop-in)</li>
-  <li><b>ลบ <code>ChipGroup.jsx</code></b> — หลังไม่มีคนเรียกแล้ว ลบไฟล์ + CSS ที่กลายเป็น orphan (<code>.filter-chip</code>,
-    <code>.filter-bar__options</code>) หลัง grep ยืนยันไม่มีที่อื่นใช้</li>
-  <li><b>CSS ใหม่ใน <code>results.css</code></b> — <code>.multiselect-dropdown</code> + <code>__trigger</code> + <code>__menu</code>
-    (glass panel, position:absolute) + <code>__option</code> (checkbox row), เพิ่มเข้า mobile breakpoint เดิมให้เต็มความกว้างจอเล็ก</li>
-  <li><b><code>Pagination.jsx</code> (ใหม่)</b> — เลขหน้า + ปุ่ม prev/next, style เดียวกับ <code>.btn</code>/<code>.filter-chip</code>,
-    หน้าปัจจุบัน = <code>btn-accent</code>. Props <code>{ page, totalPages, onChange }</code></li>
-  <li><b><code>RunnersPage.jsx</code></b> — <code>PAGE_SIZE = 20</code>, <code>useState</code> page,
-    reset page=1 ตอน query/category เปลี่ยน (<code>useEffect</code>), slice <code>rows</code> เป็น <code>pagedRows</code> สำหรับ render table
-    (empty-state เช็คจาก <code>rows.length</code> ไม่ใช่ pagedRows), export CSV ใช้ <code>rows</code> เต็มเหมือนเดิม (ไม่ตัดตามหน้า),
-    render <code>&lt;Pagination&gt;</code> ใต้ table ตอน <code>totalPages &gt; 1</code></li>
-  <li><b>CSS pagination</b> — เพิ่ม <code>.pagination</code> block ใน <code>dashboard.css</code> ใกล้ <code>.table-wrap</code></li>
+  <li><b><code>Pagination.jsx</code></b> — เปลี่ยน <code>pageList()</code> จาก sibling-window เป็นเรียงคงที่:
+    เลขหน้า 1..LEADING_COUNT (=4) เรียงต่อกัน ตามด้วย <code>…</code> แล้วปิดท้ายด้วยหน้าสุดท้ายเสมอ
+    (ถ้า totalPages ≤ 5 โชว์ครบไม่ต้องมี <code>…</code>) ไม่รับ <code>page</code> เป็น argument อีกต่อไป — เซ็ตเลขคงที่ไม่ขึ้นกับหน้าปัจจุบัน
+    (highlight หน้าปัจจุบันยังทำงานผ่าน <code>p === page</code> เดิม เฉพาะตอนหน้าปัจจุบันอยู่ในเซ็ตที่โชว์ — ข้อมูลจริง 121 คน/20 ต่อหน้า = 7 หน้า
+    เข้าเซ็ตแสดงผลอยู่แล้ว (1-4, 7) มีแค่หน้า 5-6 ที่ตัวเลขไม่ highlight แต่ปุ่ม ‹/› ยังกดได้ปกติ — แจ้งไว้ ไม่ block)</li>
+  <li><b><code>dashboard.css</code></b> — <code>.pagination</code> ตัด <code>justify-content: space-between</code>,
+    <code>.pagination__pages</code> เพิ่ม <code>flex: 1</code> + เปลี่ยน <code>justify-content: center</code> → <code>flex-start</code>
+    (เลขหน้าดูดพื้นที่ว่างทั้งหมดมาเป็นของตัวเอง แล้วชิดซ้าย — next ยังถูกดันไปชิดขอบขวาเหมือนเดิม)</li>
 </ol>
+<pre>// Pagination.jsx
+const LEADING_COUNT = 4
+
+function pageList(totalPages) {
+  if (totalPages <= LEADING_COUNT + 1) {
+    return Array.from({ length: totalPages }, (_, i) =&gt; i + 1)
+  }
+  const leading = Array.from({ length: LEADING_COUNT }, (_, i) =&gt; i + 1)
+  return [...leading, ELLIPSIS, totalPages]
+}
+// call site: pageList(totalPages) — ตัด page ออกจาก signature</pre>
+<pre>/* dashboard.css */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+}
+.pagination__pages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.35rem;
+  flex: 1;
+}</pre>
 
 <h2>ไฟล์ที่แตะ</h2>
 <div class="wrap">
 <table>
   <thead><tr><th>ไฟล์</th><th>เปลี่ยนอะไร</th></tr></thead>
   <tbody>
-    <tr><td class="mono">components/ui/MultiSelectDropdown.jsx</td><td>ใหม่ — multi-select dropdown รุ่นอายุ</td></tr>
-    <tr><td class="mono">components/ui/Pagination.jsx</td><td>ใหม่ — เลขหน้า + prev/next</td></tr>
-    <tr><td class="mono">components/ui/ChipGroup.jsx</td><td>ลบ (ไม่มีคนใช้แล้ว)</td></tr>
-    <tr><td class="mono">components/monitor/MonitorFilterBar.jsx</td><td>ระยะ/เพศ → select, รุ่นอายุ → MultiSelectDropdown</td></tr>
-    <tr><td class="mono">components/results/ResultsFilterBar.jsx</td><td>เหมือนกัน</td></tr>
-    <tr><td class="mono">pages/RunnersPage.jsx</td><td>เพิ่ม pagination state + UI</td></tr>
-    <tr><td class="mono">styles/results.css</td><td>multiselect-dropdown styles, ลบ orphan CSS</td></tr>
-    <tr><td class="mono">styles/dashboard.css</td><td>pagination styles, ลบ orphan .filter-chip</td></tr>
+    <tr><td class="mono">components/ui/Pagination.jsx</td><td>pageList() เปลี่ยนเป็น leading-run คงที่ + last page</td></tr>
+    <tr><td class="mono">styles/dashboard.css</td><td>.pagination / .pagination__pages — CSS เท่านั้น</td></tr>
   </tbody>
 </table>
 </div>
-<p style="margin:0"><b>ไม่แตะ:</b> <code>lib/results.js</code>, <code>lib/monitor.js</code>, filter data model, backend/DB</p>
+<p style="margin:0"><b>ไม่แตะ:</b> <code>RunnersPage.jsx</code>, การ render ปุ่ม/highlight เดิม, arrow disabled logic</p>
 
 <h2>การตรวจสอบ</h2>
 <ol>
   <li><code>npm run build</code> / <code>npm run lint</code> ผ่าน</li>
-  <li><code>npm test</code> ผ่านหมด (filter model ไม่เปลี่ยน — 12+ suite เดิมไม่ต้องแก้)</li>
-  <li>เปิดจริง: Monitor/Results ระยะ-เพศ เป็น select ผูกค่าถูก, รุ่นอายุ dropdown เปิด/เลือกหลายอันได้/ปิดเมื่อคลิกนอกกล่อง,
-    active-filter summary ด้านล่างยังอ่านถูก</li>
-  <li>Runners: 121 แถว แบ่งหน้า 20/หน้า, คลิกเลขหน้าทำงาน, search/filter เปลี่ยน → กลับหน้า 1, export CSV ได้ครบ (ไม่ตัดตามหน้า)</li>
-  <li>เช็คจอมือถือ (dropdown/select เต็มความกว้าง ไม่ overflow)</li>
+  <li>เปิดจริงหน้ารายชื่อนักวิ่ง (mock data 121 แถว → 7 หน้า): ทุกหน้าเห็นเซ็ตเลขเดียวกัน <code>1 2 3 4 … 7</code> เริ่มติด ‹ ทันที,
+    › ชิดขอบขวา, คลิกไล่ทีละหน้า 1-7 ปุ่ม prev/next ทำงานถูก, highlight หน้าปัจจุบันขึ้นตอนอยู่ในเซ็ตที่โชว์, เช็คจอมือถือ wrap ไม่พัง</li>
 </ol>
 
 <div class="ask">

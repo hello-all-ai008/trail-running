@@ -1,27 +1,19 @@
-const EDGE_COUNT = 1
-const SIBLING_COUNT = 1
+const LEADING_COUNT = 4
 const ELLIPSIS = '…'
 
 /**
- * Numbered page list with first/last always visible, an ellipsis for gaps,
- * and the current page ± SIBLING_COUNT shown in full — the standard windowed
- * pagination pattern, kept a pure function so it's trivial to reason about.
- * @param {number} page
+ * Sequential leading run (1..LEADING_COUNT) plus the last page, with an
+ * ellipsis between them when there's an actual gap. Fixed regardless of the
+ * current page — no sibling-window shifting as you navigate.
  * @param {number} totalPages
  * @returns {Array<number | typeof ELLIPSIS>}
  */
-function pageList(page, totalPages) {
-  const pages = []
-  for (let p = 1; p <= totalPages; p++) {
-    const isEdge = p <= EDGE_COUNT || p > totalPages - EDGE_COUNT
-    const isSibling = Math.abs(p - page) <= SIBLING_COUNT
-    if (isEdge || isSibling) {
-      pages.push(p)
-    } else if (pages[pages.length - 1] !== ELLIPSIS) {
-      pages.push(ELLIPSIS)
-    }
+function pageList(totalPages) {
+  if (totalPages <= LEADING_COUNT + 1) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
-  return pages
+  const leading = Array.from({ length: LEADING_COUNT }, (_, i) => i + 1)
+  return [...leading, ELLIPSIS, totalPages]
 }
 
 /**
@@ -43,7 +35,7 @@ function Pagination({ page, totalPages, onChange }) {
       </button>
 
       <div className="pagination__pages">
-        {pageList(page, totalPages).map((p, i) =>
+        {pageList(totalPages).map((p, i) =>
           p === ELLIPSIS ? (
             <span key={`ellipsis-${i}`} className="pagination__ellipsis">{ELLIPSIS}</span>
           ) : (

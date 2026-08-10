@@ -589,7 +589,6 @@
 .pagination {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.35rem;
   margin-top: 0.9rem;
 }
@@ -597,8 +596,9 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.35rem;
+  flex: 1;
 }
 .pagination__arrow {
   min-width: 2.1rem;
