@@ -42,21 +42,23 @@ function Pagination({ page, totalPages, onChange }) {
         ‹
       </button>
 
-      {pageList(page, totalPages).map((p, i) =>
-        p === ELLIPSIS ? (
-          <span key={`ellipsis-${i}`} className="pagination__ellipsis">{ELLIPSIS}</span>
-        ) : (
-          <button
-            key={p}
-            type="button"
-            className={`btn btn-sm ${p === page ? 'btn-accent' : 'btn-secondary'}`}
-            aria-current={p === page ? 'page' : undefined}
-            onClick={() => onChange(p)}
-          >
-            {p}
-          </button>
-        ),
-      )}
+      <div className="pagination__pages">
+        {pageList(page, totalPages).map((p, i) =>
+          p === ELLIPSIS ? (
+            <span key={`ellipsis-${i}`} className="pagination__ellipsis">{ELLIPSIS}</span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              className={`btn btn-sm ${p === page ? 'btn-accent' : 'btn-secondary'}`}
+              aria-current={p === page ? 'page' : undefined}
+              onClick={() => onChange(p)}
+            >
+              {p}
+            </button>
+          ),
+        )}
+      </div>
 
       <button
         type="button"
